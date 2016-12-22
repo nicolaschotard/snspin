@@ -33,13 +33,18 @@ from ToolBox import MPL, Optimizer
 from tools import io
 from tools import statistics
 
+
 # Definitions ==================================================================
 
+
 # classifications
+
 
 def wang_classification(phreno, vcut=12200.0, prange=2.5,
                         plot=False, keepall=False):
     """
+    Wang et al. 2009 classification scheme.
+
     Classify the SNe sanple into two sub-classes based on their SiII 6355
     velocity values:
      - if v < vcut: classified as normal SN Ia (normal)
@@ -125,19 +130,19 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
     
     # print some info
     print "\nResults:"
-    print '\n'+" Normal SNe Ia ".center(40,'=')
+    print '\n'+" Normal SNe Ia ".center(40, '=')
     print "  - %i SNe."%len(sne[normf])
     print "  - mean vSi: %.2f +- %.2f (km/s)"%\
           (N.mean(vSi[normf]), N.std(vSi[normf]))
     print "  - mean phase: %.2f +- %.2f (days)"%\
-          (N.mean(phases[normf]),N.mean(phases[normf]))
-    print '\n'+" HV SNe Ia ".center(40,'=')
+          (N.mean(phases[normf]), N.mean(phases[normf]))
+    print '\n'+" HV SNe Ia ".center(40, '=')
     print "  - %i SNe."%len(sne[HVf])
     if len(sne[HVf]) != 0:
         print "  - mean vSi: %.2f +- %.2f (km/s)"%\
               (N.mean(vSi[HVf]), N.std(vSi[HVf]))
         print "  - mean phase: %.2f +- %.2f (days)"%\
-              (N.mean(phases[HVf]),N.mean(phases[HVf]))
+              (N.mean(phases[HVf]), N.mean(phases[HVf]))
         print "  - HV SNe list:"
         print "     "+"\n     ".join(sorted(d['HV']['sne']))
     else:
@@ -153,6 +158,8 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
 def branch_classification(phreno, prange=2.5, plot=False,
                           keepall=False, sne=None):
     """
+    Branch et al 2006 et 2009 classification scheme.
+
     Classify the SNe sanple into four sub-classes based on their SiII 5972
     and SiII 6355 equivalent widths values:
      - Core-normal (CN):
@@ -193,7 +200,7 @@ def branch_classification(phreno, prange=2.5, plot=False,
         print sne[~filt]
         
     afilt = lambda x: x[filt]
-    sne,EW5,EW5e,EW6,EW6e,phases = map(afilt, [sne,EW5,EW5e,EW6,EW6e,phases])
+    sne, EW5, EW5e, EW6, EW6e, phases = map(afilt, [sne, EW5, EW5e, EW6, EW6e, phases])
     print "\n %i SNe in this sample."%(len(sne))
         
     # sub-sample filters
@@ -207,9 +214,9 @@ def branch_classification(phreno, prange=2.5, plot=False,
     d['info'] = {'prange': prange, 'bysn':{}}
     
     # get the sub-sample lists
-    stype = ['CN','BL','SS','CL']
-    filts = [CNf,BLf,SSf,CLf]
-    for i,st in enumerate(stype):
+    stype = ['CN', 'BL', 'SS', 'CL']
+    filts = [CNf, BLf, SSf, CLf]
+    for i, st in enumerate(stype):
         d[st] = {}
         d[st]['sne'] = sne[filts[i]]
         d[st]['EWSiII5972'] = EW5[filts[i]]
@@ -222,16 +229,16 @@ def branch_classification(phreno, prange=2.5, plot=False,
 
     # print some info
     print "\nResults:"
-    for i,st in enumerate(d):
+    for i, st in enumerate(d):
         if st == 'info': continue
-        print '\n'+(" %s "%st).center(40,'=')
+        print '\n'+(" %s "%st).center(40, '=')
         print "  - %i SNe."%len(d[st]['sne'])
         print "  - mean Si 5972: %.2f +- %.2f (A)"%\
               (N.mean(d[st]['EWSiII5972']), N.std(d[st]['EWSiII5972']))
         print "  - mean Si 5972: %.2f +- %.2f (A)"%\
               (N.mean(d[st]['EWSiII6355']), N.std(d[st]['EWSiII6355']))
         print "  - mean phase: %.2f +- %.2f (days)"%\
-              (N.mean(d[st]['phases']),N.mean(d[st]['phases']))
+              (N.mean(d[st]['phases']), N.mean(d[st]['phases']))
 
     if plot:
         branch_classification_plot(copy.deepcopy(d), phreno, StN=2)
@@ -241,6 +248,8 @@ def branch_classification(phreno, prange=2.5, plot=False,
 def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                            degree=1, StN=4, jack=True, plot=False):
     """
+    Benetti et al. 2005 classification sheme.
+
     Classify the SNe sanple into three sub-classes based on their SiII 6355
     velocity values:
      - faint
@@ -276,7 +285,7 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
     Inde = [getallve(phreno[sn]['spectra']) for sn in sne]
 
     results = {}
-    for i,sn in enumerate(sne):
+    for i, sn in enumerate(sne):
 
         p, ind, inde = ph[i], Ind[i], Inde[i]
         
@@ -299,23 +308,23 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
         else:
             minp = degree + 2
         if not len(p) >= minp:
-            print "%s non fitted, not enought values (%i)."%(sn,len(p))
+            print "%s non fitted, not enought values (%i)."%(sn, len(p))
             continue
         else:
             if not jack:
                 res = polyfit(p, ind, dy=inde, degree=degree)
                 print "%i/%i %s: %i value in [%.1f,%.1f]. slope: %.2f"%\
-                      (i+1,len(sne),sn,len(p),
-                       prange[0],prange[1],res['params'][0])
+                      (i+1, len(sne), sn, len(p),
+                       prange[0], prange[1], res['params'][0])
                 res['Jparams']  = res['params']
                 res['Jdparams'] = res['dparams']
             else:
                 # jackknifing to get a proper error
                 ress = []
                 for j in range(len(p)):
-                    pj = N.concatenate([p[:j],p[j+1:]])
-                    indj = N.concatenate([ind[:j],ind[j+1:]])
-                    indej = N.concatenate([inde[:j],inde[j+1:]])
+                    pj = N.concatenate([p[:j], p[j+1:]])
+                    indj = N.concatenate([ind[:j], ind[j+1:]])
+                    indej = N.concatenate([inde[:j], inde[j+1:]])
                     res = polyfit(pj, indj, dy=indej, degree=degree)
                     ress.append(res)
                 res = polyfit(p, ind, dy=inde, degree=degree)
@@ -323,12 +332,12 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                 par1 = N.mean([r['params'][1] for r in ress])
                 err0 = N.std([r['params'][0] for r in ress])
                 err1 = N.std([r['params'][1] for r in ress])
-                res['Jparams']  = [par0,par1]
-                res['Jdparams'] = [err0,err1]
+                res['Jparams']  = [par0, par1]
+                res['Jdparams'] = [err0, err1]
             
                 print "%i/%i %s: %i value in [%.1f,%.1f]. slope: %.2f +- %.2f"%\
-                      (i+1,len(sne),sn,len(p),prange[0],prange[1],
-                       res['Jparams'][0],res['Jdparams'][0])
+                      (i+1, len(sne), sn, len(p), prange[0], prange[1],
+                       res['Jparams'][0], res['Jdparams'][0])
                 
         if plot:
             fig = P.figure()
@@ -336,12 +345,12 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                                  xlabel='phase',
                                  ylabel=indic,
                                  title=sn+', s = %.2f += %.2f'%\
-                                 (res['Jparams'][0],res['Jdparams'][0]))
-            ax.plot(p,ind,'ok',mew=1.5,ms=8)
+                                 (res['Jparams'][0], res['Jdparams'][0]))
+            ax.plot(p, ind, 'ok', mew=1.5, ms=8)
             ax.errorbar(p, ind, yerr=inde, capsize=None,
                         color='k', lw=1, ls='None')
-            ax.plot(p,N.polyval([res['Jparams'][0],res['Jparams'][1]],p),'r')
-            fig.savefig('figures/%s_%s.png'%(sn,indic))
+            ax.plot(p, N.polyval([res['Jparams'][0], res['Jparams'][1]], p), 'r')
+            fig.savefig('figures/%s_%s.png'%(sn, indic))
             P.close()
         
         # save results
@@ -410,14 +419,14 @@ def get_si_at_phase(phreno, si, pvalue, prange, sne=None, saltp='salt2'):
         sne = sorted([sn for sn in phreno if sn != 'DATASET'])
     else:
         sne = sorted(sne)
-    specs = [get_id_at_phase(phreno[sn],pvalue) for sn in sne]
+    specs = [get_id_at_phase(phreno[sn], pvalue) for sn in sne]
     phases = N.array([phreno[sn]['spectra'][sp][saltp+'.phase'] \
                       / (1. + phreno[sn]['salt2.Redshift'])
-                      for sn,sp in zip(sne,specs)])
+                      for sn, sp in zip(sne, specs)])
     values = [phreno[sn]['spectra'][sp]['phrenology.'+si]
-              for sn,sp in zip(sne,specs)]
+              for sn, sp in zip(sne, specs)]
     valuese = [phreno[sn]['spectra'][sp]['phrenology.'+si+'.err']
-               for sn,sp in zip(sne,specs)]
+               for sn, sp in zip(sne, specs)]
 
     # apply the phase filter
     pfilter = (N.array(phases)>=(pvalue-prange)) & \
@@ -430,7 +439,7 @@ def get_si_at_phase(phreno, si, pvalue, prange, sne=None, saltp='salt2'):
     return fsne, fvalues, fvaluese, fphases
 
 
-def get_id_at_phase(d,p, saltp='salt2'):
+def get_id_at_phase(d, p, saltp='salt2'):
     """
     Get the id name of the closest spectra to the phase p.
     """
@@ -444,6 +453,7 @@ def get_si_in_range(phreno, si, prange, sne=None):
     """
     Get all the spectral indicators (si) values for the given list of SNe in
     a phase range around a phase value.
+
     :param dictionnary phreno: the phrenology dictionnary containing the
                                spectral indicators
     :param string si: the spectral indocator name, eg, EWSiII4000 or vSiII_6355.
@@ -477,7 +487,7 @@ def get_si_in_range(phreno, si, prange, sne=None):
 
 def merge_phreno_idr(idr, phreno):
     """
-    merge the idr dictionnary and the phrenology output
+    merge the idr dictionnary and the phrenology output.
     """
     ndic = copy.deepcopy(idr)
     for sn in phreno:
@@ -493,23 +503,24 @@ def merge_phreno_idr(idr, phreno):
 def polyfit(x, y, dy=None, degree=1):
     """
     Polynomial fit of degree 1 or 2 (default is 1) for the given input.
+
     :param 1D-array x: the x array axis
     :param 1D-array y: the y array axis (arror is dy, None by default)
     :param int degree: the polynomial degree. Could be 1 or 2.
     """
     if not isinstance(degree, int ) \
-       or not degree in [1,2]:
+       or not degree in [1, 2]:
         mess = "Error, degree must be 1 or 2."
         raise ValueError(mess)
 
     # Initialization of the parameters
     if degree == 1:
-        params = [1,0]
+        params = [1, 0]
         def model(p):
             a, b = p
             return a*x + b
     else:
-        params = [1,1,0]
+        params = [1, 1, 0]
         def model(p):
             a, b, c = p
             return a*x**2 + b*x + c
@@ -545,6 +556,7 @@ def polyfit(x, y, dy=None, degree=1):
 def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     """
     This plot is usually done in the EWSiII 5972 vs EWSiII 6533 space.
+
     :param dictionnay d: dictionnary containing the following keys:
        - 'normal': {'sne', 'vSi', 'vSi.err', 'phases', 'EWSi', 'EWSi.err'}
        - 'HV': {'sne', 'vSi', 'vSi.err', 'phases', 'EWSi', 'EWSi.err'}
@@ -576,14 +588,14 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     fig = P.figure(dpi=120)
 
     # axe
-    ax = fig.add_axes([0.09,0.09,0.88,0.69])
-    ax2 = fig.add_axes([0.09,0.79,0.88,0.19], sharex=ax)
+    ax = fig.add_axes([0.09, 0.09, 0.88, 0.69])
+    ax2 = fig.add_axes([0.09, 0.79, 0.88, 0.19], sharex=ax)
     ax.set_xlabel('v SiII 6355 [km/s]', fontsize='x-large')
     ax.set_ylabel(r'EW SiII 6355 [$\AA$]', fontsize='x-large')
 
     # plot
-    ax.plot(dn['vSi'][filtn], dn['EWSi'][filtn], 'o'
-            , mec='k', mfc='None', mew=1.5, ms=8, label='Normal (%i)'%\
+    ax.plot(dn['vSi'][filtn], dn['EWSi'][filtn], 'o',
+            mec='k', mfc='None', mew=1.5, ms=8, label='Normal (%i)'%\
             len(dn['vSi'][filtn]))
     ax.errorbar(dn['vSi'][filtn], dn['EWSi'][filtn],
                 xerr=dn['vSi.err'][filtn], yerr=dn['EWSi.err'][filtn],
@@ -603,10 +615,10 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     vsi = N.concatenate([dn['vSi'][filtn],dHV['vSi'][filtHV]])
     bins = Statistics.hist_bins(vsi)
     ax2.hist(vsi, lw=1, color='k', bins=bins, normed=True, alpha=0.7)
-    loc,scale=stats.norm.fit(vsi)
-    xx = N.linspace(8000,15000,1000)
+    loc, scale=stats.norm.fit(vsi)
+    xx = N.linspace(8000, 15000, 1000)
     gauss = stats.norm.pdf(xx, loc=loc, scale=scale)
-    ax2.fill_between(xx,gauss, color='k', alpha=0.15)
+    ax2.fill_between(xx, gauss, color='k', alpha=0.15)
     ax2.set_yticks([])
     ax2.set_ylabel('Normed distr.')
 
@@ -649,6 +661,7 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
 def branch_classification_plot(d, idr=None, name=None, StN=3):
     """
     This plot is usually done in the EWSiII 6355 vs vSiII 6533 space.
+
     :param dictionnay d: dictionnary containing the following keys:
      - CN (Core-normal)
      - BL (Broad line)
@@ -797,6 +810,7 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
                                 vcut=10, x1cut=2.5, StN=3, xaxis='dm15'):
     """
     This plot is usually done in the EWSiII 6355 vs vSiII 6533 space.
+
     :param dictionnay d: dictionnary containing the following keys:
      - CN (Core-normal)
      - BL (Broad line)
@@ -964,9 +978,9 @@ def vg_v_vs_zplot(diw, dibe, idr=None):
     # get the velocity data
     dn = diw['normal']
     dHV = diw['HV']
-    snev = N.concatenate([diw['normal']['sne'],diw['HV']['sne']])
-    vsi  = N.concatenate([diw['normal']['vSi'],diw['HV']['vSi']])
-    vsie = N.concatenate([diw['normal']['vSi.err'],diw['HV']['vSi.err']])
+    snev = N.concatenate([diw['normal']['sne'], diw['HV']['sne']])
+    vsi  = N.concatenate([diw['normal']['vSi'], diw['HV']['vSi']])
+    vsie = N.concatenate([diw['normal']['vSi.err'], diw['HV']['vSi.err']])
 
     ft = [False]*len(snev)
     filt = N.array([True and sn in sne or False for sn in snev], dtype='bool')
@@ -1048,10 +1062,10 @@ def table(output='html'):
     results = test()
     dw, dbr, dbe = results[0], results[1], results[2]
     
-    res_b  = io.load_anyfile(snid_dir+'bsnip/snid_results.pkl')
-    res_s  = io.load_anyfile(snid_dir+'snid-2.0/snid_results.pkl')
-    res_bp = io.load_anyfile(snid_dir+'bsnip/snid_results_fixp.pkl')
-    res_sp = io.load_anyfile(snid_dir+'snid-2.0/snid_results_fixp.pkl')
+    res_b  = io.load_anyfile(snid_dir + 'bsnip/snid_results.pkl')
+    res_s  = io.load_anyfile(snid_dir + 'snid-2.0/snid_results.pkl')
+    res_bp = io.load_anyfile(snid_dir + 'bsnip/snid_results_fixp.pkl')
+    res_sp = io.load_anyfile(snid_dir + 'snid-2.0/snid_results_fixp.pkl')
 
     if output == 'html':
         print "Object   SNID-2.0  SNID-2.0 (fp)  Silv  Silv (fp)  Wang   Branch  Benetti"

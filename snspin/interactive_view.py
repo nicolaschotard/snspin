@@ -57,18 +57,18 @@ class InterView:
         self.newkeys = newkeys
         
         #Open files used to plot or otherwise read input parameters
-        if isinstance(phreno,dict):
+        if isinstance(phreno, dict):
             self.pdata = phreno
         else:
             self.pdata = SnfMetaData.load(phreno)
         if idr is not None:
             if idr.endswith('pkl'):
-                self.pdata = SnfMetaData.load(self.pdata,idr)
+                self.pdata = SnfMetaData.load(self.pdata, idr)
             else:
-                self.pdata = SnfMetaData.load(self.pdata,idr+'/META.pkl')
+                self.pdata = SnfMetaData.load(self.pdata, idr+'/META.pkl')
           
         if hubble is not None:
-            if isinstance(hubble,dict):
+            if isinstance(hubble, dict):
                 self.hdata=hubble
             else:
                 self.pdata = SnfMetaData.load(hubble)
@@ -76,7 +76,7 @@ class InterView:
 
         #Create a list of SNe
         if sne is not None:
-            if isinstance(sne,str):
+            if isinstance(sne, str):
                 self.listSNe = N.loadtxt(sne, dtype='string')
             else:
                 self.listSNe = N.array(sne, dtype='string')
@@ -149,7 +149,7 @@ class InterView:
     def _organize_parameters(self):
 
         print 'Organize parameters=================================='
-        listSNe,spectra_at_max,allphases=[],[],[]
+        listSNe, spectra_at_max, allphases=[], [], []
         for SN in self.listSNe:
             psn = self.pdata[SN]
             hsn = self.hdata[SN]
@@ -191,7 +191,7 @@ class InterView:
                 phase = psn['spectra'][spec_at_max]['obs.phase']
             
 
-            print SN,spec_at_max
+            print SN, spec_at_max
             listSNe.append(SN)
             spectra_at_max.append(spec_at_max)
             allphases.append(phase)
@@ -204,7 +204,7 @@ class InterView:
         self.phases = N.array(allphases)
 
         params  = {}
-        phase,phase_err = [],[]
+        phase, phase_err = [], []
         for key in self.params_list:
             params[key] = []
             params[key+".err"] = []
@@ -214,7 +214,7 @@ class InterView:
             metrics[metric] = []
             metrics[metric+'.err'] = []
 
-        for SN,spectrum in zip(self.listSNe,self.spectra_at_max):
+        for SN, spectrum in zip(self.listSNe, self.spectra_at_max):
             psn = self.pdata[SN]
             if len(psn['spectra']) == 0:
                 continue
@@ -286,17 +286,17 @@ class InterView:
                                             / self.metrics[key1] \
                                             + self.metrics[key2+'.err'] \
                                             / self.metrics[key2] )
-            self.metrics_name = N.concatenate((self.metrics_name,[newkey]))
+            self.metrics_name = N.concatenate((self.metrics_name, [newkey]))
             print 'New key is added as %s in self.metrics'%newkey
 
     def _define_filter_colorbar(self):
 
         if self.cutkey is not None:
-            self.filter = self._cutvalues(self.cutkey,inf=self.inf,sup=self.sup)
+            self.filter = self._cutvalues(self.cutkey, inf=self.inf, sup=self.sup)
         else:
             self.filter = N.array(['True'] \
-                                      * len(self.params[self.colorlegend_name][0])
-                                      ,dtype='bool')
+                                  * len(self.params[self.colorlegend_name][0]),
+                                  dtype='bool')
         self.colorlegend = self.params[self.colorlegend_name][0][self.filter]
 
     def plot_parameters(self, key1=None, key2=None, linfit=True,
@@ -354,70 +354,71 @@ class InterView:
             #Plot only key1 versus key2
             if self.params.has_key(key1) == True \
                    and self.params.has_key(key2) == True:
-                param1 = [self.params[key1][0],self.params[key1][1]]
-                param2 = [self.params[key2][0],self.params[key2][1]]
-                self._plot(param1,param2,key1,key2,cmap=cmap)
+                param1 = [self.params[key1][0], self.params[key1][1]]
+                param2 = [self.params[key2][0], self.params[key2][1]]
+                self._plot(param1, param2, key1, key2, cmap=cmap)
             elif self.params.has_key(key1) == True \
                      and self.metrics.has_key(key2) == True:
-                metric = [self.metrics[key2],self.metrics[key2+'.err']]
-                param = [self.params[key1][0],self.params[key1][1]]
-                self._plot(param,metric,key1,key2,cmap=cmap)
+                metric = [self.metrics[key2], self.metrics[key2+'.err']]
+                param = [self.params[key1][0], self.params[key1][1]]
+                self._plot(param, metric, key1, key2, cmap=cmap)
             elif self.params.has_key(key2) == True \
                      and self.metrics.has_key(key1) == True:
-                metric = [self.metrics[key1],self.metrics[key1+'.err']]
-                param = [self.params[key2][0],self.params[key2][1]]
-                self._plot(metric,param,key1,key2,cmap=cmap)
+                metric = [self.metrics[key1], self.metrics[key1+'.err']]
+                param = [self.params[key2][0], self.params[key2][1]]
+                self._plot(metric, param, key1, key2, cmap=cmap)
             elif self.metrics.has_key(key2) == True \
                      and self.metrics.has_key(key1) == True:
-                metric1 = [self.metrics[key1],self.metrics[key1+'.err']]
-                metric2 = [self.metrics[key2],self.metrics[key2+'.err']]
-                self._plot(metric1,metric2,key1,key2,cmap=cmap)
+                metric1 = [self.metrics[key1], self.metrics[key1+'.err']]
+                metric2 = [self.metrics[key2], self.metrics[key2+'.err']]
+                self._plot(metric1, metric2, key1, key2, cmap=cmap)
             else:
-                print '%s and/or %s not in the following list of parameters:\n %s \n %s'%(key1,key2,self.metrics_name,self.params_list)
+                print '%s and/or %s not in the following list of parameters:\n %s \n %s' % \
+                    (key1, key2, self.metrics_name, self.params_list)
             return
         elif key1 is not None and key2 == None:
             #Plot only key1 versus all other parameters
             if self.params.has_key(key1) == True: 
-                param1 = [self.params[key1][0],self.params[key1][1]]
+                param1 = [self.params[key1][0], self.params[key1][1]]
                 for g in self.params:
                     print g
-                    param2 = [self.params[g][0],self.params[g][1]] 
-                    self._plot(param1,param2,key1,g,cmap=cmap)
+                    param2 = [self.params[g][0], self.params[g][1]] 
+                    self._plot(param1, param2, key1, g, cmap=cmap)
                 for m in self.metrics_name:
-                    print m[11:],m[11:]+'.err'
-                    metric = [self.metrics[m],self.metrics[m+'.err']]
-                    self._plot(param1,metric,key1,m[11:],cmap=cmap)
+                    print m[11:], m[11:]+'.err'
+                    metric = [self.metrics[m], self.metrics[m+'.err']]
+                    self._plot(param1, metric, key1, m[11:], cmap=cmap)
             elif self.metrics.has_key(key1) == True:
-                print key1,'==========================='
-                metric1 = [self.metrics[key1],self.metrics[key1+'.err']]
+                print key1, '==========================='
+                metric1 = [self.metrics[key1], self.metrics[key1+'.err']]
                 for m2 in self.metrics_name:
-                    print m2[11:],m2[11:]+'.err'
-                    metric2 = [self.metrics[m2],self.metrics[m2+'.err']]
-                    self._plot(metric1,metric2,key1,m2[11:],cmap=cmap)
+                    print m2[11:], m2[11:]+'.err'
+                    metric2 = [self.metrics[m2], self.metrics[m2+'.err']]
+                    self._plot(metric1, metric2, key1, m2[11:], cmap=cmap)
                 for g in self.params:
                     print g
-                    param2 = [self.params[g][0],self.params[g][1]] 
-                    self._plot(metric1,param2,key1,g,cmap=cmap)
+                    param2 = [self.params[g][0], self.params[g][1]] 
+                    self._plot(metric1, param2, key1, g, cmap=cmap)
         else:
             print "Give me one (key1) or two keys"; return
    
         
-    def _cutvalues(self,key,inf=-N.inf,sup=N.inf):
+    def _cutvalues(self, key, inf=-N.inf, sup=N.inf):
         
         listSNe_cut = []
         filter = []
         if key in self.params: 
-            for i,sn in enumerate(self.listSNe):
+            for i, sn in enumerate(self.listSNe):
                 if self.params[key][0][i] < inf or self.params[key][0][i] > sup:
-                    print sn,self.params[key][0][i]
+                    print sn, self.params[key][0][i]
                     filter.append(0)
                 else:
                     listSNe_cut.append(sn)
                     filter.append(1)
         elif key in self.metrics:
-            for i,sn in enumerate(self.listSNe):
+            for i, sn in enumerate(self.listSNe):
                 if self.metrics[key][i] < inf or self.metrics[key][i] > sup:
-                    print sn,self.metrics[key][i]
+                    print sn, self.metrics[key][i]
                     filter.append(0)
                 else:
                     filter.append(1)
@@ -425,22 +426,22 @@ class InterView:
         else:
             raise ValueError, \
                   'Error. Name of the cut must be in\n %s\n or in\n %s' % \
-                  (self.params.keys(),self.metrics.keys())
+                  (self.params.keys(), self.metrics.keys())
         
         print 'list of SNe used after %s cut saved in self.listSNe_cut' % key
         self.listSNe_cut = N.array(listSNe_cut)
         
-        return N.array(filter,dtype='bool')
+        return N.array(filter, dtype='bool')
 
-    def _plot(self,x,y,xname,yname,cmap=False):
+    def _plot(self, x, y, xname, yname, cmap=False):
 
         if not cmap: cmap = self.cmap
 
-        self.x,self.y = x,y
+        self.x, self.y = x, y
         
         #Keep only 'good' values
-        x = [x[0][self.filter],x[1][self.filter]]
-        y = [y[0][self.filter],y[1][self.filter]]
+        x = [x[0][self.filter], x[1][self.filter]]
+        y = [y[0][self.filter], y[1][self.filter]]
         filt = N.isfinite(x[0])*N.isfinite(y[0])
         if xname in self.metrics and yname in self.metrics:
             filt *= ((x[0]/x[1])>self.StN)*((y[0]/y[1])>self.StN)
@@ -451,15 +452,15 @@ class InterView:
         else:
             pass
             
-        x,y = [x[0][filt],x[1][filt]],[y[0][filt],y[1][filt]]
+        x, y = [x[0][filt], x[1][filt]], [y[0][filt], y[1][filt]]
 
         #Compute correlation coefficient
-        correlation,corred,correp = Corr(x[0],y[0],error=True)
+        correlation, corred, correp = Corr(x[0], y[0], error=True)
     
         # Simple linear fit
         if self.linfit:
             print 'Linear fit done without error taken into acount'
-            self.pol = N.polyfit(x[0],y[0],1)                
+            self.pol = N.polyfit(x[0], y[0], 1)                
 
         #If it's True, there will be no plot.
         #Only correlation and fit parameters will be saved.
@@ -467,11 +468,11 @@ class InterView:
             return 
 
         fig = P.figure(dpi=150)
-        ax = fig.add_axes([0.10,0.08,0.87,0.84])
+        ax = fig.add_axes([0.10, 0.08, 0.87, 0.84])
 
         #Plot the linear fit
         if self.linfit:
-            ax.plot(x[0], N.polyval(self.pol,x[0]),'r')
+            ax.plot(x[0], N.polyval(self.pol, x[0]), 'r')
 
         #Make the colorbar if the option is True
         if self.colorbar:
@@ -483,7 +484,7 @@ class InterView:
             col = cmap(norm)
 
             #Plot colored points and error bar
-            for i,c in enumerate(col):
+            for i, c in enumerate(col):
                 if (self.listSNe)[self.filter][i] not in self.peculiar:
                     #For a non peculiar SN
                     ax.errorbar(x[0][i], y[0][i], xerr=x[1][i], yerr=y[1][i],
@@ -527,18 +528,18 @@ class InterView:
                         self.y[0][~self.filter][filt2],
                         xerr=self.x[1][~self.filter][filt2],
                         yerr=self.y[1][~self.filter][filt2],
-                        linestyle='None', capsize=0,ecolor='k',
+                        linestyle='None', capsize=0, ecolor='k',
                         marker='s', mfc='k', mec='k')
             #Plot the name of each cuted SN
             if self.text_sne:
-                for xx,yy,sn in zip(self.x[0][~self.filter][filt2],
+                for xx, yy, sn in zip(self.x[0][~self.filter][filt2],
                                     self.y[0][~self.filter][filt2],
                                     (self.listSNe)[~self.filter][filt2]):
-                    print sn,xx,yy
+                    print sn, xx, yy
                     if sn[:3] == 'SNF':
-                        ax.text(xx,yy,' %s'%sn[5:], rotation=45,size='x-small')
+                        ax.text(xx, yy, ' %s'%sn[5:], rotation=45, size='x-small')
                     else:
-                        ax.text(xx,yy,' %s'%sn[4:], rotation=45,size='x-small')
+                        ax.text(xx, yy, ' %s'%sn[4:], rotation=45, size='x-small')
 
             filt3 = N.isfinite(self.x[0])*N.isfinite(self.y[0])
             scat = ax.scatter(self.x[0][filt3], self.y[0][filt3], c='k',
@@ -559,10 +560,10 @@ class InterView:
         ax.set_xlabel('%s' %xname  )
         ax.set_ylabel('%s' %yname )
         ax.set_title(r'%s vs %s (%i objects)' % \
-                     (xname,yname,len(N.array(x[0]))))
+                     (xname, yname, len(N.array(x[0]))))
         ax.annotate(r'$\rho=%.2f^{+%.2f}_{-%.2f}$' % \
-                    (correlation,correp,corred),
-                    xy=(0.01, 0.99), xycoords='axes fraction',
+                    (correlation, correp, corred),
+                    xy=(0.01,  0.99), xycoords='axes fraction',
                     xytext=(0.01, 0.99), textcoords='axes fraction',
                     horizontalalignment='left',
                     verticalalignment='top', fontsize=12)
@@ -575,12 +576,12 @@ class InterView:
 
         #Plot the name of each SN
         if self.text_sne:
-            for xx,yy,sn in zip(x[0],y[0],(self.listSNe)[self.filter][filt]):
-                print sn,xx,yy
+            for xx, yy, sn in zip(x[0], y[0], (self.listSNe)[self.filter][filt]):
+                print sn, xx, yy
                 if sn[:3] == 'SNF':
-                    ax.text(xx,yy,' %s'%sn[5:], rotation=45,size='x-small')
+                    ax.text(xx, yy, ' %s'%sn[5:],  rotation=45, size='x-small')
                 else:
-                    ax.text(xx,yy,' %s'%sn[4:], rotation=45,size='x-small')
+                    ax.text(xx, yy, ' %s'%sn[4:], rotation=45, size='x-small')
 
         #Plot some lines
         if xname == '$\Delta \mu_B$':
@@ -602,24 +603,24 @@ class InterView:
                 fig.savefig(xname+'_vs_'+yname+'.'+out)
             fig.close()
 
-    def sort_by(self,key):
+    def sort_by(self, key):
 
         """
         Print the list of SN sorted by the given value.
         Input: Name of the value (x1 or color for instance)
         """
-        print len(self.listSNe),len(self.params['color'][0])
-        for i,sn in enumerate(self.listSNe):
-            print sn,self.params['color'][0][i]
-        listSNe,values = [],[]
+        print len(self.listSNe), len(self.params['color'][0])
+        for i, sn in enumerate(self.listSNe):
+            print sn, self.params['color'][0][i]
+        listSNe, values = [], []
         if key in self.params.keys():
             order = N.argsort(self.params[key][0])
-            for SN,value in zip(self.listSNe[order],self.params[key][0][order]):
+            for SN, value in zip(self.listSNe[order], self.params[key][0][order]):
                 listSNe.append(SN)
                 values.append(value)
         elif key in self.metrics.keys():
             order = N.argsort(self.metrics[key])
-            for SN,value in zip(self.listSNe[order],self.metrics[key][order]):
+            for SN, value in zip(self.listSNe[order], self.metrics[key][order]):
                 listSNe.append(SN)
                 values.append(value)
         else:
@@ -627,9 +628,9 @@ class InterView:
             print self.params.keys()
             print self.metrics.keys()
 
-        return map(N.array,[listSNe,values])
+        return map(N.array, [listSNe, values])
 
-    def multiplots(self, list_keys=[], list_keys2=False, space=0.04, left=0.08,
+    def multiplots(self,  list_keys=[], list_keys2=False, space=0.04, left=0.08,
                    right=0.97, bottom=0.05, top=0.95, errorbar=True,
                    colorlegend=False, histtype= 'step',
                    coords=[0.35,0.1,0.6,0.8], title='',
@@ -638,7 +639,7 @@ class InterView:
 
         """
         space: space between each axe
-        left,right,bottom,top: space between axes and the edges of the
+        left, right, bottom, top: space between axes and the edges of the
         figure (% of axis)
         cut: every values not in this range will be cut
         """
@@ -647,10 +648,10 @@ class InterView:
         if not list_keys2:
             list_keys2 = list_keys
 
-        nvar,nvar2 = len(list_keys),len(list_keys2)
-        size = (N.sqrt(len(list_keys2))*4,N.sqrt(len(list_keys))*4)
+        nvar, nvar2 = len(list_keys), len(list_keys2)
+        size = (N.sqrt(len(list_keys2))*4, N.sqrt(len(list_keys))*4)
         
-        fig = P.figure(figsize=size,dpi=dpi)
+        fig = P.figure(figsize=size, dpi=dpi)
         #fig = P.figure(dpi=dpi)
         fig.subplots_adjust(hspace=space, wspace=space, right=0.85, left=0.09)
         
@@ -665,23 +666,23 @@ class InterView:
             else:
                 raise 'Colorlegend not in the list of parameters'
             
-        for i,key1 in enumerate(list_keys):
+        for i, key1 in enumerate(list_keys):
                 
             if key1 in self.metrics:
-                x = [self.metrics[key1],self.metrics[key1+'.err']]
+                x = [self.metrics[key1], self.metrics[key1+'.err']]
             elif key1 in self.params:
-                x = [self.params[key1][0],self.params[key1][1]]
+                x = [self.params[key1][0], self.params[key1][1]]
             filter1 = N.isfinite(x[0])
             if key1 in self.metrics:
                 filter1 *= (x[0]/x[1])>=StN
 
-            for j,key2 in enumerate(list_keys2):
+            for j, key2 in enumerate(list_keys2):
                 k = i*nvar2 + j + 1
 
                 if key2 in self.metrics:
-                    y = [self.metrics[key2],self.metrics[key2+'.err']]
+                    y = [self.metrics[key2], self.metrics[key2+'.err']]
                 elif key2 in self.params:
-                    y = [self.params[key2][0],self.params[key2][1]]
+                    y = [self.params[key2][0], self.params[key2][1]]
             
                 filter2 = N.isfinite(y[0])
                 if key2 in self.metrics:
@@ -689,13 +690,13 @@ class InterView:
                 filter = filter1*filter2
 
                 if list_keys2 != list_keys:
-                    ax = fig.add_subplot(nvar,nvar2,k)
+                    ax = fig.add_subplot(nvar, nvar2, k)
                 elif i==j:
-                    ax = fig.add_subplot(nvar,nvar,k)
+                    ax = fig.add_subplot(nvar, nvar, k)
                     ax.hist(y[0][filter],
                             bins=N.sqrt(len(x[0][filter])),
                             fc='k', ec='k', histtype=histtype)
-                    mask=N.array([True]*len(y[0][filter]),dtype='bool')
+                    mask=N.array([True]*len(y[0][filter]), dtype='bool')
                     xmean=y[0][filter][mask].mean()/10
 
                     ax.set_xlim(xmin=y[0][filter][mask].min() - xmean,
@@ -704,12 +705,12 @@ class InterView:
                     P.setp(ax.get_xticklabels()+ax.get_yticklabels(),
                                fontsize=6)
                     if len(list_keys)>5:
-                        self._set_labels(fig,ax,str(j),str(i))
+                        self._set_labels(fig, ax, str(j), str(i))
                     else:
-                        self._set_labels(fig,ax,list_keys2[j],list_keys[i])
+                        self._set_labels(fig, ax, list_keys2[j], list_keys[i])
                     continue
                 elif j<i:
-                    ax = fig.add_subplot(nvar,nvar2,k)
+                    ax = fig.add_subplot(nvar, nvar2, k)
                     pass 
                 else:
                     continue
@@ -727,7 +728,7 @@ class InterView:
                     col=cmap(norm)
                     
                     #Plot colored points and error bar
-                    for l,c in enumerate(col):
+                    for l, c in enumerate(col):
                         ax.errorbar(y[0][filter][mask][l],
                                     x[0][filter][mask][l],
                                     xerr=y[1][filter][mask][l],
@@ -747,16 +748,16 @@ class InterView:
                           (x[0][filter]>=cut[0]) & \
                           (x[0][filter]<=cut[1])
                     if corrcol:
-                        correlation,corred,correp = Corr(y[0][filter][mask],
-                                                         x[0][filter][mask],
-                                                         error=True)
+                        correlation, corred, correp = Corr(y[0][filter][mask],
+                                                           x[0][filter][mask],
+                                                           error=True)
                         col = cmap(N.abs(correlation))
                         color.append(N.abs(correlation))
-                        print list_keys2[j],list_keys[i],'%.2f + %.2f - %.2f'%\
-                              (correlation,correp,corred)
+                        print list_keys2[j], list_keys[i], '%.2f + %.2f - %.2f'%\
+                              (correlation, correp, corred)
                     else:
                         col='k'
-                    ax.plot(y[0][filter][mask],x[0][filter][mask],'.',color=col)
+                    ax.plot(y[0][filter][mask], x[0][filter][mask], '.', color=col)
                     if errorbar:
                         ax.errorbar(y[0][filter][mask],
                                     x[0][filter][mask],
@@ -765,9 +766,9 @@ class InterView:
                                     linestyle='None', capsize=0, ecolor=col,
                                     mfc=col, mec=col)
                 if corr or corrcol:
-                    correlation,corred,correp = Corr(y[0][filter][mask],
-                                                     x[0][filter][mask],
-                                                     error=True)
+                    correlation, corred, correp = Corr(y[0][filter][mask],
+                                                       x[0][filter][mask],
+                                                       error=True)
                     ax.annotate(r'$%.2f\pm %.2f$' % \
                                 (correlation, N.mean(corred, correp)),
                                 xy=(0.01, 0.99),
@@ -783,16 +784,16 @@ class InterView:
                 ymin = x[0][filter][mask].min()-ymean
                 ymax = x[0][filter][mask].max()+ymean
                 if list_keys != list_keys:
-                    ax.set_xlim(xmin=xmin,xmax=xmax)
-                ax.set_ylim(ymin=ymin,ymax=ymax)
+                    ax.set_xlim(xmin=xmin, xmax=xmax)
+                ax.set_ylim(ymin=ymin, ymax=ymax)
                             
                 P.setp(ax.get_xticklabels() + ax.get_yticklabels(),
                            fontsize=6)
 
                 if len(list_keys)>5:
-                    self._set_labels(fig,ax,str(j),str(i))
+                    self._set_labels(fig, ax, str(j), str(i))
                 else:
-                    self._set_labels(fig,ax,list_keys2[j],list_keys[i])
+                    self._set_labels(fig, ax, list_keys2[j], list_keys[i])
 
                         
         if colorlegend:                

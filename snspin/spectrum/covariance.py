@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#/bin/env python
 
 """
 Spectral covariance matrix (variance and correlation) study
 """
 
+from glob import glob
 import pylab as P
 import numpy as N
 import scipy as S
@@ -19,10 +20,10 @@ from . import io
 class SPCS:
 
     """
-    SpecVarCorrStudy
+    SpecVarCorrStudy.
     """
 
-    def __init__(self,x, y, v, specid='', obj='',
+    def __init__(self, x, y, v, specid='', obj='',
                  verbose=False, rhoB=0.32, rhoR=0.40, factor=0.69):
         """."""
         #Set the data
@@ -30,7 +31,7 @@ class SPCS:
         self.y = y
         self.v = v * factor
         self.factor_used = factor
-        if S.mean(x)<5150:
+        if S.mean(x) < 5150:
             self.rho = rhoB
             self.rho_used = 'rhoB'
         else:
@@ -42,7 +43,7 @@ class SPCS:
         self.object = obj
         self.verbose = verbose
         if verbose:
-            print 'Working on ',self.specid,', from',self.object
+            print 'Working on ', self.specid, ', from', self.object
             print '%i bins from %.2f to %.2f A' \
                   % (len(self.x), self.x[0], self.x[-1])
 
@@ -81,21 +82,21 @@ class SPCS:
         self.pull = comp_pull(self.y, self.ysmooth, self.v)
         self.pull_mean = S.mean(self.pull)
         self.pull_std = S.std(self.pull)
-        #self.rho = autocorr(self.pull,k=1,full=False)
+        #self.rho = autocorr(self.pull, k=1, full=False)
         self.residuals = self.y - self.ysmooth
 
         if self.verbose:
-            print 'Smoothing function used:',self.smoothing
-            if self.smoothing == 'sg': print 'w = ',self.w
-            if self.smoothing == 'sp': print 's = ',self.s
-            print 'Chi2 = ',self.chi2
-            print 'Mean(pull) = ',self.pull_mean
-            print 'Std(pull) = ',self.pull_std
-            print 'Corr = ',self.rho
+            print 'Smoothing function used:', self.smoothing
+            if self.smoothing == 'sg': print 'w = ', self.w
+            if self.smoothing == 'sp': print 's = ', self.s
+            print 'Chi2 = ', self.chi2
+            print 'Mean(pull) = ', self.pull_mean
+            print 'Std(pull) = ', self.pull_std
+            print 'Corr = ', self.rho
 
         if self.verbose:
-            print "Factor used: ",self.factor
-            print "Correlation coefficient:",self.rho
+            print "Factor used: ", self.factor
+            print "Correlation coefficient:", self.rho
 
     def make_simu(self, nsimu=1000):
         """
@@ -130,12 +131,12 @@ class SPCS:
             self.simus.append(si)
 
         if self.verbose:
-            print "\nSmoothing used:",self.smoothing
-            if self.smoothing == 'sg': print 'w = ',self.w
-            if self.smoothing == 'sp': print 's = ',self.s
-            print "Factor used: ",factor
-            print "Correlation coefficient:",self.rho
-            print nsimu,"simulated spectra have been created"
+            print "\nSmoothing used:", self.smoothing
+            if self.smoothing == 'sg': print 'w = ', self.w
+            if self.smoothing == 'sp': print 's = ', self.s
+            print "Factor used: ", factor
+            print "Correlation coefficient:", self.rho
+            print nsimu, "simulated spectra have been created"
             print "             Real spectrum   Simulations"
             print "Mean pull        %.3f         %.3f" \
                   % (self.pull_mean, S.mean([s.pull_mean for s in self.simus]))
@@ -149,12 +150,12 @@ class SPCS:
     def do_plots(self, all=False, lim=2):
         """."""
         plot_spec(self.x, self.y, self.v, self.ysmooth,
-                  title=self.object+','+self.specid)
-        plot_pull(self.x, self.pull, title=self.object+','+self.specid)
+                  title=self.object+', '+self.specid)
+        plot_pull(self.x, self.pull, title=self.object+', '+self.specid)
         if hasattr(self, 'simus'):
             self.plot_simu_distri()
             if all:
-                for i,s in enumerate(self.simus):
+                for i, s in enumerate(self.simus):
                     if i < lim:
                         s.do_plots()
                     else:
@@ -171,11 +172,11 @@ class SPCS:
         pstd = S.concatenate([[s.pull_std for s in self.simus],
                               [self.pull_std]])
 
-        data = [chi2,corr,pmean,pstd]
-        names= ['chi2','corr','pmean','pstd']
+        data = [chi2, corr, pmean, pstd]
+        names= ['chi2', 'corr', 'pmean', 'pstd']
 
         #make the figure
-        for d,n in zip(data,names):
+        for d, n in zip(data, names):
             P.figure()
             P.hist(d[:-1], bins=S.sqrt(len(d[:-1]))*2, color='b', alpha=0.5)
             P.axvline(d[-1], color='k')
@@ -200,9 +201,9 @@ class SPCS_test:
         self.object = obj
         self.verbose = verbose
         if verbose:
-            print 'Working on ',self.specid,', from',self.object
+            print 'Working on ', self.specid, ', from', self.object
             print '%i bins from %.2f to %.2f A' \
-                  % (len(self.x),self.x[0],self.x[-1])
+                  % (len(self.x), self.x[0], self.x[-1])
         
     def smooth(self, smoothing='sp', s=None, w=15,
                findp=False, rho=0, factor=1):
@@ -525,7 +526,7 @@ def plot_smoothed_spec(f, num=5):
 def plot_obj(ob, num=5):
     """."""        
     fig = P.figure(figsize=(8,18), dpi=150)
-    ax = fig.add_axes([0.08,0.08,0.86,0.87],
+    ax = fig.add_axes([0.08, 0.08, 0.86, 0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Flux')
     ax.plot(ob.x, ob.y, 'k')
     ax.plot(ob.x, ob.ysmooth, 'r', lw=1.5)
@@ -533,18 +534,19 @@ def plot_obj(ob, num=5):
         if i >= num:
             return
         cst = (i+1)*S.mean(ob.y)
-        ax.plot(s.x, s.y-cst, 'k')
-        ax.plot(s.x, s.ysmooth-cst, 'r', lw=1.5)
+        ax.plot(s.x, s.y - cst, 'k')
+        ax.plot(s.x, s.ysmooth - cst, 'r', lw=1.5)
 
 def run_over_dir(dir):
     """."""
-    from glob import  glob
     files = glob(dir+'*.pkl')
     for f in files:
         plot_smoothed_spec(f)
 
 def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
         """
+        Simu.
+
         Make some simulation for which everything will be computing as well
         nsimu is the number af simulations
         if factor is set (1 by default), then self.v*=factor
@@ -564,8 +566,8 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
             sims = S.random.randn(nsimu, nbin)
         else:
             sims = corr_noise(rho, nbin=nbin, nsimu=nsimu)
-        sims*=factor
-
+        sims *= factor
+        
         #Check if rho is the given one
         Rho = N.array([autocorr(N.array(sim), k=1, full=False) for sim in sims])
         if plot:
@@ -575,16 +577,17 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
         else:
             return Rho
 
-def control_case_rho_var(rhos=[0,0.1,0.2,0.3,0.4,0.5], factor=1):
-    col=P.cm.jet(S.linspace(0, 1, len(rhos)))
+def control_case_rho_var(rhos=[0, 0.1, 0.2, 0.3, 0.4, 0.5], factor=1):
+    """."""
+    col = P.cm.jet(S.linspace(0, 1, len(rhos)))
     fig = P.figure(dpi=150)
-    ax = fig.add_axes([0.1,0.08,0.86,0.87], xlabel=r'$\rho$', ylabel='N')
+    ax = fig.add_axes([0.1, 0.08, 0.86, 0.87], xlabel=r'$\rho$', ylabel='N')
     ax.set_title(r'Variation of $\rho$ for a controled case')
-    for i,rho in enumerate(rhos):
-        Rho=control_case(rho=rho, factor=factor)
-        p=ax.hist(Rho, histtype='step', color=col[i],
-                  bins=statistics.hist_nbin(Rho), lw=1.5,
-                  label=r'$\rho=%.2f$'%rho)
+    for i, rho in enumerate(rhos):
+        Rho = control_case(rho=rho, factor=factor)
+        p = ax.hist(Rho, histtype='step', color=col[i],
+                    bins=statistics.hist_nbin(Rho), lw=1.5,
+                    label=r'$\rho=%.2f$'%rho)
         if i == 0: m = p[0].max() + 15
         ax.axvline(rho, color=col[i], ls=':', lw=2)
         ax.annotate('%.2f'%N.mean(Rho), (rho, m),
@@ -600,15 +603,15 @@ def control_case_rho_var(rhos=[0,0.1,0.2,0.3,0.4,0.5], factor=1):
     ax.legend(loc='best').draw_frame(False)
 
 def spec_autocorr(dir='./'):
-    from glob import glob
-    dirs=glob(dir+'data_*/')
-    rho, factor, lbd, sn, params=[], [], [], [], []
+    """."""
+    dirs = glob(dir+'data_*/')
+    rho, factor, lbd, sn, params = [], [], [], [], []
     for d in dirs:
         print d
-        files=glob(d+'*.txt')
+        files = glob(d+'*.txt')
         for f in files:
             try:
-                r, f, l, s, p=N.loadtxt(f, unpack=True)
+                r, f, l, s, p = N.loadtxt(f, unpack=True)
             except:
                 continue
             rho.extend(r)
@@ -620,10 +623,10 @@ def spec_autocorr(dir='./'):
     P.figure()
     P.plot(rho, factor, 'og')
     P.plot(rho, N.array(rho)+0.3, 'k')
-    rho, factor, lbd, sn, params=map(N.array, [rho, factor, lbd, sn, params])
-    sort=N.argsort(lbd)
-    lbd0=lbd[sort][0]
-    r, f, s=[], [], []
+    rho, factor, lbd, sn, params = map(N.array, [rho, factor, lbd, sn, params])
+    sort = N.argsort(lbd)
+    lbd0 = lbd[sort][0]
+    r, f, s = [], [], []
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1,0.08,0.86,0.87], xlabel=r'$\rho$', ylabel='N')
     #ax.set_title(r'Variation of $\rho$ for a controled case')
@@ -633,8 +636,8 @@ def spec_autocorr(dir='./'):
     fig3 = P.figure(dpi=150)
     ax3 = fig3.add_axes([0.1,0.08,0.86,0.87], xlabel=r'$s$', ylabel='N')
     #ax3.set_title(r'Variation of $\rho$ for a controled case')
-    col=P.cm.jet(S.linspace(0,1,9))
-    j=0
+    col = P.cm.jet(S.linspace(0,1,9))
+    j = 0
     for i,lb in enumerate(lbd[sort]):
         if lb==lbd0 and i != len(lbd)-1:
             r.append(float(rho[sort][i]))
@@ -663,17 +666,17 @@ def spec_autocorr(dir='./'):
                                              statistics.nMAD(s)))
             ax4.set_xlim(xmin=0, xmax=0.5)
             ax4.set_ylim(ymin=0.5, ymax=1)
-            lbd0=lb
-            r=[]
+            lbd0 = lb
+            r = []
             r.append(rho[sort][i])
-            f=[]
+            f = []
             try:
                 f.append(float(factor[sort][i]))
             except:
                 f.append(0)
-            s=[]
+            s = []
             s.append(float(params[sort][i]))
-            j+=1
+            j += 1
             
     ax.legend(loc='upper left').draw_frame(False)
     ax2.legend(loc='upper left').draw_frame(False)
