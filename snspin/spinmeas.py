@@ -8,24 +8,24 @@ import matplotlib.pyplot as P
 from spectrum import merge
 
 
-class DrGall:
+class DrGall(object):
 
     """
     Class to manipulate and use the craniometer
     """
 
-    def __init__(self, spec=None, specB=None, specR=None,
+    def __init__(self, spec=None, specB=None, specr=None,
                  spec_merged=None, verbose=True):
         """
         Spectrum initialization.
         Create self.x, self.y, self.v if spec is the merged spectrum
         Create self.xB, self.yB, self.vB for the blue channel if specB is given
-        Create self.xR, self.yR, self.vR for the blue channel if specR is given
+        Create self.xr, self.yr, self.vr for the blue channel if specr is given
         """
         self.values_initialization()
 
-        self.xB = None
-        self.xR = None
+        self.xb = None
+        self.xr = None
         self.x_merged = None
 
         if spec is not None:
@@ -33,47 +33,47 @@ class DrGall:
                 self.x = N.array(spec.x)
                 self.y = N.array(spec.y)
                 self.v = N.array(spec.v)
-                self.xB = N.array(spec.x)
-                self.yB = N.array(spec.y)
-                self.vB = N.array(spec.v)
-                self.xR = N.array(spec.x)
-                self.yR = N.array(spec.y)
-                self.vR = N.array(spec.v)
+                self.xb = N.array(spec.x)
+                self.yb = N.array(spec.y)
+                self.vb = N.array(spec.v)
+                self.xr = N.array(spec.x)
+                self.yr = N.array(spec.y)
+                self.vr = N.array(spec.v)
                 self.x_merged = N.array(spec.x)
                 self.y_merged = N.array(spec.y)
                 self.v_merged = N.array(spec.v)
             elif spec.x[0] < 4000 and spec.x[-1] < 6500:
-                self.xB = N.array(spec.x)
-                self.yB = N.array(spec.y)
-                self.vB = N.array(spec.v)
+                self.xb = N.array(spec.x)
+                self.yb = N.array(spec.y)
+                self.vb = N.array(spec.v)
             elif spec.x[0] > 4000 and spec.x[-1] > 6500:
-                self.xR = N.array(spec.x)
-                self.yR = N.array(spec.y)
-                self.vR = N.array(spec.v)
+                self.xr = N.array(spec.x)
+                self.yr = N.array(spec.y)
+                self.vr = N.array(spec.v)
             if verbose:
                 print >> sys.stderr, 'Work on merged spectrum'
 
-        elif specB or specR:
-            if (specB and specB.x[0] > 4000) or (specR and specR.x[0] < 4000):
-                print  >> sys.stderr, 'ERROR, check if B channel is really B '\
-                    'channel and not R channel'
+        elif specb or specr:
+            if (specb and specb.x[0] > 4000) or (specr and specr.x[0] < 4000):
+                print  >> sys.stderr, 'ErrOr, check if B channel is really B '\
+                    'channel and not r channel'
                 return
             try:
-                self.xB = N.array(specB.x)
-                self.yB = N.array(specB.y)
-                self.vB = N.array(specB.v)
+                self.xb = N.array(specb.x)
+                self.yb = N.array(specb.y)
+                self.vb = N.array(specb.v)
             except ValueError:
                 pass
             try:
-                self.xR = N.array(specR.x)
-                self.yR = N.array(specR.y)
-                self.vR = N.array(specR.v)
+                self.xr = N.array(specr.x)
+                self.yr = N.array(specr.y)
+                self.vr = N.array(specr.v)
             except ValueError:
                 pass
 
-            if self.xB is not None and self.xR is not None:
+            if self.xb is not None and self.xr is not None:
                 try:
-                    spec_merged = merge.MergedSpectrum(specB, specR)
+                    spec_merged = merge.MergedSpectrum(specb, specr)
                     self.x_merged = N.array(spec_merged.x)
                     self.y_merged = N.array(spec_merged.y)
                     self.v_merged = N.array(spec_merged.v)
@@ -81,24 +81,24 @@ class DrGall:
                     print >> sys.stderr, 'Merged spectrum failure'
 
             if verbose:
-                if self.xB is not None and self.xR is not None:
-                    print >> sys.stderr, 'Work on B and R channel'
-                elif self.xB is not None and self.xR is None:
+                if self.xb is not None and self.xr is not None:
+                    print >> sys.stderr, 'Work on B and r channel'
+                elif self.xb is not None and self.xr is None:
                     print >> sys.stderr, 'Work only on B channel'
-                elif self.xB is None and self.xR is not None:
-                    print >> sys.stderr, 'Work only on R channel'
-                elif self.xB is None \
-                        and self.xR is None \
+                elif self.xb is None and self.xr is not None:
+                    print >> sys.stderr, 'Work only on r channel'
+                elif self.xb is None \
+                        and self.xr is None \
                         and not hasattr(self, 'x'):
                     print >> sys.stderr, 'Work on merged spectrum'
                 else:
-                    print >> sys.stderr, 'ERROR, no correct input in DrGall. '\
+                    print >> sys.stderr, 'ErrOr, no correct input in DrGall. '\
                         'Give me a spectrum (for instance; spec with '\
                         'spec.x, spec.y and spec.v)'
                     sys.exit()
 
         else:
-            print >> sys.stderr, 'ERROR, no correct input in DrGall. Give me a'\
+            print >> sys.stderr, 'ErrOr, no correct input in DrGall. Give me a'\
                 'spectrum (for instance; spec with spec.x, spec.y and spec.v)'
             sys.exit()
 
@@ -113,493 +113,493 @@ class DrGall:
         cranio.init_only = True
 
         # Create values
-        cranio.RCa(verbose=verbose)
-        cranio.RCaS(verbose=verbose)
-        cranio.RCaS2(verbose=verbose)
-        cranio.RSi(verbose=verbose)
-        cranio.RSiS(verbose=verbose)
-        cranio.RSiSS(verbose=verbose)
-        cranio.EW(3504, 3687, 3887, 3990, 'CaIIHK', verbose=verbose)
-        cranio.EW(3830, 3963, 4034, 4150, 'SiII4000', verbose=verbose)
-        cranio.EW(4034, 4150, 4452, 4573, 'MgII', verbose=verbose)
-        cranio.EW(5085, 5250, 5500, 5681, 'SIIW', verbose=verbose)
-        cranio.EW(5085, 5250, 5250, 5450, 'SIIW_L', verbose=verbose)
-        cranio.EW(5250, 5450, 5500, 5681, 'SIIW_R', verbose=verbose)
-        cranio.EW(5550, 5681, 5850, 6015, 'SiII5972', verbose=verbose)
-        cranio.EW(5850, 6015, 6250, 6365, 'SiII6355', verbose=verbose)
-        cranio.EW(7100, 7270, 7720, 8000, 'OI7773', verbose=verbose)
-        cranio.EW(7720, 8000, 8300, 8800, 'CaIIIR', verbose=verbose)
-        cranio.EW(4400, 4650, 5050, 5300, 'Fe4800', verbose=verbose)
+        cranio.rCa(verbose=verbose)
+        cranio.rCaS(verbose=verbose)
+        cranio.rCaS2(verbose=verbose)
+        cranio.rsi(verbose=verbose)
+        cranio.rsiS(verbose=verbose)
+        cranio.rsiSS(verbose=verbose)
+        cranio.ew(3504, 3687, 3887, 3990, 'CaIIHK', verbose=verbose)
+        cranio.ew(3830, 3963, 4034, 4150, 'siII4000', verbose=verbose)
+        cranio.ew(4034, 4150, 4452, 4573, 'MgII', verbose=verbose)
+        cranio.ew(5085, 5250, 5500, 5681, 'SIIW', verbose=verbose)
+        cranio.ew(5085, 5250, 5250, 5450, 'SIIW_L', verbose=verbose)
+        cranio.ew(5250, 5450, 5500, 5681, 'SIIW_r', verbose=verbose)
+        cranio.ew(5550, 5681, 5850, 6015, 'siII5972', verbose=verbose)
+        cranio.ew(5850, 6015, 6250, 6365, 'siII6355', verbose=verbose)
+        cranio.ew(7100, 7270, 7720, 8000, 'OI7773', verbose=verbose)
+        cranio.ew(7720, 8000, 8300, 8800, 'CaIIIR', verbose=verbose)
+        cranio.ew(4400, 4650, 5050, 5300, 'fe4800', verbose=verbose)
         cranio.velocity({'lmin': 3963,
                          'lmax': 4034,
                          'lrest': 4128,
-                         'name': 'vSiII_4128'},
+                         'name': 'vsiII_4128'},
                         verbose=verbose)
         cranio.velocity({'lmin': 5200,
                          'lmax': 5350,
                          'lrest': 5454,
-                         'name': 'vSiII_5454'},
+                         'name': 'vsiII_5454'},
                         verbose=verbose)
         cranio.velocity({'lmin': 5351,
                          'lmax': 5550,
                          'lrest': 5640,
-                         'name': 'vSiII_5640'},
+                         'name': 'vsiII_5640'},
                         verbose=verbose)
         cranio.velocity({'lmin': 5700,
                          'lmax': 5900,
                          'lrest': 5972,
-                         'name': 'vSiII_5972'},
+                         'name': 'vsiII_5972'},
                         verbose=verbose)
         cranio.velocity({'lmin': 6000,
                          'lmax': 6210,
                          'lrest': 6355,
-                         'name': 'vSiII_6355'},
+                         'name': 'vsiII_6355'},
                         verbose=verbose)
 
         # Update values
-        Values.update(cranio.RCavalues)
-        Values.update(cranio.RCaSvalues)
-        Values.update(cranio.RCaS2values)
-        Values.update(cranio.RSivalues)
-        Values.update(cranio.RSiSvalues)
-        Values.update(cranio.RSiSSvalues)
+        Values.update(cranio.rCavalues)
+        Values.update(cranio.rCaSvalues)
+        Values.update(cranio.rCaS2values)
+        Values.update(cranio.rsivalues)
+        Values.update(cranio.rsiSvalues)
+        Values.update(cranio.rsiSSvalues)
         Values.update(cranio.velocityValues)
-        Values.update(cranio.EWvalues)
+        Values.update(cranio.ewvalues)
 
         self.Values = Values
 
-    def calcium_computing(self, factor=1.05, rhoB=0.479, nsimu=1000,
-                          smoother="sgfilter", sBCa=None, sBSi=None,
-                          sBMg=None, wBCa=None, wBSi=None, wBMg=None,
+    def calcium_computing(self, factor=1.05, rhob=0.479, nsimu=1000,
+                          smoother="sgfilter", sbCa=None, sbsi=None,
+                          sbMg=None, wbCa=None, wbsi=None, wbMg=None,
                           verbose=False):
         """
         Function to compute and return all spectral indicators in the calcium
         zone (Blue part of the spectrum, B channel)
         """
         # Test if computing is possible
-        if self.xB is None:
-            print >> sys.stderr, 'ERROR, impossible to compute spectral '\
+        if self.xb is None:
+            print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
                 'indictors defined in calcium zone (maybe no B channel)'
             indicators = {'EDCa': [N.nan, N.nan],
-                          'RCa': [N.nan, N.nan],
-                          'RCaS': [N.nan, N.nan],
-                          'RCaS2': [N.nan, N.nan],
-                          'EWCaIIHK': [N.nan, N.nan],
-                          'EWSiII4000': [N.nan, N.nan],
-                          'EWMgII': [N.nan, N.nan]}
+                          'rCa': [N.nan, N.nan],
+                          'rCaS': [N.nan, N.nan],
+                          'rCaS2': [N.nan, N.nan],
+                          'ewCaIIHK': [N.nan, N.nan],
+                          'ewsiII4000': [N.nan, N.nan],
+                          'ewMgII': [N.nan, N.nan]}
             return indicators
 
         # Create zone and craniometers
-        Cazone = (self.xB > 3450) & (self.xB < 4070)
-        Sizone = (self.xB > 3850) & (self.xB < 4150)
-        Mgzone = (self.xB > 4000) & (self.xB < 4610)
+        cazone = (self.xb > 3450) & (self.xb < 4070)
+        sizone = (self.xb > 3850) & (self.xb < 4150)
+        Mgzone = (self.xb > 4000) & (self.xb < 4610)
 
-        self.cranio_BCa = get_cranio(self.xB[Cazone],
-                                     self.yB[Cazone],
-                                     self.vB[Cazone],
+        self.cranio_bca = get_cranio(self.xb[cazone],
+                                     self.yb[cazone],
+                                     self.vb[cazone],
                                      smoother=smoother,
                                      verbose=verbose)
-        self.cranio_BSi = get_cranio(self.xB[Sizone],
-                                     self.yB[Sizone],
-                                     self.vB[Sizone],
+        self.cranio_bsi = get_cranio(self.xb[sizone],
+                                     self.yb[sizone],
+                                     self.vb[sizone],
                                      smoother=smoother,
                                      verbose=verbose)
-        self.cranio_BMg = get_cranio(self.xB[Mgzone],
-                                     self.yB[Mgzone],
-                                     self.vB[Mgzone],
+        self.cranio_bMg = get_cranio(self.xb[Mgzone],
+                                     self.yb[Mgzone],
+                                     self.vb[Mgzone],
                                      smoother=smoother,
                                      verbose=verbose)
 
         try:
-            RCa = self.cranio_BCa.RCa(verbose=verbose)
-            self.Values.update(self.cranio_BCa.RCavalues)
+            rca = self.cranio_bca.rca(verbose=verbose)
+            self.Values.update(self.cranio_bca.rcavalues)
             if verbose:
-                print 'RCa computing done, RCa =', RCa
+                print 'rca computing done, rca =', rca
         except ValueError:
-            RCa = [N.nan, N.nan]
+            rca = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in RCa computing, RCa =', RCa
+                print 'ErrOr in rca computing, rca =', rca
 
         try:
-            RCaS = self.cranio_BCa.RCaS(verbose=verbose)
-            self.Values.update(self.cranio_BCa.RCaSvalues)
+            rcaS = self.cranio_bca.rcaS(verbose=verbose)
+            self.Values.update(self.cranio_bca.rcaSvalues)
             if verbose:
-                print 'RCaS computing done, RCaS =', RCaS
+                print 'rcaS computing done, rcaS =', rcaS
         except ValueError:
-            RCaS = [N.nan, N.nan]
+            rcaS = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in RCaS computing, RCaS =', RCaS
+                print 'ErrOr in rcaS computing, rcaS =', rcaS
 
         try:
-            RCaS2 = self.cranio_BCa.RCaS2(verbose=verbose)
-            self.Values.update(self.cranio_BCa.RCaS2values)
+            rcaS2 = self.cranio_bca.rcaS2(verbose=verbose)
+            self.Values.update(self.cranio_bca.rcaS2values)
             if verbose:
-                print 'RCaS2 computing done, RCaS2 =', RCaS2
+                print 'rcaS2 computing done, rcaS2 =', rcaS2
         except ValueError:
-            RCaS2 = [N.nan, N.nan]
+            rcaS2 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in RCaS2 computing, RCaS2 =', RCaS2
+                print 'ErrOr in rcaS2 computing, rcaS2 =', rcaS2
 
         try:
-            EWCaIIHK = self.cranio_BCa.EW(3504, 3687, 3830, 3990,
-                                          'CaIIHK',
+            ewcaIIHK = self.cranio_bca.ew(3504, 3687, 3830, 3990,
+                                          'caIIHK',
                                           sup=True,
                                           right1=True,
                                           verbose=verbose)
-            self.Values.update(self.cranio_BCa.EWvalues)
+            self.Values.update(self.cranio_bca.ewvalues)
             if verbose:
-                print 'EWCaIIHK computing done, EWCaIIHK =', EWCaIIHK
+                print 'ewcaIIHK computing done, ewcaIIHK =', ewcaIIHK
         except ValueError:
-            EWCaIIHK = [N.nan, N.nan]
+            ewcaIIHK = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWCaIIHK computing, EWCaIIHK =', EWCaIIHK
+                print 'ErrOr in ewcaIIHK computing, ewcaIIHK =', ewcaIIHK
 
         try:
-            EWSiII4000 = self.cranio_BSi.EW(3830, 3990, 4030, 4150,
-                                            'SiII4000',
+            ewsiII4000 = self.cranio_bsi.ew(3830, 3990, 4030, 4150,
+                                            'siII4000',
                                             sup=True,
                                             verbose=verbose)
-            self.Values.update(self.cranio_BSi.EWvalues)
+            self.Values.update(self.cranio_bsi.ewvalues)
             if verbose:
-                print 'EWSiII4000 computing done, EWSiII4000 =', EWSiII4000
+                print 'ewsiII4000 computing done, ewsiII4000 =', ewsiII4000
         except ValueError:
-            EWSiII4000 = [N.nan, N.nan]
+            ewsiII4000 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWSiII4000 computing EWSiII4000 =', EWSiII4000
+                print 'ErrOr in ewsiII4000 computing ewsiII4000 =', ewsiII4000
 
         try:
-            EWMgII = self.cranio_BMg.EW(4030, 4150, 4450, 4650,
+            ewMgII = self.cranio_bMg.ew(4030, 4150, 4450, 4650,
                                         'MgII',
                                         sup=True,
                                         left2=True,
                                         verbose=verbose)
-            self.Values.update(self.cranio_BMg.EWvalues)
+            self.Values.update(self.cranio_bMg.ewvalues)
             if verbose:
-                print 'EWMgII computing done, EWMgII = ', EWMgII
+                print 'ewMgII computing done, ewMgII = ', ewMgII
         except ValueError:
-            EWMgII = [N.nan, N.nan]
+            ewMgII = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWMgII computing, EWMgII =', EWMgII
+                print 'ErrOr in ewMgII computing, ewMgII =', ewMgII
 
         try:
-            vSiII_4000 = self.cranio_BSi.velocity({'lmin': 3963,
+            vsiII_4000 = self.cranio_bsi.velocity({'lmin': 3963,
                                                    'lmax': 4034,
                                                    'lrest': 4128,
-                                                   'name': 'vSiII_4128'},
+                                                   'name': 'vsiII_4128'},
                                                   verbose=verbose)
-            self.Values.update(self.cranio_BSi.velocityValues)
+            self.Values.update(self.cranio_bsi.velocityValues)
             if verbose:
-                print 'vSiII_4128 computing done, vSiII_4000 =', vSiII_4000
+                print 'vsiII_4128 computing done, vsiII_4000 =', vsiII_4000
         except ValueError:
-            vSiII_4000 = [N.nan, N.nan]
+            vsiII_4000 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in vSiII_4128 computing, vSiII_4000', vSiII_4000
+                print 'ErrOr in vsiII_4128 computing, vsiII_4000', vsiII_4000
 
         if verbose:
             print >> sys.stderr, 'Computing on calcium zone for this '\
                 'spectrum done\n'
 
-        indicators = {'RCa': RCa,
-                      'RCaS2': RCaS2,
-                      'EWCaIIHK': EWCaIIHK,
-                      'EWSiII4000': EWSiII4000,
-                      'EWMgII': EWMgII,
-                      'vSiII4128': vSiII_4000}
+        indicators = {'rca': rca,
+                      'rcaS2': rcaS2,
+                      'ewcaIIHK': ewcaIIHK,
+                      'ewsiII4000': ewsiII4000,
+                      'ewMgII': ewMgII,
+                      'vsiII4128': vsiII_4000}
 
-        del self.cranio_BCa.simulations
-        del self.cranio_BCa.syst
-        del self.cranio_BSi.simulations
-        del self.cranio_BSi.syst
-        del self.cranio_BMg.simulations
-        del self.cranio_BMg.syst
+        del self.cranio_bca.simulations
+        del self.cranio_bca.syst
+        del self.cranio_bsi.simulations
+        del self.cranio_bsi.syst
+        del self.cranio_bMg.simulations
+        del self.cranio_bMg.syst
 
         return indicators
 
-    def silicon_computing(self, factor=1.23, rhoR=0.484, nsimu=1000,
-                          smoother="sgfilter", sR1=None, sR2=None, sR3=None,
-                          sR4=None, wR1=None, wR2=None, wR3=None, wR4=None,
+    def silicon_computing(self, factor=1.23, rhor=0.484, nsimu=1000,
+                          smoother="sgfilter", sr1=None, sr2=None, sr3=None,
+                          sr4=None, wr1=None, wr2=None, wr3=None, wr4=None,
                           verbose=False):
         """
         Function to compute and retunr all spectral indicators in the silicon
         zone
         """
         # Test if computing is possible
-        if self.xR is None:
-            print >> sys.stderr, 'ERROR, impossible to compute spectral '\
-                'indictors defined in calcium zone (maybe no R channel)'
-            indicators = {'EDCa': [N.nan, N.nan],
-                          'RCa': [N.nan, N.nan],
-                          'RCaS': [N.nan, N.nan],
-                          'RCaS2': [N.nan, N.nan],
-                          'EWCaIIHK': [N.nan, N.nan],
-                          'EWSiII4000': [N.nan, N.nan],
-                          'EWMgII': [N.nan, N.nan],
-                          'vSiII_5972': [N.nan, N.nan],
-                          'vSiII_6355': [N.nan, N.nan]}
+        if self.xr is None:
+            print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
+                'indictors defined in calcium zone (maybe no r channel)'
+            indicators = {'EDca': [N.nan, N.nan],
+                          'rca': [N.nan, N.nan],
+                          'rcaS': [N.nan, N.nan],
+                          'rcaS2': [N.nan, N.nan],
+                          'ewcaIIHK': [N.nan, N.nan],
+                          'ewsiII4000': [N.nan, N.nan],
+                          'ewMgII': [N.nan, N.nan],
+                          'vsiII_5972': [N.nan, N.nan],
+                          'vsiII_6355': [N.nan, N.nan]}
             return indicators
 
         # Create zone and craniometers
-        zone1 = (self.xR > 5500) & (self.xR < 6400)
-        zone2 = (self.xR > 5060) & (self.xR < 5700)
-        zone3 = (self.xR > 5500) & (self.xR < 6050)
-        zone4 = (self.xR > 5800) & (self.xR < 6400)
-        zone5 = (self.xR > 5480) & (self.xR < 6500)
-        self.cranio_R1 = get_cranio(self.xR[zone1],
-                                    self.yR[zone1],
-                                    self.vR[zone1],
+        zone1 = (self.xr > 5500) & (self.xr < 6400)
+        zone2 = (self.xr > 5060) & (self.xr < 5700)
+        zone3 = (self.xr > 5500) & (self.xr < 6050)
+        zone4 = (self.xr > 5800) & (self.xr < 6400)
+        zone5 = (self.xr > 5480) & (self.xr < 6500)
+        self.cranio_r1 = get_cranio(self.xr[zone1],
+                                    self.yr[zone1],
+                                    self.vr[zone1],
                                     smoother=smoother,
-                                    verbose=verbose)  # RSi, RSiS
-        self.cranio_R2 = get_cranio(self.xR[zone2],
-                                    self.yR[zone2],
-                                    self.vR[zone2],
+                                    verbose=verbose)  # rsi, rsiS
+        self.cranio_r2 = get_cranio(self.xr[zone2],
+                                    self.yr[zone2],
+                                    self.vr[zone2],
                                     smoother=smoother,
-                                    verbose=verbose)  # EWSIIW
-        self.cranio_R3 = get_cranio(self.xR[zone3],
-                                    self.yR[zone3],
-                                    self.vR[zone3],
+                                    verbose=verbose)  # ewSIIW
+        self.cranio_r3 = get_cranio(self.xr[zone3],
+                                    self.yr[zone3],
+                                    self.vr[zone3],
                                     smoother=smoother,
-                                    verbose=verbose)  # EWSiII5972
-        self.cranio_R4 = get_cranio(self.xR[zone4],
-                                    self.yR[zone4],
-                                    self.vR[zone4],
+                                    verbose=verbose)  # ewsiII5972
+        self.cranio_r4 = get_cranio(self.xr[zone4],
+                                    self.yr[zone4],
+                                    self.vr[zone4],
                                     smoother=smoother,
-                                    verbose=verbose)  # EWSiII6355
-        self.cranio_R5 = get_cranio(self.xR[zone5],
-                                    self.yR[zone5],
-                                    self.vR[zone5],
+                                    verbose=verbose)  # ewsiII6355
+        self.cranio_r5 = get_cranio(self.xr[zone5],
+                                    self.yr[zone5],
+                                    self.vr[zone5],
                                     smoother=smoother,
-                                    verbose=verbose)  # RSiSS
+                                    verbose=verbose)  # rsiSS
 
         try:
-            RSi = self.cranio_R1.RSi(verbose=verbose)
-            self.Values.update(self.cranio_R1.RSivalues)
+            rsi = self.cranio_r1.rsi(verbose=verbose)
+            self.Values.update(self.cranio_r1.rsivalues)
             if verbose:
-                print 'RSi computing done, RSi =', RSi
+                print 'rsi computing done, rsi =', rsi
         except ValueError:
-            RSi = [N.nan, N.nan]
+            rsi = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in RSi computing, RSi =', RSi
+                print 'ErrOr in rsi computing, rsi =', rsi
 
         try:
-            RSiS = self.cranio_R1.RSiS(verbose=verbose)
-            self.Values.update(self.cranio_R1.RSiSvalues)
+            rsiS = self.cranio_r1.rsiS(verbose=verbose)
+            self.Values.update(self.cranio_r1.rsiSvalues)
             if verbose:
-                print 'RSiS computing done, RSiS =', RSiS
+                print 'rsiS computing done, rsiS =', rsiS
         except ValueError:
-            RSiS = [N.nan, N.nan]
+            rsiS = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in RSiS computing, RSiS =', RSiS
+                print 'ErrOr in rsiS computing, rsiS =', rsiS
 
         try:
-            RSiSS = self.cranio_R5.RSiSS(verbose=verbose)
-            self.Values.update(self.cranio_R5.RSiSSvalues)
+            rsiSS = self.cranio_r5.rsiSS(verbose=verbose)
+            self.Values.update(self.cranio_r5.rsiSSvalues)
             if verbose:
-                print 'RSiSS computing done, RSiSS =', RSiSS
+                print 'rsiSS computing done, rsiSS =', rsiSS
         except ValueError:
-            RSiSS = [N.nan, N.nan]
+            rsiSS = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in RSiSS computing, RSiSS =', RSiSS
+                print 'ErrOr in rsiSS computing, rsiSS =', rsiSS
 
         try:
-            EWSIIW = self.cranio_R2.EW(5050, 5285, 5500, 5681,
+            ewSIIW = self.cranio_r2.ew(5050, 5285, 5500, 5681,
                                        'SIIW',
                                        sup=True,
                                        # right1=True,
                                        verbose=verbose)
             if verbose:
-                print 'EWSIIW computing done, EWSIIW =', EWSIIW
+                print 'ewSIIW computing done, ewSIIW =', ewSIIW
         except ValueError:
-            EWSIIW = [N.nan, N.nan]
+            ewSIIW = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWSIIW computing, EWSIIW =', EWSIIW
+                print 'ErrOr in ewSIIW computing, ewSIIW =', ewSIIW
 
         try:
-            EWSIIW_L = self.cranio_R2.EW(5085, 5250, 5250, 5450,
+            ewSIIW_L = self.cranio_r2.ew(5085, 5250, 5250, 5450,
                                          'SIIW_L',
                                          sup=True,
                                          right1=True,
                                          verbose=verbose)
             if verbose:
-                print 'EWSIIW_L computing done, EWSIIW_L =', EWSIIW_L
+                print 'ewSIIW_L computing done, ewSIIW_L =', ewSIIW_L
         except ValueError:
-            EWSIIW_L = [N.nan, N.nan]
+            ewSIIW_L = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWSIIW_L computing, EWSIIW_L =', EWSIIW_L
+                print 'ErrOr in ewSIIW_L computing, ewSIIW_L =', ewSIIW_L
 
         try:
-            EWSIIW_R = self.cranio_R2.EW(5250, 5450, 5500, 5681,
-                                         'SIIW_R',
+            ewSIIW_r = self.cranio_r2.ew(5250, 5450, 5500, 5681,
+                                         'SIIW_r',
                                          sup=True,
                                          verbose=verbose)
             if verbose:
-                print 'EWSIIW_R computing done, EWSIIW_R =', EWSIIW_R
+                print 'ewSIIW_r computing done, ewSIIW_r =', ewSIIW_r
         except ValueError:
-            EWSIIW_R = [N.nan, N.nan]
+            ewSIIW_r = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWSIIW_R computing, EWSIIW_R =', EWSIIW_R
+                print 'ErrOr in ewSIIW_r computing, ewSIIW_r =', ewSIIW_r
 
         try:
-            self.Values.update(self.cranio_R2.EWvalues)
+            self.Values.update(self.cranio_r2.ewvalues)
         except ValueError:
             pass
 
         try:
-            EWSiII5972 = self.cranio_R3.EW(5550, 5681, 5850, 6015,
-                                           'SiII5972',
+            ewsiII5972 = self.cranio_r3.ew(5550, 5681, 5850, 6015,
+                                           'siII5972',
                                            sup=True,
                                            right2=True,
                                            verbose=verbose)
-            self.Values.update(self.cranio_R3.EWvalues)
+            self.Values.update(self.cranio_r3.ewvalues)
             if verbose:
-                print 'EWSiII5972 computing done, EWSiII5972 =', EWSiII5972
+                print 'ewsiII5972 computing done, ewsiII5972 =', ewsiII5972
         except ValueError:
-            EWSiII5972 = [N.nan, N.nan]
+            ewsiII5972 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWSiII5972 computing, EWSiII5972 =', EWSiII5972
+                print 'ErrOr in ewsiII5972 computing, ewsiII5972 =', ewsiII5972
         try:
-            EWSiII6355 = self.cranio_R4.EW(5850, 6015, 6250, 6365,
-                                           'SiII6355',
+            ewsiII6355 = self.cranio_r4.ew(5850, 6015, 6250, 6365,
+                                           'siII6355',
                                            right1=True,
                                            sup=True,
                                            verbose=verbose)
-            self.Values.update(self.cranio_R4.EWvalues)
+            self.Values.update(self.cranio_r4.ewvalues)
             if verbose:
-                print 'EWSiII6355 computing done, EWSiII6355 =', EWSiII6355
+                print 'ewsiII6355 computing done, ewsiII6355 =', ewsiII6355
         except ValueError:
-            EWSiII6355 = [N.nan, N.nan]
+            ewsiII6355 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWSiII6355 computing, EWSiII6355 =', EWSiII6355
+                print 'ErrOr in ewsiII6355 computing, ewsiII6355 =', ewsiII6355
 
         try:
-            vSiII_5454 = self.cranio_R2.velocity({'lmin': 5200,
+            vsiII_5454 = self.cranio_r2.velocity({'lmin': 5200,
                                                   'lmax': 5350,
                                                   'lrest': 5454,
-                                                  'name': 'vSiII_5454'},
+                                                  'name': 'vsiII_5454'},
                                                  verbose=verbose)
-            self.Values.update(self.cranio_R2.velocityValues)
+            self.Values.update(self.cranio_r2.velocityValues)
             if verbose:
-                print 'vSiII_5454 computing done, vSiII_5454 =', vSiII_5454
+                print 'vsiII_5454 computing done, vsiII_5454 =', vsiII_5454
         except ValueError:
-            vSiII_5454 = [N.nan, N.nan]
+            vsiII_5454 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in vSiII_5454 computing, vSiII_5454 =', vSiII_5454
+                print 'ErrOr in vsiII_5454 computing, vsiII_5454 =', vsiII_5454
 
         try:
-            vSiII_5640 = self.cranio_R2.velocity({'lmin': 5351,
+            vsiII_5640 = self.cranio_r2.velocity({'lmin': 5351,
                                                   'lmax': 5550,
                                                   'lrest': 5640,
-                                                  'name': 'vSiII_5640'},
+                                                  'name': 'vsiII_5640'},
                                                  verbose=verbose)
-            self.Values.update(self.cranio_R2.velocityValues)
+            self.Values.update(self.cranio_r2.velocityValues)
             if verbose:
-                print 'vSiII_5640 computing done, vSiII_5640 =', vSiII_5640
+                print 'vsiII_5640 computing done, vsiII_5640 =', vsiII_5640
         except ValueError:
-            vSiII_5640 = [N.nan, N.nan]
+            vsiII_5640 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in vSiII_5640 computing, vSiII_5640 =', vSiII_5640
+                print 'ErrOr in vsiII_5640 computing, vsiII_5640 =', vsiII_5640
 
         try:
-            vSiII_5972 = self.cranio_R3.velocity({'lmin': 5700,
+            vsiII_5972 = self.cranio_r3.velocity({'lmin': 5700,
                                                   'lmax': 5875,
                                                   'lrest': 5972,
-                                                  'name': 'vSiII_5972'},
+                                                  'name': 'vsiII_5972'},
                                                  verbose=verbose)
-            self.Values.update(self.cranio_R3.velocityValues)
+            self.Values.update(self.cranio_r3.velocityValues)
             if verbose:
-                print 'vSiII_5972 computing done, vSiII_5972 =', vSiII_5972
+                print 'vsiII_5972 computing done, vsiII_5972 =', vsiII_5972
         except ValueError:
-            vSiII_5972 = [N.nan, N.nan]
+            vsiII_5972 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in vSiII_5972 computing, vSiII_5972 =', vSiII_5972
+                print 'ErrOr in vsiII_5972 computing, vsiII_5972 =', vsiII_5972
 
         try:
-            vSiII_6355 = self.cranio_R4.velocity({'lmin': 6000,
+            vsiII_6355 = self.cranio_r4.velocity({'lmin': 6000,
                                                   'lmax': 6210,
                                                   'lrest': 6355,
-                                                  'name': 'vSiII_6355'},
+                                                  'name': 'vsiII_6355'},
                                                  verbose=verbose)
-            # vSiII_6355 = self.cranio_R4.velocity2({'lmin':5850, 'lmax':6015,
-            # 'lrest':6355, 'name':'vSiII_6355'}, verbose=verbose)
-            self.Values.update(self.cranio_R4.velocityValues)
+            # vsiII_6355 = self.cranio_r4.velocity2({'lmin':5850, 'lmax':6015,
+            # 'lrest':6355, 'name':'vsiII_6355'}, verbose=verbose)
+            self.Values.update(self.cranio_r4.velocityValues)
             if verbose:
-                print 'vSiII_6355 computing done, vSiII_6355 =', vSiII_6355
+                print 'vsiII_6355 computing done, vsiII_6355 =', vsiII_6355
         except ValueError:
-            vSiII_6355 = [N.nan, N.nan]
+            vsiII_6355 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in vSiII_6355 computing, vSiII_6355 =', vSiII_6355
+                print 'ErrOr in vsiII_6355 computing, vsiII_6355 =', vsiII_6355
 
         if verbose:
             print >> sys.stderr, 'Computing on silicon zone for this spectrum done'
             print ''.center(100, '=')
 
-        indicators = {'RSi': RSi,
-                      'RSiS': RSiS,
-                      'RSiSS': RSiSS,
-                      'EWSIIW': EWSIIW,
-                      'EWSiII5972': EWSiII5972,
-                      'EWSiII6355': EWSiII6355,
-                      'vSiII_5972': vSiII_5972,
-                      'vSiII_6355': vSiII_6355}
+        indicators = {'rsi': rsi,
+                      'rsiS': rsiS,
+                      'rsiSS': rsiSS,
+                      'ewSIIW': ewSIIW,
+                      'ewsiII5972': ewsiII5972,
+                      'ewsiII6355': ewsiII6355,
+                      'vsiII_5972': vsiII_5972,
+                      'vsiII_6355': vsiII_6355}
 
-        del self.cranio_R1.simulations
-        del self.cranio_R2.simulations
-        del self.cranio_R3.simulations
-        del self.cranio_R4.simulations
-        del self.cranio_R1.syst
-        del self.cranio_R2.syst
-        del self.cranio_R3.syst
-        del self.cranio_R4.syst
+        del self.cranio_r1.simulations
+        del self.cranio_r2.simulations
+        del self.cranio_r3.simulations
+        del self.cranio_r4.simulations
+        del self.cranio_r1.syst
+        del self.cranio_r2.syst
+        del self.cranio_r3.syst
+        del self.cranio_r4.syst
 
         return indicators
 
-    def oxygen_computing(self, factor=1.23, rhoR=0.484, nsimu=1000,
+    def oxygen_computing(self, factor=1.23, rhor=0.484, nsimu=1000,
                          w=None, s=None, smoother="sgfilter", verbose=True):
         """
         Function to compute and return spectral indicators in the end of
         the spectrum
         """
         # Test if the computation will be possible
-        if self.xR is None:
-            print >> sys.stderr, 'ERROR, impossible to compute spectral '\
-                'indictors defined in oxygen zone (maybe no R channel)'
-            indicators = {'EWOI7773': [N.nan, N.nan],
-                          'EWCaIIIR': [N.nan, N.nan]}
+        if self.xr is None:
+            print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
+                'indictors defined in oxygen zone (maybe no r channel)'
+            indicators = {'ewOI7773': [N.nan, N.nan],
+                          'ewcaIIIR': [N.nan, N.nan]}
             return indicators
 
         # Create zone and craniometers
-        zone = (self.xR > 6500) & (self.xR < 8800)
-        self.cranio_O = get_cranio(self.xR[zone],
-                                   self.yR[zone],
-                                   self.vR[zone],
+        zone = (self.xr > 6500) & (self.xr < 8800)
+        self.cranio_O = get_cranio(self.xr[zone],
+                                   self.yr[zone],
+                                   self.vr[zone],
                                    smoother=smoother,
-                                   verbose=verbose)  # EWOI7773 and CaIIIR
+                                   verbose=verbose)  # ewOI7773 and caIIIR
 
         try:
-            EWOI7773 = self.cranio_O.EW(7100, 7270, 7720, 8000,
+            ewOI7773 = self.cranio_O.ew(7100, 7270, 7720, 8000,
                                         'OI7773',
                                         sup=True,
                                         verbose=verbose)
             if verbose:
-                print 'EWOI7773 computing done, EWOI7773 =', EWOI7773
+                print 'ewOI7773 computing done, ewOI7773 =', ewOI7773
         except ValueError:
-            EWOI7773 = [N.nan, N.nan]
+            ewOI7773 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWOI7773 computing, EWOI7773 =', EWOI7773
+                print 'ErrOr in ewOI7773 computing, ewOI7773 =', ewOI7773
 
         try:
-            EWCaIIIR = self.cranio_O.EW(7720, 8000, 8300, 8800,
-                                        'CaIIIR',
+            ewcaIIIR = self.cranio_O.ew(7720, 8000, 8300, 8800,
+                                        'caIIIR',
                                         sup=True,
                                         verbose=verbose)
             if verbose:
-                print 'EWCaIIIR computing done, EWCaIIIR =', EWCaIIIR
+                print 'ewcaIIIR computing done, ewcaIIIR =', ewcaIIIR
         except ValueError:
-            EWCaIIIR = [N.nan, N.nan]
+            ewcaIIIR = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWCaIIIR computing, EWCaIIIR =', EWCaIIIR
+                print 'ErrOr in ewcaIIIR computing, ewcaIIIR =', ewcaIIIR
 
         try:
-            self.Values.update(self.cranio_O.EWvalues)
+            self.Values.update(self.cranio_O.ewvalues)
         except ValueError:
             pass
 
@@ -608,15 +608,15 @@ class DrGall:
                 'spectrum done'
             print ''.center(100, '=')
 
-        indicators = {'EWOI7773': EWOI7773,
-                      'EWCaIIIR': EWCaIIIR}
+        indicators = {'ewOI7773': ewOI7773,
+                      'ewcaIIIR': ewcaIIIR}
 
         del self.cranio_O.simulations
         del self.cranio_O.syst
 
         return indicators
 
-    def iron_computing(self, factor=1.23, rhoR=0.484, nsimu=1000,
+    def iron_computing(self, factor=1.23, rhor=0.484, nsimu=1000,
                        smoother="sgfilter", w=None, s=None, verbose=True):
         """
         Function to compute and return spectral indicators on the middle of
@@ -624,9 +624,9 @@ class DrGall:
         """
         # Test if the computation will be possible
         if self.x_merged is None:
-            print >> sys.stderr, 'ERROR, impossible to compute spectral '\
-                'indictors defined in iron zone (maybe no R or B channel)'
-            indicators = {'EWFe4800': [N.nan, N.nan]}
+            print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
+                'indictors defined in iron zone (maybe no r or b channel)'
+            indicators = {'ewfe4800': [N.nan, N.nan]}
             return indicators
 
         # Create zone and craniometers
@@ -635,23 +635,23 @@ class DrGall:
                                    self.y_merged[zone],
                                    self.v_merged[zone],
                                    smoother=smoother,
-                                   verbose=verbose)  # EWFe4800
+                                   verbose=verbose)  # ewfe4800
 
         try:
-            EWFe4800 = self.cranio_F.EW(4450, 4650, 5050, 5285,
-                                        'Fe4800',
+            ewfe4800 = self.cranio_F.ew(4450, 4650, 5050, 5285,
+                                        'fe4800',
                                         sup=True,
                                         left2=True,
                                         verbose=verbose)
             if verbose:
-                print 'EWFe4800 computing done, EWFe4800 =', EWFe4800
+                print 'ewfe4800 computing done, ewfe4800 =', ewfe4800
         except ValueError:
-            EWFe4800 = [N.nan, N.nan]
+            ewfe4800 = [N.nan, N.nan]
             if verbose:
-                print 'ERROR in EWFe4800 computing, EWFe4800 =', EWFe4800
+                print 'ErrOr in ewfe4800 computing, ewfe4800 =', ewfe4800
 
         try:
-            self.Values.update(self.cranio_F.EWvalues)
+            self.Values.update(self.cranio_F.ewvalues)
         except ValueError:
             pass
 
@@ -659,7 +659,7 @@ class DrGall:
             print >> sys.stderr, 'Computing on iron zone for this spectrum done'
             print ''.center(100, '=')
 
-        indicators = {'EWFe4800': EWFe4800}
+        indicators = {'ewfe4800': ewfe4800}
 
         del self.cranio_F.simulations
         del self.cranio_F.syst
@@ -671,104 +671,104 @@ class DrGall:
         Function to initialize parameters use to make the control_plot
         """
         try:
-            RSi = self.cranio_R1.RSivalues['RSi']
+            rsi = self.cranio_r1.rsivalues['rsi']
         except ValueError:
-            RSi = float(N.nan)
+            rsi = float(N.nan)
 
         try:
-            RSiS = self.cranio_R1.RSiSvalues['RSiS']
+            rsiS = self.cranio_r1.rsiSvalues['rsiS']
         except ValueError:
-            RSiS = float(N.nan)
+            rsiS = float(N.nan)
 
         try:
-            RSiSS = self.cranio_R5.RSiSSvalues['RSiSS']
+            rsiSS = self.cranio_r5.rsiSSvalues['rsiSS']
         except ValueError:
-            RSiSS = float(N.nan)
+            rsiSS = float(N.nan)
 
         try:
-            RCa = self.cranio_BCa.RCavalues['RCa']
+            rca = self.cranio_bca.rcavalues['rca']
         except ValueError:
-            RCa = float(N.nan)
+            rca = float(N.nan)
 
         try:
-            RCaS = self.cranio_BCa.RCaSvalues['RCaS']
+            rcaS = self.cranio_bca.rcaSvalues['rcaS']
         except ValueError:
-            RCaS = float(N.nan)
+            rcaS = float(N.nan)
 
         try:
-            RCaS2 = self.cranio_BCa.RCaS2values['RCaS2']
+            rcaS2 = self.cranio_bca.rcaS2values['rcaS2']
         except ValueError:
-            RCaS2 = float(N.nan)
+            rcaS2 = float(N.nan)
 
         try:
-            EDCa = self.cranio_BCa.EDCavalues['EDCa']
+            EDca = self.cranio_bca.EDcavalues['EDca']
         except ValueError:
-            EDCa = float(N.nan)
+            EDca = float(N.nan)
 
         try:
-            EWCaIIHK = self.cranio_BCa.EWvalues['EWCaIIHK']
+            ewcaIIHK = self.cranio_bca.ewvalues['ewcaIIHK']
         except ValueError:
-            EWCaIIHK = float(N.nan)
+            ewcaIIHK = float(N.nan)
 
         try:
-            EWSiII4000 = self.cranio_BSi.EWvalues['EWSiII4000']
+            ewsiII4000 = self.cranio_bsi.ewvalues['ewsiII4000']
         except ValueError:
-            EWSiII4000 = float(N.nan)
+            ewsiII4000 = float(N.nan)
 
         try:
-            EWMgII = self.cranio_BMg.EWvalues['EWMgII']
+            ewMgII = self.cranio_bMg.ewvalues['ewMgII']
         except ValueError:
-            EWMgII = float(N.nan)
+            ewMgII = float(N.nan)
 
         try:
-            EWSIIW = self.cranio_R2.EWvalues['EWSIIW']
+            ewSIIW = self.cranio_r2.ewvalues['ewSIIW']
         except ValueError:
-            EWSIIW = float(N.nan)
+            ewSIIW = float(N.nan)
 
         try:
-            EWSIIW_L = self.cranio_R2.EWvalues['EWSIIW_L']
+            ewSIIW_L = self.cranio_r2.ewvalues['ewSIIW_L']
         except ValueError:
-            EWSIIW_L = float(N.nan)
+            ewSIIW_L = float(N.nan)
 
         try:
-            EWSIIW_R = self.cranio_R2.EWvalues['EWSIIW_R']
+            ewSIIW_r = self.cranio_r2.ewvalues['ewSIIW_r']
         except ValueError:
-            EWSIIW_R = float(N.nan)
+            ewSIIW_r = float(N.nan)
 
         try:
-            EWSiII5972 = self.cranio_R3.EWvalues['EWSiII5972']
+            ewsiII5972 = self.cranio_r3.ewvalues['ewsiII5972']
         except ValueError:
-            EWSiII5972 = float(N.nan)
+            ewsiII5972 = float(N.nan)
 
         try:
-            EWSiII6355 = self.cranio_R4.EWvalues['EWSiII6355']
+            ewsiII6355 = self.cranio_r4.ewvalues['ewsiII6355']
         except ValueError:
-            EWSiII6355 = float(N.nan)
+            ewsiII6355 = float(N.nan)
 
         try:
-            vSiII_5972 = self.cranio_R3.velocityValues['vSiII_5972']
+            vsiII_5972 = self.cranio_r3.velocityValues['vsiII_5972']
         except ValueError:
-            vSiII_5972 = float(N.nan)
+            vsiII_5972 = float(N.nan)
 
         try:
-            vSiII_6355 = self.cranio_R4.velocityValues['vSiII_6355']
+            vsiII_6355 = self.cranio_r4.velocityValues['vsiII_6355']
         except ValueError:
-            vSiII_6355 = float(N.nan)
+            vsiII_6355 = float(N.nan)
 
-        return RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, \
-            EWSIIW, EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, \
-            EWSIIW_R
+        return rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, \
+            ewSIIW, ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, \
+            ewSIIW_r
 
     #=========================================================================
     # Functions to plot control_plot of spectral indicators computing
     #=========================================================================
 
-    def plot_cranioBCa(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where RCa, RCaS, RCas2, EDCa and EWCaIIHK are computed"""
+    def plot_craniobca(self, metrics, ax=None, filename='', verbose=True):
+        """Plot zone where rca, rcaS, rcas2, EDca and ewcaIIHK are computed"""
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
-        cr = self.cranio_BCa
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
+        cr = self.cranio_bca
 
         if ax is None:
             fig = P.figure()
@@ -784,48 +784,48 @@ class DrGall:
             print >> sys.stderr, "No smothing function computed, so no '\
             'smoothing function ploted"
 
-        try:  # Plot the RCaS vspan
-            ax.axvspan(cr.RCaSvalues['RCaS_lbd'][0],
-                       cr.RCaSvalues['RCaS_lbd'][1],
+        try:  # Plot the rcaS vspan
+            ax.axvspan(cr.rcaSvalues['rcaS_lbd'][0],
+                       cr.rcaSvalues['rcaS_lbd'][1],
                        ymin=0, ymax=1, facecolor='y', alpha=0.25)
-            ax.axvspan(cr.RCaSvalues['RCaS_lbd'][2],
-                       cr.RCaSvalues['RCaS_lbd'][3],
+            ax.axvspan(cr.rcaSvalues['rcaS_lbd'][2],
+                       cr.rcaSvalues['rcaS_lbd'][3],
                        ymin=0, ymax=1, facecolor='y', alpha=0.25)
         except ValueError:
-            print >> sys.stderr, "No parameters to plot RCaS zone"
+            print >> sys.stderr, "No parameters to plot rcaS zone"
 
-        try:  # Plot the EWCaIIHK points and lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWCaIIHK'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWCaIIHK'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWCaIIHK'][0],
-                                cr.EWvalues['lbd_EWCaIIHK'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWCaIIHK'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWCaIIHK'])[1]], 1)
-            ax.scatter(cr.RCavalues['RCa_lbd'],
-                       cr.smoother(cr.RCavalues['RCa_lbd']),
+        try:  # Plot the ewcaIIHK points and lines
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewcaIIHK'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewcaIIHK'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewcaIIHK'][0],
+                                cr.ewvalues['lbd_ewcaIIHK'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewcaIIHK'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewcaIIHK'])[1]], 1)
+            ax.scatter(cr.rcavalues['rca_lbd'],
+                       cr.smoother(cr.rcavalues['rca_lbd']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWCaIIHK zone"
+            print >> sys.stderr, "No parameters to plot ewcaIIHK zone"
 
-        try:  # Plot the RCa lines
-            for x, y in zip(cr.RCavalues['RCa_lbd'],
-                            cr.smoother(cr.RCavalues['RCa_lbd'])):
+        try:  # Plot the rca lines
+            for x, y in zip(cr.rcavalues['rca_lbd'],
+                            cr.smoother(cr.rcavalues['rca_lbd'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot RCa zone"
+            print >> sys.stderr, "No parameters to plot rca zone"
 
-        # Annotate the Ca zone with spectral indicators values
+        # Annotate the ca zone with spectral indicators values
         try:
-            ax.annotate('RCa=%.2f, RCaS=%.2f, RCaS2=%.2f' %
-                        (RCa, RCaS, RCaS2), xy=(0.01, 0.01),
+            ax.annotate('rca=%.2f, rcaS=%.2f, rcaS2=%.2f' %
+                        (rca, rcaS, rcaS2), xy=(0.01, 0.01),
                         xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
-            ax.annotate('EWCaIIHK=%.2f' %
-                        (EWCaIIHK), xy=(0.01, 0.95), xycoords='axes fraction',
+            ax.annotate('ewcaIIHK=%.2f' %
+                        (ewcaIIHK), xy=(0.01, 0.95), xycoords='axes fraction',
                         xytext=(0.01, 0.95), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
@@ -837,12 +837,12 @@ class DrGall:
         if save:
             fig.savefig('calcium_' + filename)
 
-    def plot_cranioBSi(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where EWSi4000 is computed"""
+    def plot_craniobsi(self, metrics, ax=None, filename='', verbose=True):
+        """Plot zone where ewsi4000 is computed"""
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
-        cr = self.cranio_BSi
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
+        cr = self.cranio_bsi
 
         if ax is None:
             fig = P.figure()
@@ -859,32 +859,32 @@ class DrGall:
             'smoothing function ploted"
 
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWSiII4000'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWSiII4000'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWSiII4000'][0],
-                                cr.EWvalues['lbd_EWSiII4000'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWSiII4000'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWSiII4000'])[1]],
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewsiII4000'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewsiII4000'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewsiII4000'][0],
+                                cr.ewvalues['lbd_ewsiII4000'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewsiII4000'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewsiII4000'])[1]],
                                1)
-            ax.scatter(cr.EWvalues['lbd_EWSiII4000'],
-                       cr.smoother(cr.EWvalues['lbd_EWSiII4000']),
+            ax.scatter(cr.ewvalues['lbd_ewsiII4000'],
+                       cr.smoother(cr.ewvalues['lbd_ewsiII4000']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EDCa straight line"
+            print >> sys.stderr, "No parameters to plot EDca straight line"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWSiII4000'],
-                            cr.smoother(cr.EWvalues['lbd_EWSiII4000'])):
+            for x, y in zip(cr.ewvalues['lbd_ewsiII4000'],
+                            cr.smoother(cr.ewvalues['lbd_ewsiII4000'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot RCa vlines"
+            print >> sys.stderr, "No parameters to plot rca vlines"
 
-        # Annotate the Ca zone with spectral indicators values
+        # Annotate the ca zone with spectral indicators values
         try:
-            ax.annotate('EWSiII4000=%.2f' %
-                        (EWSiII4000), xy=(0.01, 0.01), xycoords='axes fraction',
+            ax.annotate('ewsiII4000=%.2f' %
+                        (ewsiII4000), xy=(0.01, 0.01), xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
@@ -894,14 +894,14 @@ class DrGall:
         ax.set_xlim(xmin=3850, xmax=4150)
 
         if save:
-            fig.savefig('EWSiII4000_' + filename)
+            fig.savefig('ewsiII4000_' + filename)
 
-    def plot_cranioBMg(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where EWMgII is computed"""
+    def plot_craniobMg(self, metrics, ax=None, filename='', verbose=True):
+        """Plot zone where ewMgII is computed"""
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
-        cr = self.cranio_BMg
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
+        cr = self.cranio_bMg
 
         if ax is None:
             fig = P.figure()
@@ -918,32 +918,32 @@ class DrGall:
             'smoothing function ploted"
 
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWMgII'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWMgII'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWMgII'][0],
-                                cr.EWvalues['lbd_EWMgII'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWMgII'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWMgII'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWMgII'],
-                       cr.smoother(cr.EWvalues['lbd_EWMgII']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewMgII'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewMgII'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewMgII'][0],
+                                cr.ewvalues['lbd_ewMgII'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewMgII'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewMgII'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewMgII'],
+                       cr.smoother(cr.ewvalues['lbd_ewMgII']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWMgII straight '\
+            print >> sys.stderr, "No parameters to plot ewMgII straight '\
             'line zone"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWMgII'],
-                            cr.smoother(cr.EWvalues['lbd_EWMgII'])):
+            for x, y in zip(cr.ewvalues['lbd_ewMgII'],
+                            cr.smoother(cr.ewvalues['lbd_ewMgII'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWMgII vlines"
+            print >> sys.stderr, "No parameters to plot ewMgII vlines"
 
-        # Annotate the Ca zone with spectral indicators values
+        # Annotate the ca zone with spectral indicators values
         try:
-            ax.annotate('EWMgII=%.2f' %
-                        (EWMgII), xy=(0.01, 0.01), xycoords='axes fraction',
+            ax.annotate('ewMgII=%.2f' %
+                        (ewMgII), xy=(0.01, 0.01), xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
@@ -953,15 +953,15 @@ class DrGall:
         ax.set_xlim(xmin=4000, xmax=4600)
 
         if save:
-            fig.savefig('EWMgII_' + filename)
+            fig.savefig('ewMgII_' + filename)
 
-    def plot_cranioR1R5(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where RCa, RCaS, RCas2, EDCa and EWCaIIHK are computed"""
+    def plot_cranior1r5(self, metrics, ax=None, filename='', verbose=True):
+        """Plot zone where rca, rcaS, rcas2, EDca and ewcaIIHK are computed"""
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
-        cr1 = self.cranio_R1
-        cr5 = self.cranio_R5
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
+        cr1 = self.cranio_r1
+        cr5 = self.cranio_r5
 
         if ax is None:
             fig = P.figure()
@@ -977,48 +977,48 @@ class DrGall:
             print >> sys.stderr, "No smothing function computed, so no '\
             'smoothing function ploted"
 
-        # try: #Plot the RSiSS vspan
-        ax.axvspan(cr5.RSiSSvalues['RSiSS_lbd'][0],
-                   cr5.RSiSSvalues['RSiSS_lbd'][1],
+        # try: #Plot the rsiSS vspan
+        ax.axvspan(cr5.rsiSSvalues['rsiSS_lbd'][0],
+                   cr5.rsiSSvalues['rsiSS_lbd'][1],
                    ymin=0, ymax=1, facecolor='y', alpha=0.25)
-        ax.axvspan(cr5.RSiSSvalues['RSiSS_lbd'][2],
-                   cr5.RSiSSvalues['RSiSS_lbd'][3],
+        ax.axvspan(cr5.rsiSSvalues['rsiSS_lbd'][2],
+                   cr5.rsiSSvalues['rsiSS_lbd'][3],
                    ymin=0, ymax=1, facecolor='y', alpha=0.25)
-        # except ValueError: print >> sys.stderr, "No parameters to plot RSiSS zone"
+        # except ValueError: print >> sys.stderr, "No parameters to plot rsiSS zone"
 
-        try:  # Plot the RSi points and lines
-            lbd_line1 = cr1.x[(cr1.xR >= cr1.RSivalues['RSi_lbd'][0])
-                              & (cr1.x <= cr1.RSivalues['RSi_lbd'][2])]
-            lbd_line2 = cr1.x[(cr1.x >= cr1.RSivalues['RSi_lbd'][2])
-                              & (cr1.x <= cr1.RSivalues['RSi_lbd'][4])]
-            p_line1 = N.polyfit([cr1.RSivalues['RSi_lbd'][0],
-                                 cr1.RSivalues['RSi_lbd'][2]],
-                                [cr1.smoother(cr1.RSivalues['RSi_lbd'])[0],
-                                 cr1.smoother(cr1.RSivalues['RSi_lbd'])[2]], 1)
-            p_line2 = N.polyfit([cr1.RSivalues['RSi_lbd'][2],
-                                 cr1.RSivalues['RSi_lbd'][4]],
-                                [cr1.smoother(cr1.RSivalues['RSi_lbd'])[2],
-                                 cr1.smoother(cr1.RSivalues['RSi_lbd'])[4]], 1)
-            ax.scatter(cr1.RSivalues['RSi_lbd'],
-                       cr1.smoother(cr1.RSivalues['RSi_lbd']),
+        try:  # Plot the rsi points and lines
+            lbd_line1 = cr1.x[(cr1.xr >= cr1.rsivalues['rsi_lbd'][0])
+                              & (cr1.x <= cr1.rsivalues['rsi_lbd'][2])]
+            lbd_line2 = cr1.x[(cr1.x >= cr1.rsivalues['rsi_lbd'][2])
+                              & (cr1.x <= cr1.rsivalues['rsi_lbd'][4])]
+            p_line1 = N.polyfit([cr1.rsivalues['rsi_lbd'][0],
+                                 cr1.rsivalues['rsi_lbd'][2]],
+                                [cr1.smoother(cr1.rsivalues['rsi_lbd'])[0],
+                                 cr1.smoother(cr1.rsivalues['rsi_lbd'])[2]], 1)
+            p_line2 = N.polyfit([cr1.rsivalues['rsi_lbd'][2],
+                                 cr1.rsivalues['rsi_lbd'][4]],
+                                [cr1.smoother(cr1.rsivalues['rsi_lbd'])[2],
+                                 cr1.smoother(cr1.rsivalues['rsi_lbd'])[4]], 1)
+            ax.scatter(cr1.rsivalues['rsi_lbd'],
+                       cr1.smoother(cr1.rsivalues['rsi_lbd']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line1, N.polyval(p_line1, lbd_line1), color='g')
             ax.plot(lbd_line2, N.polyval(p_line2, lbd_line2), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot RSi zone"
+            print >> sys.stderr, "No parameters to plot rsi zone"
 
-        try:  # Plot the RSi and RSiS lines
-            for x, y in zip(cr1.RSivalues['RSi_lbd'],
-                            cr1.smoother(cr1.RSivalues['RSi_lbd'])):
+        try:  # Plot the rsi and rsiS lines
+            for x, y in zip(cr1.rsivalues['rsi_lbd'],
+                            cr1.smoother(cr1.rsivalues['rsi_lbd'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot RSi and RSiS lines"
+            print >> sys.stderr, "No parameters to plot rsi and rsiS lines"
 
-        # Annotate the Ca zone with spectral indicators values
+        # Annotate the ca zone with spectral indicators values
         try:
-            ax.annotate('RSi=%.2f, RSiS=%.2f, RSiSS=%.2f' %
-                        (RSi, RSiS, RSiSS), xy=(0.01, 0.01),
+            ax.annotate('rsi=%.2f, rsiS=%.2f, rsiSS=%.2f' %
+                        (rsi, rsiS, rsiSS), xy=(0.01, 0.01),
                         xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left',
@@ -1032,12 +1032,12 @@ class DrGall:
         if save:
             fig.savefig('silicon_' + filename)
 
-    def plot_cranioR2(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where EWSIIW is computed"""
+    def plot_cranior2(self, metrics, ax=None, filename='', verbose=True):
+        """Plot zone where ewSIIW is computed"""
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
-        cr = self.cranio_R2
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
+        cr = self.cranio_r2
 
         if ax is None:
             fig = P.figure()
@@ -1053,87 +1053,87 @@ class DrGall:
             print >> sys.stderr, "No smothing function computed, so no '\
             'smoothing function ploted"
 
-        # For EWSiW
+        # For ewsiW
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWSIIW'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWSIIW'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWSIIW'][0],
-                                cr.EWvalues['lbd_EWSIIW'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWSIIW'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWSIIW'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWSIIW'],
-                       cr.smoother(cr.EWvalues['lbd_EWSIIW']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewSIIW'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewSIIW'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewSIIW'][0],
+                                cr.ewvalues['lbd_ewSIIW'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewSIIW'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewSIIW'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewSIIW'],
+                       cr.smoother(cr.ewvalues['lbd_ewSIIW']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSIIW straight '\
+            print >> sys.stderr, "No parameters to plot ewSIIW straight '\
             'line zone"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWSIIW'],
-                            cr.smoother(cr.EWvalues['lbd_EWSIIW'])):
+            for x, y in zip(cr.ewvalues['lbd_ewSIIW'],
+                            cr.smoother(cr.ewvalues['lbd_ewSIIW'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSIIW vlines"
+            print >> sys.stderr, "No parameters to plot ewSIIW vlines"
 
-        # For EWSiW_L
+        # For ewsiW_L
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWSIIW_L'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWSIIW_L'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWSIIW_L'][0],
-                                cr.EWvalues['lbd_EWSIIW_L'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWSIIW_L'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWSIIW_L'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWSIIW_L'],
-                       cr.smoother(cr.EWvalues['lbd_EWSIIW_L']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewSIIW_L'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewSIIW_L'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewSIIW_L'][0],
+                                cr.ewvalues['lbd_ewSIIW_L'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewSIIW_L'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewSIIW_L'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewSIIW_L'],
+                       cr.smoother(cr.ewvalues['lbd_ewSIIW_L']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSIIW_L straight '\
+            print >> sys.stderr, "No parameters to plot ewSIIW_L straight '\
             'line zone"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWSIIW_L'],
-                            cr.smoother(cr.EWvalues['lbd_EWSIIW_L'])):
+            for x, y in zip(cr.ewvalues['lbd_ewSIIW_L'],
+                            cr.smoother(cr.ewvalues['lbd_ewSIIW_L'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSIIW_L vlines"
+            print >> sys.stderr, "No parameters to plot ewSIIW_L vlines"
 
-        # For EWSiW_R
+        # For ewsiW_r
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWSIIW_R'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWSIIW_R'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWSIIW_R'][0],
-                                cr.EWvalues['lbd_EWSIIW_R'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWSIIW_R'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWSIIW_R'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWSIIW_R'],
-                       cr.smoother(cr.EWvalues['lbd_EWSIIW_R']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewSIIW_r'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewSIIW_r'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewSIIW_r'][0],
+                                cr.ewvalues['lbd_ewSIIW_r'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewSIIW_r'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewSIIW_r'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewSIIW_r'],
+                       cr.smoother(cr.ewvalues['lbd_ewSIIW_r']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSIIW_R straight '\
+            print >> sys.stderr, "No parameters to plot ewSIIW_r straight '\
             'line zone"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWSIIW_R'],
-                            cr.smoother(cr.EWvalues['lbd_EWSIIW_R'])):
+            for x, y in zip(cr.ewvalues['lbd_ewSIIW_r'],
+                            cr.smoother(cr.ewvalues['lbd_ewSIIW_r'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSIIW_R vlines"
+            print >> sys.stderr, "No parameters to plot ewSIIW_r vlines"
 
-        # Annotate the Ca zone with spectral indicators values
+        # Annotate the ca zone with spectral indicators values
         try:
-            ax.annotate('EWSIIW=%.2f' %
-                        (EWSIIW), xy=(0.01, 0.07), xycoords='axes fraction',
+            ax.annotate('ewSIIW=%.2f' %
+                        (ewSIIW), xy=(0.01, 0.07), xycoords='axes fraction',
                         xytext=(0.01, 0.07), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
-            ax.annotate('EWSIIW_L=%.2f, EWSIIW_R=%.2f' %
-                        (EWSIIW_L, EWSIIW_R), xy=(0.01, 0.01),
+            ax.annotate('ewSIIW_L=%.2f, ewSIIW_r=%.2f' %
+                        (ewSIIW_L, ewSIIW_r), xy=(0.01, 0.01),
                         xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left',
@@ -1145,15 +1145,15 @@ class DrGall:
         ax.set_xlim(xmin=5060, xmax=5700)
         print filename
         if save:
-            fig.savefig('EWSIIW_' + filename)
+            fig.savefig('ewSIIW_' + filename)
 
-    def plot_cranioR3R4(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where EWSIIW is computed"""
+    def plot_cranior3r4(self, metrics, ax=None, filename='', verbose=True):
+        """Plot zone where ewSIIW is computed"""
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
-        cr3 = self.cranio_R3
-        cr4 = self.cranio_R4
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
+        cr3 = self.cranio_r3
+        cr4 = self.cranio_r4
 
         if ax is None:
             fig = P.figure()
@@ -1168,63 +1168,63 @@ class DrGall:
             ax.plot(cr3.x, cr3.s, color='r', label='Interpolated flux')
         except ValueError:
             print >> sys.stderr, "No smothing function computed for '\
-            'EWSiII5972, so no smoothing function ploted"
+            'ewsiII5972, so no smoothing function ploted"
         try:
             ax.plot(cr4.x, cr4.s, color='b', label='Interpolated flux')
         except ValueError:
             print >> sys.stderr, "No smothing function computed for '\
-            'EWSiII6355, so no smoothing function ploted"
+            'ewsiII6355, so no smoothing function ploted"
 
         try:  # Plot points and straight lines
-            lbd_line = cr3.x[(cr3.x >= cr3.EWvalues['lbd_EWSiII5972'][0]) &
-                             (cr3.x <= cr3.EWvalues['lbd_EWSiII5972'][1])]
-            p_line = N.polyfit([cr3.EWvalues['lbd_EWSiII5972'][0],
-                                cr3.EWvalues['lbd_EWSiII5972'][1]],
-                               [cr3.smoother(cr3.EWvalues['lbd_EWSiII5972'])[0],
-                                cr3.smoother(cr3.EWvalues['lbd_EWSiII5972'])[1]], 1)
-            ax.scatter(cr3.EWvalues['lbd_EWSiII5972'],
-                       cr3.smoother(cr3.EWvalues['lbd_EWSiII5972']),
+            lbd_line = cr3.x[(cr3.x >= cr3.ewvalues['lbd_ewsiII5972'][0]) &
+                             (cr3.x <= cr3.ewvalues['lbd_ewsiII5972'][1])]
+            p_line = N.polyfit([cr3.ewvalues['lbd_ewsiII5972'][0],
+                                cr3.ewvalues['lbd_ewsiII5972'][1]],
+                               [cr3.smoother(cr3.ewvalues['lbd_ewsiII5972'])[0],
+                                cr3.smoother(cr3.ewvalues['lbd_ewsiII5972'])[1]], 1)
+            ax.scatter(cr3.ewvalues['lbd_ewsiII5972'],
+                       cr3.smoother(cr3.ewvalues['lbd_ewsiII5972']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSiII5972 straight '\
+            print >> sys.stderr, "No parameters to plot ewsiII5972 straight '\
             'line zone"
 
         try:  # Plot points and straight lines
-            lbd_line = cr4.x[(cr4.x >= cr4.EWvalues['lbd_EWSiII6355'][0]) &
-                             (cr4.x <= cr4.EWvalues['lbd_EWSiII6355'][1])]
-            p_line = N.polyfit([cr4.EWvalues['lbd_EWSiII6355'][0],
-                                cr4.EWvalues['lbd_EWSiII6355'][1]],
-                               [cr4.smoother(cr4.EWvalues['lbd_EWSiII6355'])[0],
-                                cr4.smoother(cr4.EWvalues['lbd_EWSiII6355'])[1]], 1)
-            ax.scatter(cr4.EWvalues['lbd_EWSiII6355'],
-                       cr4.smoother(cr4.EWvalues['lbd_EWSiII6355']),
+            lbd_line = cr4.x[(cr4.x >= cr4.ewvalues['lbd_ewsiII6355'][0]) &
+                             (cr4.x <= cr4.ewvalues['lbd_ewsiII6355'][1])]
+            p_line = N.polyfit([cr4.ewvalues['lbd_ewsiII6355'][0],
+                                cr4.ewvalues['lbd_ewsiII6355'][1]],
+                               [cr4.smoother(cr4.ewvalues['lbd_ewsiII6355'])[0],
+                                cr4.smoother(cr4.ewvalues['lbd_ewsiII6355'])[1]], 1)
+            ax.scatter(cr4.ewvalues['lbd_ewsiII6355'],
+                       cr4.smoother(cr4.ewvalues['lbd_ewsiII6355']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSiII6355 straight '\
+            print >> sys.stderr, "No parameters to plot ewsiII6355 straight '\
             'line zone"
 
-        try:  # Plot vlines for EWSiII5972
-            for x, y in zip(cr3.EWvalues['lbd_EWSiII5972'],
-                            cr3.smoother(cr3.EWvalues['lbd_EWSiII5972'])):
+        try:  # Plot vlines for ewsiII5972
+            for x, y in zip(cr3.ewvalues['lbd_ewsiII5972'],
+                            cr3.smoother(cr3.ewvalues['lbd_ewsiII5972'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSiII5972 vlines"
+            print >> sys.stderr, "No parameters to plot ewsiII5972 vlines"
 
-        try:  # Plot vlines for EWSiII6355
-            for x, y in zip(cr4.EWvalues['lbd_EWSiII6355'],
-                            cr4.smoother(cr4.EWvalues['lbd_EWSiII6355'])):
+        try:  # Plot vlines for ewsiII6355
+            for x, y in zip(cr4.ewvalues['lbd_ewsiII6355'],
+                            cr4.smoother(cr4.ewvalues['lbd_ewsiII6355'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWSiII6355 vlines"
+            print >> sys.stderr, "No parameters to plot ewsiII6355 vlines"
 
-        # Annotate the Si zone with spectral indicators values
+        # Annotate the si zone with spectral indicators values
         try:
-            ax.annotate('EWSiII5972=%.2f, EWSiII6355=%.2f' %
-                        (EWSiII5972, EWSiII6355),
+            ax.annotate('ewsiII5972=%.2f, ewsiII6355=%.2f' %
+                        (ewsiII5972, ewsiII6355),
                         xy=(0.01, 0.01), xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left', verticalalignment='bottom',
@@ -1232,22 +1232,22 @@ class DrGall:
         except ValueError:
             pass
 
-        try:  # Plot vline for vSiII_6355
-            ax.axvline(cr4.velocityValues['vSiII_6355_lbd'],
+        try:  # Plot vline for vsiII_6355
+            ax.axvline(cr4.velocityValues['vsiII_6355_lbd'],
                        color='k', lw=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot SiII6355 vlines"
+            print >> sys.stderr, "No parameters to plot siII6355 vlines"
 
         ax.set_ylim(ymin=0)
         ax.set_xlim(xmin=5500, xmax=6400)
 
         if save:
-            fig.savefig('EWSiII5972_' + filename)
+            fig.savefig('ewsiII5972_' + filename)
 
     def plot_spectrum(self, metrics, ax=None, filename='', title=None, verbose=True):
 
-        RSi, RSiS, RSiSS, RCa, RCaS, RCaS2, EDCa, EWCaIIHK, EWSiII4000, EWMgII, EWSIIW, \
-            EWSiII5972, EWSiII6355, vSiII_5972, vSiII_6355, EWSIIW_L, EWSIIW_R = metrics
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaIIHK, ewsiII4000, ewMgII, ewSIIW, \
+            ewsiII5972, ewsiII6355, vsiII_5972, vsiII_6355, ewSIIW_L, ewSIIW_r = metrics
 
         if ax is None:
             fig = P.figure()
@@ -1262,14 +1262,14 @@ class DrGall:
             label = 'Interpolated flux'
             try:
                 ax.plot(self.calcium_zone['x'],
-                        self.cranio_B.smoother(self.calcium_zone['x']),
+                        self.cranio_b.smoother(self.calcium_zone['x']),
                         color='r', label=label)
                 label = '_nolegend_'
             except ValueError:
                 pass
             try:
                 ax.plot(self.silicon_zone['x'],
-                        self.cranioR.smoother(self.silicon_zone['x']),
+                        self.cranior.smoother(self.silicon_zone['x']),
                         color='r', label=label)
             except ValueError:
                 pass
@@ -1277,18 +1277,18 @@ class DrGall:
             label1 = 'Flux'
             label2 = 'Interpolated flux'
             try:
-                ax.plot(self.xB, self.yB, color='k', label=label1)
+                ax.plot(self.xb, self.yb, color='k', label=label1)
                 ax.plot(self.calcium_zone['x'],
-                        self.cranio_B.smoother(self.calcium_zone['x']),
+                        self.cranio_b.smoother(self.calcium_zone['x']),
                         color='r', label=label2)
                 label1 = '_nolegend_'
                 label2 = '_nolegend_'
             except ValueError:
                 pass
             try:
-                ax.plot(self.xR, self.yR, color='k', label=label1)
+                ax.plot(self.xr, self.yr, color='k', label=label1)
                 ax.plot(self.silicon_zone['x'],
-                        self.cranioR.smoother(self.silicon_zone['x']),
+                        self.cranior.smoother(self.silicon_zone['x']),
                         color='r', label=label2)
             except ValueError:
                 pass
@@ -1310,7 +1310,7 @@ class DrGall:
         # Initialize parameters=====================================
 
         metrics = self.initialize_parameters()
-        if self.xB is not None and self.xR is not None:
+        if self.xb is not None and self.xr is not None:
             MetricsFig = P.figure(figsize=(14, 12))
             ax1 = MetricsFig.add_subplot(3, 3, 1)
             ax2 = MetricsFig.add_subplot(3, 3, 2)
@@ -1319,12 +1319,12 @@ class DrGall:
             ax5 = MetricsFig.add_subplot(3, 3, 5)
             ax6 = MetricsFig.add_subplot(3, 3, 6)
             ax7 = MetricsFig.add_subplot(3, 1, 3)
-            self.plot_cranioBCa(metrics, ax=ax1, filename=filename)
-            self.plot_cranioBSi(metrics, ax=ax2, filename=filename)
-            self.plot_cranioBMg(metrics, ax=ax3, filename=filename)
-            self.plot_cranioR1R5(metrics, ax=ax4, filename=filename)
-            self.plot_cranioR2(metrics, ax=ax5, filename=filename)
-            self.plot_cranioR3R4(metrics, ax=ax6, filename=filename)
+            self.plot_craniobca(metrics, ax=ax1, filename=filename)
+            self.plot_craniobsi(metrics, ax=ax2, filename=filename)
+            self.plot_craniobMg(metrics, ax=ax3, filename=filename)
+            self.plot_cranior1r5(metrics, ax=ax4, filename=filename)
+            self.plot_cranior2(metrics, ax=ax5, filename=filename)
+            self.plot_cranior3r4(metrics, ax=ax6, filename=filename)
             self.plot_spectrum(metrics, ax=ax7, filename=filename, title=title)
             ax7.set_ylim(ymin=0)
             ax7.set_xlim(xmin=3000, xmax=7000)
@@ -1337,53 +1337,53 @@ class DrGall:
                 print >> sys.stderr, "Control plot saved in %s" % filename \
                     + '.' + f
 
-        elif self.xB is not None:
-            print >> sys.stderr, 'Worked on the B channel only'
+        elif self.xb is not None:
+            print >> sys.stderr, 'Worked on the b channel only'
             MetricsFig = P.figure(figsize=(12, 8))
             ax1 = MetricsFig.add_subplot(2, 3, 1)
             ax2 = MetricsFig.add_subplot(2, 3, 2)
             ax3 = MetricsFig.add_subplot(2, 3, 3)
             ax7 = MetricsFig.add_subplot(2, 1, 2)
-            self.plot_cranioBCa(metrics, ax=ax1, filename=filename)
-            self.plot_cranioBSi(metrics, ax=ax2, filename=filename)
-            self.plot_cranioBMg(metrics, ax=ax3, filename=filename)
+            self.plot_craniobca(metrics, ax=ax1, filename=filename)
+            self.plot_craniobsi(metrics, ax=ax2, filename=filename)
+            self.plot_craniobMg(metrics, ax=ax3, filename=filename)
             self.plot_spectrum(metrics, ax=ax7, filename=filename, title=title)
             ax7.set_ylim(ymin=0)
-            ax7.set_xlim(xmin=self.xB[0], xmax=self.xB[-1])
+            ax7.set_xlim(xmin=self.xb[0], xmax=self.xb[-1])
             if filename is None:
                 unique_suffix = time.strftime("%Y-%m-%d-%H_%M_%S_UTC",
                                               time.gmtime())
                 filename = "control_plot_SNfPhrenology_" + unique_suffix
             if title is not None:
-                ax7.set_title('%s, Calcium zone' % title)
+                ax7.set_title('%s, calcium zone' % title)
             else:
-                ax7.set_title('Calcium zone')
+                ax7.set_title('calcium zone')
             for f in format:
                 MetricsFig.savefig(filename + '.' + f)
                 print >> sys.stderr, "Control plot saved in %s" % filename \
                     + '.' + f
 
-        elif self.xR is not None:
-            print >> sys.stderr, 'Worked on the R channel only'
+        elif self.xr is not None:
+            print >> sys.stderr, 'Worked on the r channel only'
             MetricsFig = P.figure(figsize=(12, 8))
             ax4 = MetricsFig.add_subplot(2, 3, 1)
             ax5 = MetricsFig.add_subplot(2, 3, 2)
             ax6 = MetricsFig.add_subplot(2, 3, 3)
             ax7 = MetricsFig.add_subplot(2, 1, 2)
-            self.plot_cranioR1R5(metrics, ax=ax4, filename=filename)
-            self.plot_cranioR2(metrics, ax=ax5, filename=filename)
-            self.plot_cranioR3R4(metrics, ax=ax6, filename=filename)
+            self.plot_cranior1r5(metrics, ax=ax4, filename=filename)
+            self.plot_cranior2(metrics, ax=ax5, filename=filename)
+            self.plot_cranior3r4(metrics, ax=ax6, filename=filename)
             self.plot_spectrum(metrics, ax=ax7, filename=filename, title=title)
             ax7.set_ylim(ymin=0)
-            ax7.set_xlim(xmin=self.xR[0], xmax=7000)
+            ax7.set_xlim(xmin=self.xr[0], xmax=7000)
             if filename is None:
                 unique_suffix = time.strftime("%Y-%m-%d-%H_%M_%S_UTC",
                                               time.gmtime())
                 filename = "control_plot_SNfPhrenology_" + unique_suffix
             if title is not None:
-                ax7.set_title('%s, Silicon zone' % title)
+                ax7.set_title('%s, silicon zone' % title)
             else:
-                ax7.set_title('Silicon zone')
+                ax7.set_title('silicon zone')
             for f in format:
                 MetricsFig.savefig(filename + '.' + f)
                 print >> sys.stderr, "Control plot saved in %s" % filename \
@@ -1399,54 +1399,54 @@ class DrGall:
         ax.plot(cr.x, cr.y, 'k', label='Flux')
         ax.plot(cr.x, cr.s, 'r', label='Interpolated flux')
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWOI7773'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWOI7773'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWOI7773'][0],
-                                cr.EWvalues['lbd_EWOI7773'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWOI7773'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWOI7773'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWOI7773'],
-                       cr.smoother(cr.EWvalues['lbd_EWOI7773']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewOI7773'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewOI7773'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewOI7773'][0],
+                                cr.ewvalues['lbd_ewOI7773'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewOI7773'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewOI7773'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewOI7773'],
+                       cr.smoother(cr.ewvalues['lbd_ewOI7773']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWOI7773 straight line"
+            print >> sys.stderr, "No parameters to plot ewOI7773 straight line"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWOI7773'],
-                            cr.smoother(cr.EWvalues['lbd_EWOI7773'])):
+            for x, y in zip(cr.ewvalues['lbd_ewOI7773'],
+                            cr.smoother(cr.ewvalues['lbd_ewOI7773'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWOI7773 vlines\n"
+            print >> sys.stderr, "No parameters to plot ewOI7773 vlines\n"
 
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWCaIIIR'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWCaIIIR'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWCaIIIR'][0],
-                                cr.EWvalues['lbd_EWCaIIIR'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWCaIIIR'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWCaIIIR'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWCaIIIR'],
-                       cr.smoother(cr.EWvalues['lbd_EWCaIIIR']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewcaIIIR'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewcaIIIR'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewcaIIIR'][0],
+                                cr.ewvalues['lbd_ewcaIIIR'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewcaIIIR'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewcaIIIR'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewcaIIIR'],
+                       cr.smoother(cr.ewvalues['lbd_ewcaIIIR']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWCaIIIR straight line"
+            print >> sys.stderr, "No parameters to plot ewcaIIIR straight line"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWCaIIIR'],
-                            cr.smoother(cr.EWvalues['lbd_EWCaIIIR'])):
+            for x, y in zip(cr.ewvalues['lbd_ewcaIIIR'],
+                            cr.smoother(cr.ewvalues['lbd_ewcaIIIR'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWCaIIIR vlines\n"
+            print >> sys.stderr, "No parameters to plot ewcaIIIR vlines\n"
 
         # Try to Annotate with spectral indicators values
         try:
-            ax.annotate('EWOI7773=%.2f, EWCaIIIR=%.2f' %
-                        (cr.EWvalues['EWOI7773'],
-                         cr.EWvalues['EWCaIIIR']),
+            ax.annotate('ewOI7773=%.2f, ewcaIIIR=%.2f' %
+                        (cr.ewvalues['ewOI7773'],
+                         cr.ewvalues['ewcaIIIR']),
                         xy=(0.01, 0.01), xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left', verticalalignment='bottom',
@@ -1475,30 +1475,30 @@ class DrGall:
         ax.plot(cr.x, cr.y, 'k', label='Flux')
         ax.plot(cr.x, cr.s, 'r', label='Interpolated flux')
         try:  # Plot points and straight lines
-            lbd_line = cr.x[(cr.x >= cr.EWvalues['lbd_EWFe4800'][0])
-                            & (cr.x <= cr.EWvalues['lbd_EWFe4800'][1])]
-            p_line = N.polyfit([cr.EWvalues['lbd_EWFe4800'][0],
-                                cr.EWvalues['lbd_EWFe4800'][1]],
-                               [cr.smoother(cr.EWvalues['lbd_EWFe4800'])[0],
-                                cr.smoother(cr.EWvalues['lbd_EWFe4800'])[1]], 1)
-            ax.scatter(cr.EWvalues['lbd_EWFe4800'],
-                       cr.smoother(cr.EWvalues['lbd_EWFe4800']),
+            lbd_line = cr.x[(cr.x >= cr.ewvalues['lbd_ewfe4800'][0])
+                            & (cr.x <= cr.ewvalues['lbd_ewfe4800'][1])]
+            p_line = N.polyfit([cr.ewvalues['lbd_ewfe4800'][0],
+                                cr.ewvalues['lbd_ewfe4800'][1]],
+                               [cr.smoother(cr.ewvalues['lbd_ewfe4800'])[0],
+                                cr.smoother(cr.ewvalues['lbd_ewfe4800'])[1]], 1)
+            ax.scatter(cr.ewvalues['lbd_ewfe4800'],
+                       cr.smoother(cr.ewvalues['lbd_ewfe4800']),
                        s=40, c='g', marker='o', edgecolors='none',
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWFe4800 straight line"
+            print >> sys.stderr, "No parameters to plot ewfe4800 straight line"
 
         try:  # Plot vlines
-            for x, y in zip(cr.EWvalues['lbd_EWFe4800'],
-                            cr.smoother(cr.EWvalues['lbd_EWFe4800'])):
+            for x, y in zip(cr.ewvalues['lbd_ewfe4800'],
+                            cr.smoother(cr.ewvalues['lbd_ewfe4800'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EWFe4800 vlines\n"
+            print >> sys.stderr, "No parameters to plot ewfe4800 vlines\n"
 
         # Try to Annotate with spectral indicators values
         try:
-            ax.annotate('EWFe4800=%.2f' % (cr.EWvalues['EWFe4800']),
+            ax.annotate('ewfe4800=%.2f' % (cr.ewvalues['ewfe4800']),
                         xy=(0.01, 0.01), xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left', verticalalignment='bottom',

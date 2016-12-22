@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
+"""
+Spectral indicator definition and measurements.
+"""
 
 import sys
 import numpy as N
 from scipy.interpolate import LSQUnivariateSpline, UnivariateSpline
 
-from tools import smoothing
-from spectrum import covariance
+from snspin.tools import smoothing
+from snspin.spectrum import covariance
 
 
-class Craniometer:
+class Craniometer(object):
 
     """
     Initialization function
@@ -129,10 +132,10 @@ class Craniometer:
         rc = 1. - 2. * (rho**2)
         if s is None:
             try:
-                s = smooth_tools.spline_find_s(self.x,
-                                               self.y,
-                                               self.v * rc,
-                                               corr=(rho**2) / rc)
+                s = smoothing.spline_find_s(self.x,
+                                            self.y,
+                                            self.v * rc,
+                                            corr=(rho**2) / rc)
             except ValueError:
                 s = 0.492 * len(self.x)
         try:
@@ -191,10 +194,10 @@ class Craniometer:
         rc = 1. - 2. * (rho**2)
         if hsize is None:
             try:
-                hsize = int(smooth_tools.sg_find_num_points(self.x,
-                                                            self.y,
-                                                            self.v * rc,
-                                                            corr=(rho**2) / rc))
+                hsize = int(smoothing.sg_find_num_points(self.x,
+                                                         self.y,
+                                                         self.v * rc,
+                                                         corr=(rho**2) / rc))
             except ValueError:
                 if verbose:
                     print >> sys.stderr, 'ERROR in computing of best hsize'
@@ -250,7 +253,8 @@ class Craniometer:
                                 self.x[0], self.x[-1])
                             print >> sys.stderr, mess
                         return None
-                flux = N.array([float(self.s[(self.x > (l - 1)) & (self.x < (l + 1))])
+                flux = N.array([float(self.s[(self.x > (l - 1)) & \
+                                             (self.x < (l + 1))])
                                 for l in lbd])
                 return flux
 
@@ -517,8 +521,7 @@ class Craniometer:
             return float(y[(x >= min) & (x <= max)].sum())
 
     def _var_integration(self, x, v, min=None, max=None, verbose=True):
-        """Compute variance of an intergration"""
-        """."""
+        """Compute variance of an intergration."""
         if len(v):
             var_int = v[(x > min) & (x < max)].sum()
         else:
@@ -610,7 +613,7 @@ class Craniometer:
     def _find_special_peak(self, min, max, maxima=False,
                            minima=False, right=False, left=False):
         """."""
-        if maxima == False and minima == False:
+        if maxima is False and minima is False:
             return None, None, None
 
         limit = (self.x >= min) & (self.x <= max)
@@ -690,16 +693,16 @@ class Craniometer:
 # Functions to compute several spectral indicators
 #=========================================================================
 
-    def RCa(self, verbose=True, simu=True, syst=True):
+    def rca(self, verbose=True, simu=True, syst=True):
         """
-        Return the value and the error of RCa.
+        Return the value and the error of rca.
 
-        [RCa, RCa_sigma]
+        [rca, rca_sigma]
         """
         # Initialisation
-        self.RCavalues = {'RCa': N.nan, 'RCa.err': N.nan, 'RCa.stat': N.nan,
-                          'RCa.syst': N.nan, 'RCa.mean': N.nan,
-                          'RCa_lbd': [N.nan, N.nan], 'RCa_flux': [N.nan, N.nan]}
+        self.rcavalues = {'rca': N.nan, 'rca.err': N.nan, 'rca.stat': N.nan,
+                          'rca.syst': N.nan, 'rca.mean': N.nan,
+                          'rca_lbd': [N.nan, N.nan], 'rca_flux': [N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -727,77 +730,77 @@ class Craniometer:
                 self.p3930[0], self.p3930[1])
 
         try:
-            RCa_value = flux2 / flux1
+            rca_value = flux2 / flux1
         except ValueError:
             if verbose:
-                print >> sys.stderr, "ERROR in computing RCa"
-            RCa_value = N.nan
+                print >> sys.stderr, "ERROR in computing rca"
+            rca_value = N.nan
 
         if simu:
 
-            if not N.isfinite(RCa_value):
+            if not N.isfinite(rca_value):
                 return [float(N.nan), float(N.nan)]
 
-            RCa_simu = []
+            rca_simu = []
             for simu in self.simulations:
                 try:
-                    RCa_simu.append(simu.RCa(simu=False, syst=False,
+                    rca_simu.append(simu.rca(simu=False, syst=False,
                                              verbose=False))
                 except ValueError:
                     continue
-            RCa_sigma = self.std2(N.array(RCa_simu)[N.isfinite(RCa_simu)],
-                                  RCa_value)
-            RCa_mean = N.mean(N.array(RCa_simu)[N.isfinite(RCa_simu)])
+            rca_sigma = self.std2(N.array(rca_simu)[N.isfinite(rca_simu)],
+                                  rca_value)
+            rca_mean = N.mean(N.array(rca_simu)[N.isfinite(rca_simu)])
 
-            if N.isfinite(RCa_value):
-                self.RCavalues = {'RCa': float(RCa_value),
-                                  'RCa.err': float(RCa_sigma),
-                                  'RCa.stat': float(RCa_sigma),
-                                  'RCa.mean': float(RCa_mean),
-                                  'RCa_lbd': [float(lbd1), float(lbd2)],
-                                  'RCa_flux': [float(flux1), float(flux2)]}
+            if N.isfinite(rca_value):
+                self.rcavalues = {'rca': float(rca_value),
+                                  'rca.err': float(rca_sigma),
+                                  'rca.stat': float(rca_sigma),
+                                  'rca.mean': float(rca_mean),
+                                  'rca_lbd': [float(lbd1), float(lbd2)],
+                                  'rca_flux': [float(flux1), float(flux2)]}
 
         if syst:
 
-            RCa_syst = []
+            rca_syst = []
             for system in self.syst:
                 try:
-                    RCa_syst.append(system.RCa(syst=False, simu=False,
+                    rca_syst.append(system.rca(syst=False, simu=False,
                                                verbose=False))
                 except ValueError:
                     continue
-            RCa_sigma_syst = self.std2(N.array(RCa_syst)[N.isfinite(RCa_syst)],
-                                       RCa_value)
+            rca_sigma_syst = self.std2(N.array(rca_syst)[N.isfinite(rca_syst)],
+                                       rca_value)
 
-            if N.isfinite(RCa_sigma_syst):
-                RCa_sigma = float(N.sqrt(RCa_sigma**2 + RCa_sigma_syst**2))
+            if N.isfinite(rca_sigma_syst):
+                rca_sigma = float(N.sqrt(rca_sigma**2 + rca_sigma_syst**2))
             else:
-                RCa_sigma *= 2
-            self.RCavalues['RCa.syst'] = float(RCa_sigma_syst)
-            self.RCavalues['RCa.err'] = float(RCa_sigma)
+                rca_sigma *= 2
+            self.rcavalues['rca.syst'] = float(rca_sigma_syst)
+            self.rcavalues['rca.err'] = float(rca_sigma)
 
-            return [float(RCa_value), float(RCa_sigma)]
+            return [float(rca_value), float(rca_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(RCa_value):
-                self.RCavalues = {'RCa': float(RCa_value),
-                                  'RCa_lbd': [float(lbd1), float(lbd2)],
-                                  'RCa_flux': [float(flux1), float(flux2)],
-                                  'RCa.err': N.nan, 'RCa.stat': N.nan,
-                                  'RCa.mean': N.nan}
-            return RCa_value
+            if N.isfinite(rca_value):
+                self.rcavalues = {'rca': float(rca_value),
+                                  'rca_lbd': [float(lbd1), float(lbd2)],
+                                  'rca_flux': [float(flux1), float(flux2)],
+                                  'rca.err': N.nan, 'rca.stat': N.nan,
+                                  'rca.mean': N.nan}
+            return rca_value
 
-    def RCaS(self, verbose=True, simu=True, syst=True):
+    def rcaS(self, verbose=True, simu=True, syst=True):
         """
-        Return the value and the error of RCaS.
+        Return the value and the error of rcaS.
 
-        [RCaS, RCaS_sigma]
+        [rcaS, rcaS_sigma]
         """
         # Initialisation
-        self.RCaSvalues = {'RCaS': N.nan, 'RCaS.err': N.nan, 'RCaS.stat': N.nan,
-                           'RCaS.syst': N.nan, 'RCaS.mean': N.nan,
-                           'RCaS_lbd': [N.nan, N.nan, N.nan, N.nan]}
+        self.rcaSvalues = {'rcaS': N.nan, 'rcaS.err': N.nan, 'rcaS.stat': N.nan,
+                           'rcaS.syst': N.nan, 'rcaS.mean': N.nan,
+                           'rcaS_lbd': [N.nan, N.nan, N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -807,7 +810,7 @@ class Craniometer:
         max_2 = 4012
 
         try:
-            RCaS_value = (self._integration(self.x, self.y, min=min_2, max=max_2,
+            rcaS_value = (self._integration(self.x, self.y, min=min_2, max=max_2,
                                             verbose=verbose)) / \
                 (self._integration(self.x, self.y,
                                    min=min_1,
@@ -815,78 +818,78 @@ class Craniometer:
                                    verbose=verbose))
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of RCaS'
-            RCaS_value = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcaS'
+            rcaS_value = float(N.nan)
 
         if simu:
-            if not N.isfinite(RCaS_value):
+            if not N.isfinite(rcaS_value):
                 return [float(N.nan), float(N.nan)]
 
-            RCaS_simu = []
+            rcaS_simu = []
             for simu in self.simulations:
                 try:
-                    RCaS_simu.append(simu.RCaS(simu=False, syst=False,
+                    rcaS_simu.append(simu.rcaS(simu=False, syst=False,
                                                verbose=False))
                 except ValueError:
                     continue
-            RCaS_sigma = self.std2(N.array(RCaS_simu)[N.isfinite(RCaS_simu)],
-                                   RCaS_value)
-            RCaS_mean = N.mean(N.array(RCaS_simu)[N.isfinite(RCaS_simu)])
+            rcaS_sigma = self.std2(N.array(rcaS_simu)[N.isfinite(rcaS_simu)],
+                                   rcaS_value)
+            rcaS_mean = N.mean(N.array(rcaS_simu)[N.isfinite(rcaS_simu)])
 
-            if N.isfinite(RCaS_value):
-                self.RCaSvalues = {'RCaS': float(RCaS_value),
-                                   'RCaS.err': float(RCaS_sigma),
-                                   'RCaS.stat': float(RCaS_sigma),
-                                   'RCaS.mean': float(RCaS_mean),
-                                   'RCaS_lbd': [float(min_1),
+            if N.isfinite(rcaS_value):
+                self.rcaSvalues = {'rcaS': float(rcaS_value),
+                                   'rcaS.err': float(rcaS_sigma),
+                                   'rcaS.stat': float(rcaS_sigma),
+                                   'rcaS.mean': float(rcaS_mean),
+                                   'rcaS_lbd': [float(min_1),
                                                 float(max_1),
                                                 float(min_2),
                                                 float(max_2)]}
 
         if syst:
 
-            RCaS_syst = []
+            rcaS_syst = []
             for system in self.syst:
                 try:
-                    RCaS_syst.append(system.RCaS(simu=False,
+                    rcaS_syst.append(system.rcaS(simu=False,
                                                  syst=False, verbose=False))
                 except ValueError:
                     continue
-            RCaS_sigma_syst = self.std2(
-                N.array(RCaS_syst)[N.isfinite(RCaS_syst)], RCaS_value)
+            rcaS_sigma_syst = self.std2(
+                N.array(rcaS_syst)[N.isfinite(rcaS_syst)], rcaS_value)
 
-            if N.isfinite(RCaS_sigma_syst):
-                RCaS_sigma = float(N.sqrt(RCaS_sigma**2 + RCaS_sigma_syst**2))
+            if N.isfinite(rcaS_sigma_syst):
+                rcaS_sigma = float(N.sqrt(rcaS_sigma**2 + rcaS_sigma_syst**2))
             else:
-                RCaS_sigma *= 2
-            self.RCaSvalues['RCaS.syst'] = float(RCaS_sigma_syst)
-            self.RCaSvalues['RCaS.err'] = float(RCaS_sigma)
+                rcaS_sigma *= 2
+            self.rcaSvalues['rcaS.syst'] = float(rcaS_sigma_syst)
+            self.rcaSvalues['rcaS.err'] = float(rcaS_sigma)
 
-            return [float(RCaS_value), float(RCaS_sigma)]
+            return [float(rcaS_value), float(rcaS_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(RCaS_value):
-                self.RCaSvalues = {'RCaS': float(RCaS_value),
-                                   'RCaS_lbd': [min_1, max_1, min_2, max_2]}
-            return RCaS_value
+            if N.isfinite(rcaS_value):
+                self.rcaSvalues = {'rcaS': float(rcaS_value),
+                                   'rcaS_lbd': [min_1, max_1, min_2, max_2]}
+            return rcaS_value
 
-    def RCaS2(self, verbose=True, simu=True, syst=True):
+    def rcaS2(self, verbose=True, simu=True, syst=True):
         """
-        New RCaS where peaks are following.
+        New rcaS where peaks are following.
 
-        Return the value and the error of RCaS
-        [RCaS, RCaS_sigma]
+        Return the value and the error of rcaS
+        [rcaS, rcaS_sigma]
         """
         interval_1 = 48
         interval_2 = 62.5
 
         # Initialisation
-        self.RCaS2values = {'RCaS2': N.nan, 'RCaS2.err': N.nan,
-                            'RCaS2.stat': N.nan,
-                            'RCaS2.syst': N.nan,
-                            'RCaS2.mean': N.nan,
-                            'RCaS2_lbd': [N.nan, N.nan, N.nan, N.nan]}
+        self.rcaS2values = {'rcaS2': N.nan, 'rcaS2.err': N.nan,
+                            'rcaS2.stat': N.nan,
+                            'rcaS2.syst': N.nan,
+                            'rcaS2.mean': N.nan,
+                            'rcaS2_lbd': [N.nan, N.nan, N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -924,7 +927,7 @@ class Craniometer:
             min_2 = lbd2 - interval_2
             max_2 = lbd2 + interval_2
 
-            RCaS2_value = (self._integration(self.x, self.y, min=min_2,
+            rcaS2_value = (self._integration(self.x, self.y, min=min_2,
                                              max=max_2, verbose=verbose)) / \
                 self._integration(self.x, self.y,
                                   min=min_1,
@@ -932,75 +935,75 @@ class Craniometer:
                                   verbose=verbose)
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of RCaS2'
-            RCaS2_value = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcaS2'
+            rcaS2_value = float(N.nan)
 
         if simu:
-            if not N.isfinite(RCaS2_value):
+            if not N.isfinite(rcaS2_value):
                 return [float(N.nan), float(N.nan)]
 
-            RCaS2_simu = []
+            rcaS2_simu = []
             for simu in self.simulations:
                 try:
-                    RCaS2_simu.append(simu.RCaS2(simu=False,
+                    rcaS2_simu.append(simu.rcaS2(simu=False,
                                                  syst=False,
                                                  verbose=False))
                 except ValueError:
                     continue
-            RCaS2_sigma = self.std2(N.array(RCaS2_simu)[N.isfinite(RCaS2_simu)],
-                                    RCaS2_value)
-            RCaS2_mean = N.mean(N.array(RCaS2_simu)[N.isfinite(RCaS2_simu)])
+            rcaS2_sigma = self.std2(N.array(rcaS2_simu)[N.isfinite(rcaS2_simu)],
+                                    rcaS2_value)
+            rcaS2_mean = N.mean(N.array(rcaS2_simu)[N.isfinite(rcaS2_simu)])
 
-            if N.isfinite(RCaS2_value):
-                self.RCaS2values = {'RCaS2': float(RCaS2_value),
-                                    'RCaS2.err': float(RCaS2_sigma),
-                                    'RCaS2.stat': float(RCaS2_sigma),
-                                    'RCaS2.mean': float(RCaS2_mean),
-                                    'RCaS2_lbd': [float(min_1), float(max_1),
+            if N.isfinite(rcaS2_value):
+                self.rcaS2values = {'rcaS2': float(rcaS2_value),
+                                    'rcaS2.err': float(rcaS2_sigma),
+                                    'rcaS2.stat': float(rcaS2_sigma),
+                                    'rcaS2.mean': float(rcaS2_mean),
+                                    'rcaS2_lbd': [float(min_1), float(max_1),
                                                   float(min_2), float(max_2)]}
 
         if syst:
-            RCaS2_syst = []
+            rcaS2_syst = []
             for system in self.syst:
                 try:
-                    RCaS2_syst.append(system.RCaS2(simu=False,
+                    rcaS2_syst.append(system.rcaS2(simu=False,
                                                    syst=False,
                                                    verbose=False))
                 except ValueError:
                     continue
 
-            RCaS2_sigma_syst = self.std2(
-                N.array(RCaS2_syst)[N.isfinite(RCaS2_syst)], RCaS2_value)
+            rcaS2_sigma_syst = self.std2(
+                N.array(rcaS2_syst)[N.isfinite(rcaS2_syst)], rcaS2_value)
 
-            if N.isfinite(RCaS2_sigma_syst):
-                RCaS2_sigma = float(N.sqrt(RCaS2_sigma**2 +
-                                           RCaS2_sigma_syst**2))
+            if N.isfinite(rcaS2_sigma_syst):
+                rcaS2_sigma = float(N.sqrt(rcaS2_sigma**2 +
+                                           rcaS2_sigma_syst**2))
             else:
-                RCaS2_sigma *= 2
-            self.RCaS2values['RCaS2.syst'] = float(RCaS2_sigma_syst)
-            self.RCaS2values['RCaS2.err'] = float(RCaS2_sigma)
+                rcaS2_sigma *= 2
+            self.rcaS2values['rcaS2.syst'] = float(rcaS2_sigma_syst)
+            self.rcaS2values['rcaS2.err'] = float(rcaS2_sigma)
 
-            return [float(RCaS2_value), float(RCaS2_sigma)]
+            return [float(rcaS2_value), float(rcaS2_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(RCaS2_value):
-                self.RCaS2values = {'RCaS2': float(RCaS2_value),
-                                    'RCaS2_lbd': [float(min_1),
+            if N.isfinite(rcaS2_value):
+                self.rcaS2values = {'rcaS2': float(rcaS2_value),
+                                    'rcaS2_lbd': [float(min_1),
                                                   float(max_1),
                                                   float(min_2),
                                                   float(max_2)],
-                                    'RCaS2.err': N.nan,
-                                    'RCaS2.stat': N.nan,
-                                    'RCaS2.mean': N.nan}
+                                    'rcaS2.err': N.nan,
+                                    'rcaS2.stat': N.nan,
+                                    'rcaS2.mean': N.nan}
 
-            return RCaS2_value
+            return rcaS2_value
 
-    def RCaSbis(self, verbose=True, simu=True):
+    def rcaSbis(self, verbose=True, simu=True):
         """
-        Return the value and the error of RCaSbis.
+        Return the value and the error of rcaSbis.
 
-        [RCaSbis, RCaSbis_sigma]
+        [rcaSbis, rcaSbis_sigma]
         """
 
         min_1 = 3620
@@ -1009,7 +1012,7 @@ class Craniometer:
         max_2 = 4012
 
         try:
-            RCaS_value = self._integration(self.x, self.y, min=min_2,
+            rcaS_value = self._integration(self.x, self.y, min=min_2,
                                            max=max_2, verbose=verbose) / \
                 self._integration(self.x, self.y,
                                   min=min_1,
@@ -1023,20 +1026,20 @@ class Craniometer:
                                           max=max_2, verbose=verbose)
             var_b = self._var_integration(self.x, self.v, min=min_1,
                                           max=max_1, verbose=verbose)
-            RCaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
+            rcaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                   verbose=verbose))
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of RCaS'
-            RCaS_value = float(N.nan)
-            RCaS_sigma = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcaS'
+            rcaS_value = float(N.nan)
+            rcaS_sigma = float(N.nan)
 
-        return [float(RCaS_value), float(RCaS_sigma)]
+        return [float(rcaS_value), float(rcaS_sigma)]
 
-    def RCaS2bis(self, verbose=True, simu=True):
+    def rcaS2bis(self, verbose=True, simu=True):
         """
-        Return the value and the error of RCaS2bis
-        [RCaS2bis, RCaS2bis_sigma]
+        Return the value and the error of rcaS2bis
+        [rcaS2bis, rcaS2bis_sigma]
         """
         interval_1 = 48
         interval_2 = 62.5
@@ -1069,7 +1072,7 @@ class Craniometer:
         max_2 = lbd2 + interval_2
 
         try:
-            RCaS_value = (self._integration(self.x, self.y, min=min_2,
+            rcaS_value = (self._integration(self.x, self.y, min=min_2,
                                             max=max_2, verbose=verbose)) / \
                 (self._integration(self.x, self.y,
                                    min=min_1,
@@ -1083,25 +1086,25 @@ class Craniometer:
                                           verbose=verbose)
             var_b = self._var_integration(self.x, self.v, min=min_1,
                                           max=max_1, verbose=verbose)
-            RCaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
+            rcaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                   verbose=verbose))
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of RCaS'
-            RCaS_value = float(N.nan)
-            RCaS_sigma = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcaS'
+            rcaS_value = float(N.nan)
+            rcaS_sigma = float(N.nan)
 
-        return [float(RCaS_value), float(RCaS_sigma)]
+        return [float(rcaS_value), float(rcaS_sigma)]
 
-    def EDCa(self, verbose=True, simu=True, syst=True):
+    def edca(self, verbose=True, simu=True, syst=True):
         """
-        Return the value and the error of EDCa.
+        Return the value and the error of edca.
 
-        [EDCa, EDCa_sigma]
+        [edca, edca_sigma]
         """
-        self.EDCavalues = {'EDCa': N.nan, 'EDCa.err': N.nan, 'EDCa.stat': N.nan,
-                           'EDCa.syst': N.nan, 'EDCa.mean': N.nan,
-                           'EDCa_lbd': [N.nan, N.nan]}
+        self.edcavalues = {'edca': N.nan, 'edca.err': N.nan, 'edca.stat': N.nan,
+                           'edca.syst': N.nan, 'edca.mean': N.nan,
+                           'edca_lbd': [N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -1134,7 +1137,7 @@ class Craniometer:
                 lbd2, flux2, var2 = self.max_of_interval(self.p3930[0],
                                                          self.p3930[1])
 
-            EDCa_value = (self._equivalentwidth(self.x, self.y, lbd1=lbd1,
+            edca_value = (self._equivalentwidth(self.x, self.y, lbd1=lbd1,
                                                 lbd2=lbd2, flux1=flux1,
                                                 flux2=flux2,
                                                 verbose=verbose)) / \
@@ -1143,66 +1146,66 @@ class Craniometer:
             if verbose:
                 print >> sys.stderr, 'ERROR, none extrema found, try '\
                     'self.find_extrema()'
-            EDCa_value = N.nan
+            edca_value = N.nan
 
         if simu:
-            if not N.isfinite(EDCa_value):
+            if not N.isfinite(edca_value):
                 return [float(N.nan), float(N.nan)]
 
-            EDCa_simu = []
+            edca_simu = []
             for simu in self.simulations:
                 try:
-                    EDCa_simu.append(simu.EDCa(simu=False, syst=False,
+                    edca_simu.append(simu.edca(simu=False, syst=False,
                                                verbose=False))
                 except ValueError:
                     continue
-            EDCa_sigma = self.std2(N.array(EDCa_simu)[N.isfinite(EDCa_simu)],
-                                   EDCa_value)
-            EDCa_mean = N.mean(N.array(EDCa_simu)[N.isfinite(EDCa_simu)])
+            edca_sigma = self.std2(N.array(edca_simu)[N.isfinite(edca_simu)],
+                                   edca_value)
+            edca_mean = N.mean(N.array(edca_simu)[N.isfinite(edca_simu)])
 
-            if N.isfinite(EDCa_value):
-                self.EDCavalues = {'EDCa': float(EDCa_value),
-                                   'EDCa.err': float(EDCa_sigma),
-                                   'EDCa.stat': float(EDCa_sigma),
-                                   'EDCa.mean': float(EDCa_mean),
-                                   'EDCa_lbd': [lbd1, lbd2]}
+            if N.isfinite(edca_value):
+                self.edcavalues = {'edca': float(edca_value),
+                                   'edca.err': float(edca_sigma),
+                                   'edca.stat': float(edca_sigma),
+                                   'edca.mean': float(edca_mean),
+                                   'edca_lbd': [lbd1, lbd2]}
 
         if syst:
-            EDCa_syst = []
+            edca_syst = []
             for system in self.syst:
                 try:
-                    EDCa_syst.append(system.EDCa(simu=False,
+                    edca_syst.append(system.edca(simu=False,
                                                  syst=False,
                                                  verbose=False))
                 except ValueError:
                     continue
-            EDCa_sigma_syst = self.std2(
-                N.array(EDCa_syst)[N.isfinite(EDCa_syst)], EDCa_value)
+            edca_sigma_syst = self.std2(
+                N.array(edca_syst)[N.isfinite(edca_syst)], edca_value)
 
-            if N.isfinite(EDCa_sigma_syst):
-                EDCa_sigma = float(N.sqrt(EDCa_sigma**2 + EDCa_sigma_syst**2))
+            if N.isfinite(edca_sigma_syst):
+                edca_sigma = float(N.sqrt(edca_sigma**2 + edca_sigma_syst**2))
             else:
-                EDCa_sigma *= 2
-            self.EDCavalues['EDCa.syst'] = float(EDCa_sigma_syst)
-            self.EDCavalues['EDCa.err'] = float(EDCa_sigma)
+                edca_sigma *= 2
+            self.edcavalues['edca.syst'] = float(edca_sigma_syst)
+            self.edcavalues['edca.err'] = float(edca_sigma)
 
-            return [float(EDCa_value), float(EDCa_sigma)]
+            return [float(edca_value), float(edca_sigma)]
 
         if not simu and not syst:
-            if N.isfinite(EDCa_value):
-                self.EDCavalues = {'EDCa': float(EDCa_value),
-                                   'EDCa_lbd': [lbd1, lbd2]}
-            return EDCa_value
+            if N.isfinite(edca_value):
+                self.edcavalues = {'edca': float(edca_value),
+                                   'edca_lbd': [lbd1, lbd2]}
+            return edca_value
 
-    def RSi(self, verbose=True, simu=True, syst=True):
+    def rsi(self, verbose=True, simu=True, syst=True):
         """
-        Retun the value and the error of RSi.
+        Retun the value and the error of rsi.
 
-        [RSi, RSi_sigma]
+        [rsi, rsi_sigma]
         """
         # initialisation
-        self.RSivalues = {'RSi': N.nan, 'RSi.err': N.nan, 'RSi.stat': N.nan,
-                          'RSi.syst': N.nan, 'RSi.mean': N.nan, 'RSi_lbd': N.nan}
+        self.rsivalues = {'rsi': N.nan, 'rsi.err': N.nan, 'rsi.stat': N.nan,
+                          'rsi.syst': N.nan, 'rsi.mean': N.nan, 'rsi_lbd': N.nan}
         if self.init_only:
             return
 
@@ -1303,76 +1306,76 @@ class Craniometer:
                                           lbd3=lbd[4], flux1=flux[2],
                                           flux2=flux[3], flux3=flux[4],
                                           verbose=verbose)
-            RSi_value = d_blue / d_red
+            rsi_value = d_blue / d_red
 
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in computing of RSi, no '\
-                    'wavelenght to compute RSi or maybe none extrema found, '\
+                print >> sys.stderr, 'ERROR in computing of rsi, no '\
+                    'wavelenght to compute rsi or maybe none extrema found, '\
                     'try self.find_extrema()'
-            RSi_value = N.nan
+            rsi_value = N.nan
 
         if simu:
-            if not N.isfinite(RSi_value):
+            if not N.isfinite(rsi_value):
                 return [float(N.nan), float(N.nan)]
 
-            RSi_simu = []
+            rsi_simu = []
             for simu in self.simulations:
                 try:
-                    RSi_simu.append(simu.RSi(simu=False, syst=False,
+                    rsi_simu.append(simu.rsi(simu=False, syst=False,
                                              verbose=False))
                 except ValueError:
                     continue
-            RSi_sigma = self.std2(N.array(RSi_simu)[N.isfinite(RSi_simu)],
-                                  RSi_value)
-            RSi_mean = N.mean(N.array(RSi_simu)[N.isfinite(RSi_simu)])
+            rsi_sigma = self.std2(N.array(rsi_simu)[N.isfinite(rsi_simu)],
+                                  rsi_value)
+            rsi_mean = N.mean(N.array(rsi_simu)[N.isfinite(rsi_simu)])
 
-            if N.isfinite(RSi_value):
-                self.RSivalues = {'RSi': float(RSi_value),
-                                  'RSi.err': float(RSi_sigma),
-                                  'RSi.stat': float(RSi_sigma),
-                                  'RSi.mean': float(RSi_mean),
-                                  'RSi_lbd': lbd}
+            if N.isfinite(rsi_value):
+                self.rsivalues = {'rsi': float(rsi_value),
+                                  'rsi.err': float(rsi_sigma),
+                                  'rsi.stat': float(rsi_sigma),
+                                  'rsi.mean': float(rsi_mean),
+                                  'rsi_lbd': lbd}
 
         if syst:
-            RSi_syst = []
+            rsi_syst = []
             for system in self.syst:
                 try:
-                    RSi_syst.append(system.RSi(simu=False, syst=False,
+                    rsi_syst.append(system.rsi(simu=False, syst=False,
                                                verbose=False))
                 except ValueError:
                     continue
-            RSi_sigma_syst = self.std2(N.array(RSi_syst)[N.isfinite(RSi_syst)],
-                                       RSi_value)
-            if N.isfinite(RSi_sigma_syst):
-                RSi_sigma = float(N.sqrt(RSi_sigma**2 + RSi_sigma_syst**2))
+            rsi_sigma_syst = self.std2(N.array(rsi_syst)[N.isfinite(rsi_syst)],
+                                       rsi_value)
+            if N.isfinite(rsi_sigma_syst):
+                rsi_sigma = float(N.sqrt(rsi_sigma**2 + rsi_sigma_syst**2))
             else:
-                RSi_sigma *= 2
-            self.RSivalues['RSi.syst'] = float(RSi_sigma_syst)
-            self.RSivalues['RSi.err'] = float(RSi_sigma)
+                rsi_sigma *= 2
+            self.rsivalues['rsi.syst'] = float(rsi_sigma_syst)
+            self.rsivalues['rsi.err'] = float(rsi_sigma)
 
-            return [float(RSi_value), float(RSi_sigma)]
+            return [float(rsi_value), float(rsi_sigma)]
 
         if simu == False and syst == False:
-            if N.isfinite(RSi_value):
-                self.RSivalues = {'RSi': float(RSi_value),
-                                  'RSi_lbd': lbd,
-                                  'RSi.err': N.nan,
-                                  'RSi.stat': N.nan,
-                                  'RSi.syst': N.nan,
-                                  'RSi.mean': N.nan}
+            if N.isfinite(rsi_value):
+                self.rsivalues = {'rsi': float(rsi_value),
+                                  'rsi_lbd': lbd,
+                                  'rsi.err': N.nan,
+                                  'rsi.stat': N.nan,
+                                  'rsi.syst': N.nan,
+                                  'rsi.mean': N.nan}
 
-            return RSi_value
+            return rsi_value
 
-    def RSiS(self, verbose=True, simu=True, syst=True):
+    def rsiS(self, verbose=True, simu=True, syst=True):
         """
-        Return the value and the error of RSiS
-        [RSiS, RSiS_sigma]
+        Return the value and the error of rsiS
+        [rsiS, rsiS_sigma]
         """
         # initialisation
-        self.RSiSvalues = {'RSiS': N.nan, 'RSiS.err': N.nan, 'RSiS.stat': N.nan,
-                           'RSiS.syst': N.nan, 'RSiS.mean': N.nan,
-                           'RSiS_lbd': [N.nan, N.nan], 'RSiS_flux': [N.nan, N.nan]}
+        self.rsiSvalues = {'rsiS': N.nan, 'rsiS.err': N.nan, 'rsiS.stat': N.nan,
+                           'rsiS.syst': N.nan, 'rsiS.mean': N.nan,
+                           'rsiS_lbd': [N.nan, N.nan], 'rsiS_flux': [N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -1399,77 +1402,77 @@ class Craniometer:
                 self.p6312[0], self.p6312[1])
 
         try:
-            RSiS_value = flux1 / flux2
+            rsiS_value = flux1 / flux2
         except ValueError:
             if verbose:
-                print >> sys.stderr, "ERROR in computing RSiS"
-            RSiS_value = N.nan
+                print >> sys.stderr, "ERROR in computing rsiS"
+            rsiS_value = N.nan
 
         if simu:
-            if not N.isfinite(RSiS_value):
+            if not N.isfinite(rsiS_value):
                 return [float(N.nan), float(N.nan)]
 
-            RSiS_simu = []
+            rsiS_simu = []
             for simu in self.simulations:
                 try:
-                    RSiS_simu.append(simu.RSiS(simu=False, syst=False,
+                    rsiS_simu.append(simu.rsiS(simu=False, syst=False,
                                                verbose=False))
                 except ValueError:
                     continue
 
-            RSiS_sigma = self.std2(N.array(RSiS_simu)[N.isfinite(RSiS_simu)],
-                                   RSiS_value)
-            RSiS_mean = N.mean(N.array(RSiS_simu)[N.isfinite(RSiS_simu)])
+            rsiS_sigma = self.std2(N.array(rsiS_simu)[N.isfinite(rsiS_simu)],
+                                   rsiS_value)
+            rsiS_mean = N.mean(N.array(rsiS_simu)[N.isfinite(rsiS_simu)])
 
-            if N.isfinite(RSiS_value):
-                self.RSiSvalues = {'RSiS': float(RSiS_value),
-                                   'RSiS.err': float(RSiS_sigma),
-                                   'RSiS.stat': float(RSiS_sigma),
-                                   'RSiS.mean': float(RSiS_mean),
-                                   'RSiS_lbd': [float(lbd1), float(lbd2)],
-                                   'RSiS_flux': [float(flux1), float(flux2)]}
+            if N.isfinite(rsiS_value):
+                self.rsiSvalues = {'rsiS': float(rsiS_value),
+                                   'rsiS.err': float(rsiS_sigma),
+                                   'rsiS.stat': float(rsiS_sigma),
+                                   'rsiS.mean': float(rsiS_mean),
+                                   'rsiS_lbd': [float(lbd1), float(lbd2)],
+                                   'rsiS_flux': [float(flux1), float(flux2)]}
 
         if syst:
 
-            RSiS_syst = []
+            rsiS_syst = []
             for system in self.syst:
                 try:
-                    RSiS_syst.append(system.RSiS(simu=False, syst=False,
+                    rsiS_syst.append(system.rsiS(simu=False, syst=False,
                                                  verbose=False))
                 except ValueError:
                     continue
 
-            RSiS_sigma_syst = self.std2(
-                N.array(RSiS_syst)[N.isfinite(RSiS_syst)], RSiS_value)
-            if N.isfinite(RSiS_sigma_syst):
-                RSiS_sigma = float(N.sqrt(RSiS_sigma**2 + RSiS_sigma_syst**2))
+            rsiS_sigma_syst = self.std2(
+                N.array(rsiS_syst)[N.isfinite(rsiS_syst)], rsiS_value)
+            if N.isfinite(rsiS_sigma_syst):
+                rsiS_sigma = float(N.sqrt(rsiS_sigma**2 + rsiS_sigma_syst**2))
             else:
-                RSiS_sigma *= 2
-            self.RSiSvalues['RSiS.syst'] = float(RSiS_sigma_syst)
-            self.RSiSvalues['RSiS.err'] = float(RSiS_sigma)
+                rsiS_sigma *= 2
+            self.rsiSvalues['rsiS.syst'] = float(rsiS_sigma_syst)
+            self.rsiSvalues['rsiS.err'] = float(rsiS_sigma)
 
-            return [float(RSiS_value), float(RSiS_sigma)]
+            return [float(rsiS_value), float(rsiS_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(RSiS_value):
-                self.RSiSvalues = {'RSiS': float(RSiS_value),
-                                   'RSiS_lbd': [float(lbd1), float(lbd2)],
-                                   'RSiS_flux': [float(flux1), float(flux2)],
-                                   'RSiS.err': N.nan, 'RSiS.stat': N.nan,
-                                   'RSiS.syst': N.nan, 'RSiS.mean': N.nan}
-            return RSiS_value
+            if N.isfinite(rsiS_value):
+                self.rsiSvalues = {'rsiS': float(rsiS_value),
+                                   'rsiS_lbd': [float(lbd1), float(lbd2)],
+                                   'rsiS_flux': [float(flux1), float(flux2)],
+                                   'rsiS.err': N.nan, 'rsiS.stat': N.nan,
+                                   'rsiS.syst': N.nan, 'rsiS.mean': N.nan}
+            return rsiS_value
 
-    def RSiSS2(self, verbose=True, simu=True):
+    def rsiSS2(self, verbose=True, simu=True):
         """
-        Return the value and the error of RSiSS
-        [RSiSS, RSiSS_sigma]
+        Return the value and the error of rsiSS
+        [rsiSS, rsiSS_sigma]
         """
         # initialisation
-        self.RSiSSvalues = {'RSiSS': N.nan, 'RSiSS.err': N.nan,
-                            'RSiSS.stat': N.nan, 'RSiSS.syst': N.nan,
-                            'RSiSS.mean': N.nan,
-                            'RSiSS_lbd': [N.nan, N.nan, N.nan, N.nan]}
+        self.rsiSSvalues = {'rsiSS': N.nan, 'rsiSS.err': N.nan,
+                            'rsiSS.stat': N.nan, 'rsiSS.syst': N.nan,
+                            'rsiSS.mean': N.nan,
+                            'rsiSS_lbd': [N.nan, N.nan, N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -1478,7 +1481,7 @@ class Craniometer:
         min_2 = 6200
         max_2 = 6450
         try:
-            RSiSS_value = (self._integration(self.x, self.y, min=min_1,
+            rsiSS_value = (self._integration(self.x, self.y, min=min_1,
                                              max=max_1, verbose=verbose)) / \
                 (self._integration(self.x, self.y,
                                    min=min_2,
@@ -1486,51 +1489,51 @@ class Craniometer:
                                    verbose=verbose))
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in RSiSS computing'
-            RSiSS_value = float(N.nan)
+                print >> sys.stderr, 'ERROR in rsiSS computing'
+            rsiSS_value = float(N.nan)
 
         if simu:
-            if not N.isfinite(RSiSS_value):
+            if not N.isfinite(rsiSS_value):
                 return [float(N.nan), float(N.nan)]
 
-            RSiSS_simu = []
+            rsiSS_simu = []
             for simu in self.simulations:
                 try:
-                    RSiSS_simu.append(simu.RSiSS(simu=False, verbose=False))
+                    rsiSS_simu.append(simu.rsiSS(simu=False, verbose=False))
                 except ValueError:
                     continue
 
-            RSiSS_sigma = self.std2(RSiSS_simu, RSiSS_value)
-            RSiSS_mean = N.mean(RSiSS_simu)
+            rsiSS_sigma = self.std2(rsiSS_simu, rsiSS_value)
+            rsiSS_mean = N.mean(rsiSS_simu)
 
-            if N.isfinite(RSiSS_value):
-                self.RSiSSvalues = {'RSiSS': float(RSiSS_value),
-                                    'RSiSS.err': float(RSiSS_sigma),
-                                    'RSiSS.stat': float(RSiSS_sigma),
-                                    'RSiSS.mean': float(RSiSS_mean),
-                                    'RSiSS_lbd': [float(min_1),
+            if N.isfinite(rsiSS_value):
+                self.rsiSSvalues = {'rsiSS': float(rsiSS_value),
+                                    'rsiSS.err': float(rsiSS_sigma),
+                                    'rsiSS.stat': float(rsiSS_sigma),
+                                    'rsiSS.mean': float(rsiSS_mean),
+                                    'rsiSS_lbd': [float(min_1),
                                                   float(max_1),
                                                   float(min_2),
                                                   float(max_2)]}
 
-            return [float(RSiSS_value), float(RSiSS_sigma)]
+            return [float(rsiSS_value), float(rsiSS_sigma)]
 
         else:
-            if N.isfinite(RSiSS_value):
-                self.RSiSSvalues = {'RSiSS': float(RSiSS_value),
-                                    'RSiSS_lbd': [float(min_1),
+            if N.isfinite(rsiSS_value):
+                self.rsiSSvalues = {'rsiSS': float(rsiSS_value),
+                                    'rsiSS_lbd': [float(min_1),
                                                   float(max_1),
                                                   float(min_2),
                                                   float(max_2)],
-                                    'RSiSS.err': N.nan, 'RSiSS.stat': N.nan,
-                                    'RSiSS.mean': N.nan, 'RSiSS.syst': N.nan}
+                                    'rsiSS.err': N.nan, 'rsiSS.stat': N.nan,
+                                    'rsiSS.mean': N.nan, 'rsiSS.syst': N.nan}
 
-            return RSiSS_value
+            return rsiSS_value
 
-    def RSiSS(self, verbose=True, simu=True):
+    def rsiSS(self, verbose=True, simu=True):
         """
-        Return the value and the error of RSiSS
-        [RSiSS, RSiSS_sigma]
+        Return the value and the error of rsiSS
+        [rsiSS, rsiSS_sigma]
         """
 
         min_1 = 5500
@@ -1546,24 +1549,24 @@ class Craniometer:
                                           verbose=verbose)
             var_b = self._var_integration(self.x, self.v, min=min_2, max=max_2,
                                           verbose=verbose)
-            RSiSS_value = a / b
-            RSiSS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
+            rsiSS_value = a / b
+            rsiSS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                    verbose=verbose))
         except ValueError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of RSiSS'
-            RSiSS_value = float(N.nan)
-            RSiSS_sigma = float(N.nan)
-        self.RSiSSvalues = {'RSiSS': float(RSiSS_value),
-                            'RSiSS.err': float(RSiSS_sigma),
-                            'RSiSS_lbd': [float(min_1),
+                print >> sys.stderr, 'ERROR in compute of rsiSS'
+            rsiSS_value = float(N.nan)
+            rsiSS_sigma = float(N.nan)
+        self.rsiSSvalues = {'rsiSS': float(rsiSS_value),
+                            'rsiSS.err': float(rsiSS_sigma),
+                            'rsiSS_lbd': [float(min_1),
                                           float(max_1),
                                           float(min_2),
                                           float(max_2)]}
 
-        return [float(RSiSS_value), float(RSiSS_sigma)]
+        return [float(rsiSS_value), float(rsiSS_sigma)]
 
-    def EW(self, lambda_min_blue, lambda_max_blue, lambda_min_red,
+    def ew(self, lambda_min_blue, lambda_max_blue, lambda_min_red,
            lambda_max_red, sf, verbose=True, simu=True,
            right1=False, left1=False, right2=False, left2=False,
            sup=False, syst=True, check=True):
@@ -1571,61 +1574,61 @@ class Craniometer:
         Return the value and the error of an Equivalent Width
         [lambda_min_blue, lambda_max_blue] and [lambda_min_red, lambda_max_red]
         are the interval where the two peaks are searching.
-        'sf' is the name (a string) of the spectral feature associated to the EW
-        [EW, EW_sigma]
+        'sf' is the name (a string) of the spectral feature associated to the ew
+        [ew, ew_sigma]
         """
         # shoftcut
-        EWV = self.ewvalues
+        ewV = self.ewvalues
 
         # Initialisation
-        EWV['EW%s' % sf] = N.nan
-        EWV['lbd_EW%s' % sf] = [N.nan, N.nan]
-        EWV['flux_EW%s' % sf] = [N.nan, N.nan]
-        EWV['R%s' % sf] = N.nan
-        EWV['flux_sum_norm_EW%s' % sf] = N.nan
-        EWV['depth_norm_EW%s' % sf] = N.nan
-        EWV['depth_EW%s' % sf] = N.nan
-        EWV['depth_EW%s.err' % sf] = N.nan
-        EWV['depth_EW%s.stat' % sf] = N.nan
-        EWV['depth_EW%s.syst' % sf] = N.nan
-        EWV['depth_EW%s.mean' % sf] = N.nan
-        EWV['surf_norm_EW%s' % sf] = N.nan
-        EWV['surf_EW%s.err' % sf] = N.nan
-        EWV['surf_EW%s.stat' % sf] = N.nan
-        EWV['surf_EW%s.syst' % sf] = N.nan
-        EWV['surf_EW%s.mean' % sf] = N.nan
-        EWV['width_EW%s' % sf] = N.nan
-        EWV['EW%s.err' % sf] = N.nan
-        EWV['EW%s.stat' % sf] = N.nan
-        EWV['EW%s.syst' % sf] = N.nan
-        EWV['flux_sum_norm_EW%s.err' % sf] = N.nan
-        EWV['flux_sum_norm_EW%s.stat' % sf] = N.nan
-        EWV['flux_sum_norm_EW%s.syst' % sf] = N.nan
-        EWV['depth_norm_EW%s.err' % sf] = N.nan
-        EWV['depth_norm_EW%s.stat' % sf] = N.nan
-        EWV['depth_norm_EW%s.syst' % sf] = N.nan
-        EWV['width_EW%s.err' % sf] = N.nan
-        EWV['width_EW%s.stat' % sf] = N.nan
-        EWV['width_EW%s.syst' % sf] = N.nan
-        EWV['EW%s.mean' % sf] = N.nan
-        EWV['R%s.mean' % sf] = N.nan
-        EWV['R%s.stat' % sf] = N.nan
-        EWV['R%s.syst' % sf] = N.nan
-        EWV['R%s.err' % sf] = N.nan
-        EWV['flux_sum_norm_EW%s.mean' % sf] = N.nan
-        EWV['depth_norm_EW%s.mean' % sf] = N.nan
-        EWV['width_EW%s.mean' % sf] = N.nan
-        EWV['EW%s.med' % sf] = N.nan
-        EWV['fmean_EW%s' % sf] = N.nan
-        EWV['fmean_EW%s.err' % sf] = N.nan
-        EWV['fmean_EW%s.stat' % sf] = N.nan
-        EWV['fmean_EW%s.syst' % sf] = N.nan
-        EWV['fmean_EW%s.mean' % sf] = N.nan
+        ewV['ew%s' % sf] = N.nan
+        ewV['lbd_ew%s' % sf] = [N.nan, N.nan]
+        ewV['flux_ew%s' % sf] = [N.nan, N.nan]
+        ewV['R%s' % sf] = N.nan
+        ewV['flux_sum_norm_ew%s' % sf] = N.nan
+        ewV['depth_norm_ew%s' % sf] = N.nan
+        ewV['depth_ew%s' % sf] = N.nan
+        ewV['depth_ew%s.err' % sf] = N.nan
+        ewV['depth_ew%s.stat' % sf] = N.nan
+        ewV['depth_ew%s.syst' % sf] = N.nan
+        ewV['depth_ew%s.mean' % sf] = N.nan
+        ewV['surf_norm_ew%s' % sf] = N.nan
+        ewV['surf_ew%s.err' % sf] = N.nan
+        ewV['surf_ew%s.stat' % sf] = N.nan
+        ewV['surf_ew%s.syst' % sf] = N.nan
+        ewV['surf_ew%s.mean' % sf] = N.nan
+        ewV['width_ew%s' % sf] = N.nan
+        ewV['ew%s.err' % sf] = N.nan
+        ewV['ew%s.stat' % sf] = N.nan
+        ewV['ew%s.syst' % sf] = N.nan
+        ewV['flux_sum_norm_ew%s.err' % sf] = N.nan
+        ewV['flux_sum_norm_ew%s.stat' % sf] = N.nan
+        ewV['flux_sum_norm_ew%s.syst' % sf] = N.nan
+        ewV['depth_norm_ew%s.err' % sf] = N.nan
+        ewV['depth_norm_ew%s.stat' % sf] = N.nan
+        ewV['depth_norm_ew%s.syst' % sf] = N.nan
+        ewV['width_ew%s.err' % sf] = N.nan
+        ewV['width_ew%s.stat' % sf] = N.nan
+        ewV['width_ew%s.syst' % sf] = N.nan
+        ewV['ew%s.mean' % sf] = N.nan
+        ewV['R%s.mean' % sf] = N.nan
+        ewV['R%s.stat' % sf] = N.nan
+        ewV['R%s.syst' % sf] = N.nan
+        ewV['R%s.err' % sf] = N.nan
+        ewV['flux_sum_norm_ew%s.mean' % sf] = N.nan
+        ewV['depth_norm_ew%s.mean' % sf] = N.nan
+        ewV['width_ew%s.mean' % sf] = N.nan
+        ewV['ew%s.med' % sf] = N.nan
+        ewV['fmean_ew%s' % sf] = N.nan
+        ewV['fmean_ew%s.err' % sf] = N.nan
+        ewV['fmean_ew%s.stat' % sf] = N.nan
+        ewV['fmean_ew%s.syst' % sf] = N.nan
+        ewV['fmean_ew%s.mean' % sf] = N.nan
 
         if self.init_only:
             return
 
-        # Function to compute the EW value and find its parameters ============
+        # Function to compute the ew value and find its parameters ============
         try:
             lbd1, flux1, var1 = self._extrema_value_in_interval(lambda_min_blue,
                                                                 lambda_max_blue,
@@ -1718,10 +1721,10 @@ class Craniometer:
                                          & (self.x < lbd2)]
                     else:
                         lbd1, flux1 = lbd1_tmp, flux1_tmp
-            #if sup and len(x[x<0]) > 5: EW_value = N.nan
-            # else: EW_value = self._equivalentwidth(self.x, self.y,
+            #if sup and len(x[x<0]) > 5: ew_value = N.nan
+            # else: ew_value = self._equivalentwidth(self.x, self.y,
             # lbd1=lbd1, lbd2=lbd2, flux1=flux1, flux2=flux2, verbose=verbose)
-            EW_value = self._equivalentwidth(self.x,
+            ew_value = self._equivalentwidth(self.x,
                                              self.y,
                                              lbd1=lbd1,
                                              lbd2=lbd2,
@@ -1732,10 +1735,10 @@ class Craniometer:
             if verbose:
                 print >> sys.stderr, 'ERROR, no extrema found, '\
                     'try self.find_extrema()'
-            EW_value = N.nan
+            ew_value = N.nan
         #======================================================================
 
-        if N.isfinite(EW_value):  # Additional informations
+        if N.isfinite(ew_value):  # Additional informations
             interval = (self.x > lbd1) & (self.x < lbd2)
             arg = N.argmin(self.s[interval])
             lbd3 = self.x[interval][arg]
@@ -1757,28 +1760,28 @@ class Craniometer:
             fmean = 2 * (flux2 - self.smoother(lbd3)) \
                 / (flux2 + self.smoother(lbd3))
 
-            EWV['EW%s' % sf] = float(EW_value)
-            EWV['lbd_EW%s' % sf] = [float(lbd1), float(lbd2)]
-            EWV['flux_EW%s' % sf] = [float(flux1), float(flux2)]
-            EWV['R%s' % sf] = float(flux2 / flux1)
-            EWV['flux_sum_norm_EW%s' % sf] = float(flux_norm)
-            EWV['depth_norm_EW%s' % sf] = float(depth_n)
-            EWV['width_EW%s' % sf] = float(lbd2 - lbd1)
-            EWV['depth_EW%s' % sf] = float(depth)
-            EWV['surf_EW%s' % sf] = float(surf)
-            EWV['fmean_EW%s' % sf] = float(fmean)
+            ewV['ew%s' % sf] = float(ew_value)
+            ewV['lbd_ew%s' % sf] = [float(lbd1), float(lbd2)]
+            ewV['flux_ew%s' % sf] = [float(flux1), float(flux2)]
+            ewV['R%s' % sf] = float(flux2 / flux1)
+            ewV['flux_sum_norm_ew%s' % sf] = float(flux_norm)
+            ewV['depth_norm_ew%s' % sf] = float(depth_n)
+            ewV['width_ew%s' % sf] = float(lbd2 - lbd1)
+            ewV['depth_ew%s' % sf] = float(depth)
+            ewV['surf_ew%s' % sf] = float(surf)
+            ewV['fmean_ew%s' % sf] = float(fmean)
 
         # Compute statistiaue error
         if simu:
-            if not N.isfinite(EW_value):
+            if not N.isfinite(ew_value):
                 return [float(N.nan), float(N.nan)]
 
-            EW_simu, R_simu, d_simu, w_simu, f_simu, fm_simu = [
+            ew_simu, R_simu, d_simu, w_simu, f_simu, fm_simu = [
             ], [], [], [], [], []
             dep_simu, sur_simu = [], []
             for simu in self.simulations:
                 try:
-                    EW_simu.append(simu.EW(lambda_min_blue,
+                    ew_simu.append(simu.ew(lambda_min_blue,
                                            lambda_max_blue,
                                            lambda_min_red,
                                            lambda_max_red,
@@ -1786,18 +1789,18 @@ class Craniometer:
                                            simu=False,
                                            syst=False,
                                            verbose=False))
-                    R_simu.append(float(simu.EWvalues['R%s' % sf]))
+                    R_simu.append(float(simu.ewvalues['R%s' % sf]))
                     f_simu.append(
-                        float(simu.EWvalues['flux_sum_norm_EW%s' % sf]))
-                    d_simu.append(float(simu.EWvalues['depth_norm_EW%s' % sf]))
-                    w_simu.append(float(simu.EWvalues['width_EW%s' % sf]))
-                    dep_simu.append(float(simu.EWvalues['depth_EW%s' % sf]))
-                    sur_simu.append(float(simu.EWvalues['surf_EW%s' % sf]))
-                    fm_simu.append(float(simu.EWvalues['fmean_EW%s' % sf]))
+                        float(simu.ewvalues['flux_sum_norm_ew%s' % sf]))
+                    d_simu.append(float(simu.ewvalues['depth_norm_ew%s' % sf]))
+                    w_simu.append(float(simu.ewvalues['width_ew%s' % sf]))
+                    dep_simu.append(float(simu.ewvalues['depth_ew%s' % sf]))
+                    sur_simu.append(float(simu.ewvalues['surf_ew%s' % sf]))
+                    fm_simu.append(float(simu.ewvalues['fmean_ew%s' % sf]))
                 except ValueError:
                     continue
-            EW_sigma = self.std2(
-                N.array(EW_simu)[N.isfinite(EW_simu)], EW_value)
+            ew_sigma = self.std2(
+                N.array(ew_simu)[N.isfinite(ew_simu)], ew_value)
             R_sigma = self.std2(N.array(R_simu)[N.isfinite(R_simu)],
                                 float(flux2 / flux1))
             f_sigma = self.std2(N.array(f_simu)[N.isfinite(f_simu)], flux_norm)
@@ -1811,7 +1814,7 @@ class Craniometer:
             fmean_sigma = self.std2(N.array(fm_simu)[N.isfinite(fm_simu)],
                                     fmean)
 
-            EW_mean = N.mean(N.array(EW_simu)[N.isfinite(EW_simu)])
+            ew_mean = N.mean(N.array(ew_simu)[N.isfinite(ew_simu)])
             R_mean = N.mean(N.array(R_simu)[N.isfinite(R_simu)])
             f_mean = N.mean(N.array(f_simu)[N.isfinite(f_simu)])
             d_mean = N.mean(N.array(d_simu)[N.isfinite(d_simu)])
@@ -1820,47 +1823,47 @@ class Craniometer:
             sur_mean = N.mean(N.array(sur_simu)[N.isfinite(sur_simu)])
             fmean_mean = N.mean(N.array(fm_simu)[N.isfinite(fm_simu)])
 
-            EW_med = N.median(N.array(EW_simu)[N.isfinite(EW_simu)])
+            ew_med = N.median(N.array(ew_simu)[N.isfinite(ew_simu)])
 
-            EWV['EW%s.err' % sf] = float(EW_sigma)
-            EWV['EW%s.stat' % sf] = float(EW_sigma)
-            EWV['R%s.err' % sf] = float(R_sigma)
-            EWV['R%s.stat' % sf] = float(R_sigma)
-            EWV['flux_sum_norm_EW%s.err' % sf] = float(f_sigma)
-            EWV['flux_sum_norm_EW%s.stat' % sf] = float(f_sigma)
-            EWV['depth_norm_EW%s.err' % sf] = float(d_sigma)
-            EWV['depth_norm_EW%s.stat' % sf] = float(d_sigma)
-            EWV['width_EW%s.err' % sf] = float(w_sigma)
-            EWV['width_EW%s.stat' % sf] = float(w_sigma)
-            EWV['depth_EW%s.err' % sf] = float(dep_sigma)
-            EWV['depth_EW%s.stat' % sf] = float(dep_sigma)
-            EWV['surf_EW%s.err' % sf] = float(sur_sigma)
-            EWV['surf_EW%s.stat' % sf] = float(sur_sigma)
-            EWV['fmean_EW%s.err' % sf] = float(fmean_sigma)
-            EWV['fmean_EW%s.stat' % sf] = float(fmean_sigma)
+            ewV['ew%s.err' % sf] = float(ew_sigma)
+            ewV['ew%s.stat' % sf] = float(ew_sigma)
+            ewV['R%s.err' % sf] = float(R_sigma)
+            ewV['R%s.stat' % sf] = float(R_sigma)
+            ewV['flux_sum_norm_ew%s.err' % sf] = float(f_sigma)
+            ewV['flux_sum_norm_ew%s.stat' % sf] = float(f_sigma)
+            ewV['depth_norm_ew%s.err' % sf] = float(d_sigma)
+            ewV['depth_norm_ew%s.stat' % sf] = float(d_sigma)
+            ewV['width_ew%s.err' % sf] = float(w_sigma)
+            ewV['width_ew%s.stat' % sf] = float(w_sigma)
+            ewV['depth_ew%s.err' % sf] = float(dep_sigma)
+            ewV['depth_ew%s.stat' % sf] = float(dep_sigma)
+            ewV['surf_ew%s.err' % sf] = float(sur_sigma)
+            ewV['surf_ew%s.stat' % sf] = float(sur_sigma)
+            ewV['fmean_ew%s.err' % sf] = float(fmean_sigma)
+            ewV['fmean_ew%s.stat' % sf] = float(fmean_sigma)
 
-            EWV['EW%s.mean' % sf] = float(EW_mean)
-            EWV['R%s.mean' % sf] = float(R_mean)
-            EWV['flux_sum_norm_EW%s.mean' % sf] = float(f_mean)
-            EWV['depth_norm_EW%s.mean' % sf] = float(d_mean)
-            EWV['width_EW%s.mean' % sf] = float(w_mean)
-            EWV['depth_EW%s.mean' % sf] = float(dep_mean)
-            EWV['surf_EW%s.mean' % sf] = float(sur_mean)
-            EWV['fmean_EW%s.mean' % sf] = float(fmean_mean)
+            ewV['ew%s.mean' % sf] = float(ew_mean)
+            ewV['R%s.mean' % sf] = float(R_mean)
+            ewV['flux_sum_norm_ew%s.mean' % sf] = float(f_mean)
+            ewV['depth_norm_ew%s.mean' % sf] = float(d_mean)
+            ewV['width_ew%s.mean' % sf] = float(w_mean)
+            ewV['depth_ew%s.mean' % sf] = float(dep_mean)
+            ewV['surf_ew%s.mean' % sf] = float(sur_mean)
+            ewV['fmean_ew%s.mean' % sf] = float(fmean_mean)
 
-            EWV['EW%s.med' % sf] = float(EW_med)
+            ewV['ew%s.med' % sf] = float(ew_med)
 
         # Compute systematic error
         if syst:
-            if not N.isfinite(EW_value):
+            if not N.isfinite(ew_value):
                 return [float(N.nan), float(N.nan)]
 
-            EW_syst, R_syst, d_syst, w_syst, f_syst, fm_syst = [
+            ew_syst, R_syst, d_syst, w_syst, f_syst, fm_syst = [
             ], [], [], [], [], []
             dep_syst, sur_syst = [], []
             for system in self.syst:
                 try:
-                    EW_syst.append(system.EW(lambda_min_blue,
+                    ew_syst.append(system.ew(lambda_min_blue,
                                              lambda_max_blue,
                                              lambda_min_red,
                                              lambda_max_red,
@@ -1868,20 +1871,20 @@ class Craniometer:
                                              simu=False,
                                              syst=False,
                                              verbose=False))
-                    R_syst.append(float(system.EWvalues['R%s' % sf]))
-                    f_syst.append(float(system.EWvalues['flux_sum_norm_EW%s' %
+                    R_syst.append(float(system.ewvalues['R%s' % sf]))
+                    f_syst.append(float(system.ewvalues['flux_sum_norm_ew%s' %
                                                         sf]))
                     d_syst.append(
-                        float(system.EWvalues['depth_norm_EW%s' % sf]))
-                    w_syst.append(float(system.EWvalues['width_EW%s' % sf]))
-                    dep_syst.append(float(system.EWvalues['depth_EW%s' % sf]))
-                    sur_syst.append(float(system.EWvalues['surf_EW%s' % sf]))
-                    fm_syst.append(float(system.EWvalues['fmean_EW%s' % sf]))
+                        float(system.ewvalues['depth_norm_ew%s' % sf]))
+                    w_syst.append(float(system.ewvalues['width_ew%s' % sf]))
+                    dep_syst.append(float(system.ewvalues['depth_ew%s' % sf]))
+                    sur_syst.append(float(system.ewvalues['surf_ew%s' % sf]))
+                    fm_syst.append(float(system.ewvalues['fmean_ew%s' % sf]))
                 except ValueError:
                     continue
 
-            EW_sigma_syst = self.std2(N.array(EW_syst)[N.isfinite(EW_syst)],
-                                      EW_value)
+            ew_sigma_syst = self.std2(N.array(ew_syst)[N.isfinite(ew_syst)],
+                                      ew_value)
             R_sigma_syst = self.std2(N.array(R_syst)[N.isfinite(R_syst)],
                                      float(flux2 / flux1))
             f_sigma_syst = self.std2(N.array(f_syst)[N.isfinite(f_syst)],
@@ -1897,8 +1900,8 @@ class Craniometer:
             fm_sigma_syst = self.std2(N.array(fm_syst)[N.isfinite(fm_syst)],
                                       fmean)
 
-            if not N.isfinite(EW_sigma_syst):
-                EW_sigma_syst = float(0.0)
+            if not N.isfinite(ew_sigma_syst):
+                ew_sigma_syst = float(0.0)
             if not N.isfinite(R_sigma_syst):
                 R_sigma_syst = float(0.0)
             if not N.isfinite(f_sigma_syst):
@@ -1914,36 +1917,36 @@ class Craniometer:
             if not N.isfinite(fm_sigma_syst):
                 fm_sigma_syst = float(0.0)
 
-            EW_sigma = N.sqrt(EW_sigma**2 + EW_sigma_syst**2)
-            EWV['EW%s.syst' % sf] = float(EW_sigma_syst)
-            EWV['EW%s.err' % sf] = float(N.sqrt(EWV['EW%s.err' % sf]**2 +
-                                                EW_sigma_syst**2))
-            EWV['R%s.syst' % sf] = float(R_sigma_syst)
-            EWV['R%s.err' % sf] = float(N.sqrt(EWV['R%s.err' % sf]**2 +
+            ew_sigma = N.sqrt(ew_sigma**2 + ew_sigma_syst**2)
+            ewV['ew%s.syst' % sf] = float(ew_sigma_syst)
+            ewV['ew%s.err' % sf] = float(N.sqrt(ewV['ew%s.err' % sf]**2 +
+                                                ew_sigma_syst**2))
+            ewV['R%s.syst' % sf] = float(R_sigma_syst)
+            ewV['R%s.err' % sf] = float(N.sqrt(ewV['R%s.err' % sf]**2 +
                                                R_sigma_syst**2))
-            EWV['flux_sum_norm_EW%s.syst' % sf] = float(f_sigma_syst)
-            EWV['flux_sum_norm_EW%s.err' % sf] = float(
-                N.sqrt(EWV['flux_sum_norm_EW%s.err' % sf]**2 + f_sigma_syst**2))
-            EWV['depth_norm_EW%s.syst' % sf] = float(d_sigma_syst)
-            EWV['depth_norm_EW%s.err' % sf] = float(
-                N.sqrt(EWV['depth_norm_EW%s.err' % sf]**2 + d_sigma_syst**2))
-            EWV['width_EW%s.syst' % sf] = float(w_sigma_syst)
-            EWV['width_EW%s.err' % sf] = float(N.sqrt(EWV['width_EW%s.err' % sf]**2
+            ewV['flux_sum_norm_ew%s.syst' % sf] = float(f_sigma_syst)
+            ewV['flux_sum_norm_ew%s.err' % sf] = float(
+                N.sqrt(ewV['flux_sum_norm_ew%s.err' % sf]**2 + f_sigma_syst**2))
+            ewV['depth_norm_ew%s.syst' % sf] = float(d_sigma_syst)
+            ewV['depth_norm_ew%s.err' % sf] = float(
+                N.sqrt(ewV['depth_norm_ew%s.err' % sf]**2 + d_sigma_syst**2))
+            ewV['width_ew%s.syst' % sf] = float(w_sigma_syst)
+            ewV['width_ew%s.err' % sf] = float(N.sqrt(ewV['width_ew%s.err' % sf]**2
                                                       + w_sigma_syst**2))
-            EWV['depth_EW%s.syst' % sf] = float(dep_sigma_syst)
-            EWV['depth_EW%s.err' % sf] = float(N.sqrt(EWV['depth_EW%s.err' % sf]**2
+            ewV['depth_ew%s.syst' % sf] = float(dep_sigma_syst)
+            ewV['depth_ew%s.err' % sf] = float(N.sqrt(ewV['depth_ew%s.err' % sf]**2
                                                       + dep_sigma_syst**2))
-            EWV['surf_EW%s.syst' % sf] = float(sur_sigma_syst)
-            EWV['surf_EW%s.err' % sf] = float(N.sqrt(EWV['surf_EW%s.err' % sf]**2 +
+            ewV['surf_ew%s.syst' % sf] = float(sur_sigma_syst)
+            ewV['surf_ew%s.err' % sf] = float(N.sqrt(ewV['surf_ew%s.err' % sf]**2 +
                                                      sur_sigma_syst**2))
-            EWV['fmean_EW%s.syst' % sf] = float(fm_sigma_syst)
-            EWV['fmean_EW%s.err' % sf] = float(N.sqrt(EWV['fmean_EW%s.err' % sf]**2
+            ewV['fmean_ew%s.syst' % sf] = float(fm_sigma_syst)
+            ewV['fmean_ew%s.err' % sf] = float(N.sqrt(ewV['fmean_ew%s.err' % sf]**2
                                                       + fm_sigma_syst**2))
 
-            return [float(EW_value), float(EW_sigma)]
+            return [float(ew_value), float(ew_sigma)]
 
         if simu == False and syst == False:
-            return EW_value
+            return ew_value
 
     def velocity(self, infodict, verbose=False, simu=True, syst=True,
                  left=False, right=False):
@@ -1957,28 +1960,28 @@ class Craniometer:
         the error will be coded as ['name']+'.err'
         and the lambda as ['name']+'_lbd'"""
         # shortcut
-        VV = self.velocityvalues
+        velo = self.velocityvalues
 
         c = 299792.458
         # Initialisation
-        VV[infodict['name']] = N.nan
-        VV[infodict['name'] + '.err'] = N.nan
-        VV[infodict['name'] + '.stat'] = N.nan
-        VV[infodict['name'] + '.syst'] = N.nan
-        VV[infodict['name'] + '_lbd'] = N.nan
-        VV[infodict['name'] + '_lbd.stat'] = N.nan
-        VV[infodict['name'] + '_lbd.syst'] = N.nan
-        VV[infodict['name'] + '_lbd.err'] = N.nan
-        VV[infodict['name'] + '_lbd.mean'] = N.nan
-        VV[infodict['name'] + '_flux'] = N.nan
-        VV[infodict['name'] + '_flux.stat'] = N.nan
-        VV[infodict['name'] + '_flux.syst'] = N.nan
-        VV[infodict['name'] + '_flux.err'] = N.nan
-        VV[infodict['name'] + '_flux.mean'] = N.nan
-        VV[infodict['name'] + '.binsyst'] = N.nan
-        VV[infodict['name'] + '.bin'] = N.nan
-        VV[infodict['name'] + '.mean'] = N.nan
-        VV[infodict['name'] + '.med'] = N.nan
+        velo[infodict['name']] = N.nan
+        velo[infodict['name'] + '.err'] = N.nan
+        velo[infodict['name'] + '.stat'] = N.nan
+        velo[infodict['name'] + '.syst'] = N.nan
+        velo[infodict['name'] + '_lbd'] = N.nan
+        velo[infodict['name'] + '_lbd.stat'] = N.nan
+        velo[infodict['name'] + '_lbd.syst'] = N.nan
+        velo[infodict['name'] + '_lbd.err'] = N.nan
+        velo[infodict['name'] + '_lbd.mean'] = N.nan
+        velo[infodict['name'] + '_flux'] = N.nan
+        velo[infodict['name'] + '_flux.stat'] = N.nan
+        velo[infodict['name'] + '_flux.syst'] = N.nan
+        velo[infodict['name'] + '_flux.err'] = N.nan
+        velo[infodict['name'] + '_flux.mean'] = N.nan
+        velo[infodict['name'] + '.binsyst'] = N.nan
+        velo[infodict['name'] + '.bin'] = N.nan
+        velo[infodict['name'] + '.mean'] = N.nan
+        velo[infodict['name'] + '.med'] = N.nan
         if self.init_only:
             return
 
@@ -2022,9 +2025,9 @@ class Craniometer:
                 velocity = N.nan
 
         if N.isfinite(velocity):
-            VV[infodict['name']] = float(velocity)
-            VV[infodict['name'] + '_lbd'] = float(lbd)
-            VV[infodict['name'] + '_flux'] = float(flux)
+            velo[infodict['name']] = float(velocity)
+            velo[infodict['name'] + '_lbd'] = float(lbd)
+            velo[infodict['name'] + '_flux'] = float(flux)
 
         velocity_sigma = None
         if simu:
@@ -2059,18 +2062,18 @@ class Craniometer:
             lbd_med = N.median(N.array(lbd_simu)[N.isfinite(lbd_simu)])
             flux_med = N.median(N.array(flux_simu)[N.isfinite(flux_simu)])
 
-            VV[infodict['name'] + '.err'] = float(velocity_sigma)
-            VV[infodict['name'] + '.stat'] = float(velocity_sigma)
-            VV[infodict['name'] + '.mean'] = float(velocity_mean)
-            VV[infodict['name'] + '.med'] = float(velocity_med)
-            VV[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
-            VV[infodict['name'] + '_lbd.stat'] = float(lbd_sigma)
-            VV[infodict['name'] + '_lbd.mean'] = float(lbd_mean)
-            VV[infodict['name'] + '_lbd.med'] = float(lbd_med)
-            VV[infodict['name'] + '_flux.err'] = float(flux_sigma)
-            VV[infodict['name'] + '_flux.stat'] = float(flux_sigma)
-            VV[infodict['name'] + '_flux.mean'] = float(flux_mean)
-            VV[infodict['name'] + '_flux.med'] = float(flux_med)
+            velo[infodict['name'] + '.err'] = float(velocity_sigma)
+            velo[infodict['name'] + '.stat'] = float(velocity_sigma)
+            velo[infodict['name'] + '.mean'] = float(velocity_mean)
+            velo[infodict['name'] + '.med'] = float(velocity_med)
+            velo[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
+            velo[infodict['name'] + '_lbd.stat'] = float(lbd_sigma)
+            velo[infodict['name'] + '_lbd.mean'] = float(lbd_mean)
+            velo[infodict['name'] + '_lbd.med'] = float(lbd_med)
+            velo[infodict['name'] + '_flux.err'] = float(flux_sigma)
+            velo[infodict['name'] + '_flux.stat'] = float(flux_sigma)
+            velo[infodict['name'] + '_flux.mean'] = float(flux_mean)
+            velo[infodict['name'] + '_flux.med'] = float(flux_med)
 
         if syst:
             velocity_syst, lbd_syst, flux_syst = [], [], []
@@ -2104,14 +2107,14 @@ class Craniometer:
                                + (binning)**2)
             flux_sigma = N.sqrt(flux_sigma ** 2 + flux_syst_sigma**2)
 
-            VV[infodict['name'] + '.syst'] = float(velocity_syst_sigma)
-            VV[infodict['name'] + '.err'] = float(velocity_sigma)
-            VV[infodict['name'] + '_lbd.syst'] = float(lbd_syst_sigma)
-            VV[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
-            VV[infodict['name'] + '_flux.syst'] = float(flux_syst_sigma)
-            VV[infodict['name'] + '_flux.err'] = float(flux_sigma)
-            VV[infodict['name'] + '.binsyst'] = float(velocity_syst_bin)
-            VV[infodict['name'] + '.bin'] = float(binning)
+            velo[infodict['name'] + '.syst'] = float(velocity_syst_sigma)
+            velo[infodict['name'] + '.err'] = float(velocity_sigma)
+            velo[infodict['name'] + '_lbd.syst'] = float(lbd_syst_sigma)
+            velo[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
+            velo[infodict['name'] + '_flux.syst'] = float(flux_syst_sigma)
+            velo[infodict['name'] + '_flux.err'] = float(flux_sigma)
+            velo[infodict['name'] + '.binsyst'] = float(velocity_syst_bin)
+            velo[infodict['name'] + '.bin'] = float(binning)
 
         if velocity_sigma is None:
             return float(velocity)
@@ -2135,20 +2138,20 @@ class Craniometer:
         Get the first minimum after the blue edge
         """
         # shortcut
-        VV = self.velocityvalues
+        velo = self.velocityvalues
 
         # Initialisation
-        VV[infodict['name'] + '.err'] = N.nan
-        VV[infodict['name'] + '.stat'] = N.nan
-        VV[infodict['name'] + '.syst'] = N.nan
-        VV[infodict['name'] + '_lbd'] = N.nan
-        VV[infodict['name'] + '_lbd.stat'] = N.nan
-        VV[infodict['name'] + '_lbd.syst'] = N.nan
-        VV[infodict['name'] + '_lbd.err'] = N.nan
-        VV[infodict['name'] + '_lbd.mean'] = N.nan
-        VV[infodict['name'] + '.binsyst'] = N.nan
-        VV[infodict['name'] + '.bin'] = N.nan
-        VV[infodict['name'] + '.mean'] = N.nan
+        velo[infodict['name'] + '.err'] = N.nan
+        velo[infodict['name'] + '.stat'] = N.nan
+        velo[infodict['name'] + '.syst'] = N.nan
+        velo[infodict['name'] + '_lbd'] = N.nan
+        velo[infodict['name'] + '_lbd.stat'] = N.nan
+        velo[infodict['name'] + '_lbd.syst'] = N.nan
+        velo[infodict['name'] + '_lbd.err'] = N.nan
+        velo[infodict['name'] + '_lbd.mean'] = N.nan
+        velo[infodict['name'] + '.binsyst'] = N.nan
+        velo[infodict['name'] + '.bin'] = N.nan
+        velo[infodict['name'] + '.mean'] = N.nan
         if self.init_only:
             return
 
@@ -2183,8 +2186,8 @@ class Craniometer:
         velocity = (infodict['lrest'] - lbd) / infodict['lrest'] * c
 
         if N.isfinite(velocity):
-            VV[infodict['name']] = float(velocity)
-            VV[infodict['name'] + '_lbd'] = float(lbd)
+            velo[infodict['name']] = float(velocity)
+            velo[infodict['name'] + '_lbd'] = float(lbd)
 
         velocity_sigma = None
         if simu:
@@ -2211,12 +2214,12 @@ class Craniometer:
                 N.array(velocity_simu)[N.isfinite(velocity_simu)])
             lbd_mean = N.mean(N.array(lbd_simu)[N.isfinite(lbd_simu)])
 
-            VV[infodict['name'] + '.err'] = float(velocity_sigma)
-            VV[infodict['name'] + '.stat'] = float(velocity_sigma)
-            VV[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
-            VV[infodict['name'] + '_lbd.stat'] = float(lbd_sigma)
-            VV[infodict['name'] + '_lbd.mean'] = float(lbd_mean)
-            VV[infodict['name'] + '.mean'] = float(velocity_mean)
+            velo[infodict['name'] + '.err'] = float(velocity_sigma)
+            velo[infodict['name'] + '.stat'] = float(velocity_sigma)
+            velo[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
+            velo[infodict['name'] + '_lbd.stat'] = float(lbd_sigma)
+            velo[infodict['name'] + '_lbd.mean'] = float(lbd_mean)
+            velo[infodict['name'] + '.mean'] = float(velocity_mean)
 
         if syst:
             velocity_syst, lbd_syst = [], []
@@ -2243,12 +2246,12 @@ class Craniometer:
                                     velocity_syst_bin**2)
             lbd_sigma = N.sqrt(lbd_sigma ** 2 + lbd_syst_sigma**2 + (binning)**2)
 
-            VV[infodict['name'] + '.syst'] = float(velocity_syst_sigma)
-            VV[infodict['name'] + '.err'] = float(velocity_sigma)
-            VV[infodict['name'] + '_lbd.syst'] = float(lbd_syst_sigma)
-            VV[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
-            VV[infodict['name'] + '.binsyst'] = float(velocity_syst_bin)
-            VV[infodict['name'] + '.bin'] = float(binning)
+            velo[infodict['name'] + '.syst'] = float(velocity_syst_sigma)
+            velo[infodict['name'] + '.err'] = float(velocity_sigma)
+            velo[infodict['name'] + '_lbd.syst'] = float(lbd_syst_sigma)
+            velo[infodict['name'] + '_lbd.err'] = float(lbd_sigma)
+            velo[infodict['name'] + '.binsyst'] = float(velocity_syst_bin)
+            velo[infodict['name'] + '.bin'] = float(binning)
 
         if velocity_sigma is None:
             return float(velocity)
