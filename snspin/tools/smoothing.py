@@ -2,8 +2,11 @@
 
 import scipy as S
 import numpy as N
-try: from scipy import factorial
-except: from scipy.misc import factorial  #To handle different version of scipy
+import pylab as P
+try:
+    from scipy import factorial
+except:
+    from scipy.misc import factorial  #To handle different version of scipy
         
 
 ##### generic functions for the prediction
@@ -482,8 +485,6 @@ def plot_params_evol(rchi2,TB,lv,p):
 
     rchi2,TB,lv,p = map(N.array,[rchi2,TB,lv,p])
     
-    import pylab as P
-    
     fig = P.figure()
     ax = fig.add_subplot(111)
     ax.plot(p,rchi2,'k',label='Regular chi2')
@@ -493,4 +494,43 @@ def plot_params_evol(rchi2,TB,lv,p):
 ##################################
 
 
+def savitzky_golay(data, kernel=11, order=4, derivative=0):
+    """Applies a Savitzky-Golay filter.
+
+    :param array data: input numpy 1D-array
+    :param int kernel: a positive odd integer > order+2 giving the kernel size
+    :param int order: order of the polynomial
+    :param int derivative: 1 or 2 for 1st or 2nd derivatives
+    :return: smoothed data as a numpy array
+
+    Source: http://www.scipy.org/Cookbook/SavitzkyGolay
+    """
+
+    try:
+        kernel = abs(int(kernel))
+        order = abs(int(order))
+    except ValueError:
+        raise ValueError("kernel and order must be castable to int")
+    if kernel%2 != 1 or kernel < 1:
+        raise TypeError("kernel=%d is not a positive odd number" % kernel)
+    if kernel < order + 2:
+        raise TypeError("kernel=%d is not > order+2=%d" % (kernel,order+2))
+
+    hsize = (kernel-1) // 2
+    b = N.mat([ [k**i for i in range(order+1)]
+                    for k in range(-hsize, hsize+1)])
+    weights = N.linalg.pinv(b).A[derivative]
+    hsize = (len(weights)-1) // 2
+
+    # Temporary data, extended with a mirror image to the left and right
+    # left extension: f(x0-x) = f(x0)-(f(x)-f(x0)) = 2f(x0)-f(x)
+    # right extension: f(xl+x) = f(xl)+(f(xl)-f(xl-x)) = 2f(xl)-f(xl-x)
+    leftpad  = 2*data[0]  - data[1:hsize+1][::-1]
+    rightpad = 2*data[-1] - data[-(hsize+1):-1][::-1]
+    data = N.concatenate((leftpad, data, rightpad))
+
+    # Convolution
+    sdata = N.convolve(data, weights, mode='valid')
+
+    return sdata
       

@@ -1,23 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-################################################################################
-## Filename:          var_corr_study.py 
-## Version:           $Revision: 1.11 $
-## Description:       
-## Author:            Nicolas Chotard <nchotard@ipnl.in2p3.fr>
-## Author:            $Author: nchotard $
-## Created at:        $Date: 2014/04/30 13:12:26 $
-## Modified at:       30-04-2014 15:07:22
-## $Id: var_corr_lib.py,v 1.11 2014/04/30 13:12:26 nchotard Exp $
-################################################################################
 
 """
+Spectral covariance matrix (variance and correlation) study
 """
-
-__author__  = "Nicolas Chotard <nchotard@ipnl.in2p3.fr>"
-__version__ = '$Id: var_corr_lib.py,v 1.11 2014/04/30 13:12:26 nchotard Exp $'
-
-from copy import copy
 
 import pylab as P
 import numpy as N
@@ -26,30 +11,32 @@ from scipy import interpolate as I
 from scipy import optimize
 
 import pySnurp
-import SNfStill
-from ToolBox import Statistics
-from ToolBox.Signal import savitzky_golay as sg
-from smooth_tools import spline_find_s, sg_find_num_points
+from tools import statistics
+from tools.smoothing import savitzky_golay as sg
+from tools.smoothing import spline_find_s, sg_find_num_points
+from . import io
 
 class SPCS:
+
     """
     SpecVarCorrStudy
     """
+
     def __init__(self,x, y, v, specid='', obj='',
                  verbose=False, rhoB=0.32, rhoR=0.40, factor=0.69):
-
+        """."""
         #Set the data
         self.x = x
         self.y = y
         self.v = v * factor
-        self.factor_used=factor
+        self.factor_used = factor
         if S.mean(x)<5150:
-            self.rho=rhoB
-            self.rho_used='rhoB'
+            self.rho = rhoB
+            self.rho_used = 'rhoB'
         else:
-            self.rho=rhoR
-            self.rho_used='rhoR'       
-            
+            self.rho = rhoR
+            self.rho_used = 'rhoR'       
+
         #Set infomations about the spectrum
         self.specid = specid
         self.object = obj
@@ -60,7 +47,7 @@ class SPCS:
                   % (len(self.x), self.x[0], self.x[-1])
 
     def smooth(self, smoothing='sp', s=None, w=15, findp=True):
-    
+        """."""
         #Set the smoothing parameters
         self.smoothing = smoothing
         if self.smoothing == 'sp' and findp:
@@ -112,8 +99,10 @@ class SPCS:
 
     def make_simu(self, nsimu=1000):
         """
-        Make some simulation for which everything will be computing as well
-        nsimu is the number af simulations
+        Build a simulated set of data.
+        
+        Make some simulation for which everything will be computing as well nsimu is the number 
+        of simulations
         if factor is set (1 by default), then self.v*=factor
         if factor is set to None, then self.v*=self.factor
         (run comp_factor before)
@@ -158,7 +147,7 @@ class SPCS:
                   % (self.rho, S.mean([s.rho for s in self.simus]))
 
     def do_plots(self, all=False, lim=2):
-        
+        """."""
         plot_spec(self.x, self.y, self.v, self.ysmooth,
                   title=self.object+','+self.specid)
         plot_pull(self.x, self.pull, title=self.object+','+self.specid)
@@ -172,7 +161,7 @@ class SPCS:
                         return
 
     def plot_simu_distri(self):
-
+        """."""
         #set the data
         ch, co, pm, ps=[], [], [], []
         chi2 = S.concatenate([[s.chi2 for s in self.simus], [self.chi2]])
@@ -193,11 +182,13 @@ class SPCS:
             P.title(n)
 
 class SPCS_test:
+                
     """
     SpecVarCorrStudy
     """
+    
     def __init__(self, x, y, v, specid='', obj='', verbose=False):
-
+        """."""
         #Set the data
         self.x = x
         self.y = y
@@ -215,7 +206,7 @@ class SPCS_test:
         
     def smooth(self, smoothing='sp', s=None, w=15,
                findp=False, rho=0, factor=1):
-
+        """."""
         #Set the smoothing parameters
         self.smoothing = smoothing
         if factor == 1: v=self.v
@@ -312,7 +303,7 @@ class SPCS_test:
                   % (self.rho, S.mean([s.rho for s in self.simus]))
 
     def comp_rho_f(self, smoothing='sp', verbose=False):
-        
+        """."""
         self.verbose=verbose
         self.smooth(smoothing=smoothing, findp=True)
         
@@ -341,7 +332,7 @@ class SPCS_test:
             print "Correlation coefficient:",self.rho
 
     def comp_rho_f_bof(self, smoothing='sp', verbose=False):
-        
+        """."""
         self.verbose=verbose
         self.smooth(smoothing=smoothing, findp=True)
         
@@ -371,7 +362,7 @@ class SPCS_test:
             print "Correlation coefficient:",self.rho
 
     def do_plots(self, all=False, lim=5):
-        
+        """."""
         plot_spec(self.x, self.y, self.v, self.ysmooth,
                   title=self.object+','+self.specid)
         plot_pull(self.x, self.pull, title=self.object+','+self.specid)
@@ -386,7 +377,7 @@ class SPCS_test:
                         return
 
     def plot_simu_distri(self):
-
+        """."""
         #set the data
         ch, co, pm, ps=[], [], [], []
         chi2 = S.concatenate([[s.chi2 for s in self.simus], [self.chi2]])
@@ -412,23 +403,26 @@ def open_spec(spec_file, xmin=0, xmax=10000, z=None):
     Load a spetrum using pySnurp
     Return: x,y,v,obejct,specid
     """
-    spec=pySnurp.Spectrum(spec_file,keepFits=False)
+    spec = pySnurp.Spectrum(spec_file, keepFits=False)
     if z != None:
         spec.deredshift(z)
-    mask=(spec.x>=xmin)&(spec.x<=xmax)
+    mask = (spec.x >= xmin) & (spec.x <= xmax)
     return spec.x[mask], spec.y[mask], spec.v[mask], \
            spec.readKey('OBJECT'), spec.name.split('/')[-1]
 
 def load_SPCS(file, xmin=0, xmax=10000, z=None, verbose=False):
+    """."""
     x, y, v, obejct, specid = open_spec(file, xmin=xmin, xmax=xmax, z=z)
     return SPCS(x, y, v, obejct, specid, verbose=verbose)
 
 def load_SPCS_test(file, xmin=0, xmax=10000, z=None, verbose=False):
+    """."""
     x, y, v, obejct, specid = open_spec(file, xmin=xmin, xmax=xmax, z=z)
     return SPCS_test(x, y, v, obejct, specid, verbose=verbose)
     
 def smooth_spec(x, y, v, s=None, w=15, sfunc='sp', order=2, verbose=False):
-        if sfunc == 'sp':
+    """."""
+    if sfunc == 'sp':
             if s == None: 
                 sp = I.LSQUnivariateSpline(x, y, t=(x[::12])[1:],
                                            w = 1/(S.sqrt(v)))
@@ -441,7 +435,7 @@ def smooth_spec(x, y, v, s=None, w=15, sfunc='sp', order=2, verbose=False):
                     s*= len(x)
                 sp = I.UnivariateSpline(x, y, w = 1/(S.sqrt(v)), s=s)
             ysmooth = sp(x)
-        elif sfunc == 'sg':
+    elif sfunc == 'sg':
             kernel = (int(w)*2)+1
             if kernel <= order+2:
                 if verbose:
@@ -491,6 +485,7 @@ def plot_spec(x, y, v, ysmooth, title=''):
     ax.set_title(title)
 
 def plot_pull(x, pull, title=''):
+    """."""    
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1,0.08,0.86,0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Pull')
@@ -501,6 +496,7 @@ def plot_pull(x, pull, title=''):
     ax.legend(loc='best').draw_frame(False)
 
 def plot_corr(corr, title=''):
+    """."""    
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1,0.08,0.86,0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Auto correlation')
@@ -520,12 +516,14 @@ def autocorr(x, k=1, full=False):
         return S.array([ ack(j) for j in range(n-1)])
 
 def plot_smoothed_spec(f, num=5):
-    d=SNfStill.LoadData(f)
+    """."""        
+    d = io.loaddata(f)
     for i in d:
         ob=d[i]
         plot_obj(ob, num=num)
 
 def plot_obj(ob, num=5):
+    """."""        
     fig = P.figure(figsize=(8,18), dpi=150)
     ax = fig.add_axes([0.08,0.08,0.86,0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Flux')
@@ -539,6 +537,7 @@ def plot_obj(ob, num=5):
         ax.plot(s.x, s.ysmooth-cst, 'r', lw=1.5)
 
 def run_over_dir(dir):
+    """."""
     from glob import  glob
     files = glob(dir+'*.pkl')
     for f in files:
@@ -571,7 +570,7 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
         Rho = N.array([autocorr(N.array(sim), k=1, full=False) for sim in sims])
         if plot:
             P.hist(Rho, histtype='step', color='b',
-                   alpha=0.5, bins=Statistics.hist_nbin(Rho))
+                   alpha=0.5, bins=statistics.hist_nbin(Rho))
             P.title('Mean=%.2f, Std=%.2f'%(N.mean(Rho), N.std(Rho)))
         else:
             return Rho
@@ -584,7 +583,7 @@ def control_case_rho_var(rhos=[0,0.1,0.2,0.3,0.4,0.5], factor=1):
     for i,rho in enumerate(rhos):
         Rho=control_case(rho=rho, factor=factor)
         p=ax.hist(Rho, histtype='step', color=col[i],
-                  bins=Statistics.hist_nbin(Rho), lw=1.5,
+                  bins=statistics.hist_nbin(Rho), lw=1.5,
                   label=r'$\rho=%.2f$'%rho)
         if i == 0: m = p[0].max() + 15
         ax.axvline(rho, color=col[i], ls=':', lw=2)
@@ -644,24 +643,24 @@ def spec_autocorr(dir='./'):
             s.append(float(params[sort][i]))
         else:
             ax.hist(r, histtype='step', color=col[j],
-                    alpha=0.8, bins=Statistics.hist_nbin(r),
+                    alpha=0.8, bins=statistics.hist_nbin(r),
                     lw=1.5, label='%i,  %.2f, %.2f'%(int(lbd0),
                                                      N.median(r),
-                                                     Statistics.nMAD(r)))
+                                                     statistics.nMAD(r)))
             ax2.hist(f, histtype='step', color=col[j], alpha=0.8,
-                     bins=Statistics.hist_nbin(f), lw=1.5,
+                     bins=statistics.hist_nbin(f), lw=1.5,
                      label='%i, %.2f, %.2f'%(int(lbd0), N.median(f),
-                                             Statistics.nMAD(f)))
+                                             statistics.nMAD(f)))
             ax3.hist(s, histtype='step', color=col[j], alpha=0.8,
-                     bins=Statistics.hist_nbin(s), lw=1.5,
+                     bins=statistics.hist_nbin(s), lw=1.5,
                      label='%i, %.2f, %.2f'%(int(lbd0), N.median(s),
-                                             Statistics.nMAD(s)))
+                                             statistics.nMAD(s)))
             fig4 = P.figure(dpi=150)
             ax4 = fig4.add_axes([0.1,0.08,0.86,0.87],
                                 xlabel=r'$\rho$', ylabel='N')
             ax4.plot(r, f, 'o', color=col[j], alpha=0.8,
                      label='%i, %.2f, %.2f'%(int(lbd0), N.median(s),
-                                             Statistics.nMAD(s)))
+                                             statistics.nMAD(s)))
             ax4.set_xlim(xmin=0, xmax=0.5)
             ax4.set_ylim(ymin=0.5, ymax=1)
             lbd0=lb
@@ -684,188 +683,4 @@ def spec_autocorr(dir='./'):
     ax2.set_title(r'Mean $\lambda$, Median, nMAD')
     ax3.set_title(r'Mean $\lambda$, Median, nMAD')
     ax4.set_title(r'Mean $\lambda$, Median, nMAD')
-
-        
-    
-# End of var_corr_study.py
-
-"""
-def comp_factor(self):
-                
-        def func(factor):
-            ysmooth = smooth_spec(self.x,self.y,self.v*factor,sfunc=self.smoothing,s=self.s,w=self.w)
-            #chi2  = S.sum((self.y-ysmooth)**2/(self.v*factor)) / (len(self.x)-1) - 1.
-            pull  = S.std(comp_pull(self.y,ysmooth,self.v*factor)) - 1.
-            return pull
-        
-        self.factor = optimize.fsolve(func,self.factor)
-        if self.verbose:
-            print 'factor = ',self.factor
-Deprecated
-def f_r_evol(f):
-    x,y,v,obejct,specid = open_spec(f)
-
-    print 'Savitzky'
-    c,f,r=[],[],[]
-    ws = [2,6,10,14,18,22,26,30,34,38,42,48,52,60]
-    for w in ws:
-        toto=SPCS(x,y,v,obejct,specid)
-        toto.smooth(smoothing='sg',w=w)
-        toto.comp_factor()
-        c.append(toto.chi2)
-        f.append(toto.factor)
-        r.append(toto.rho)
-
-    P.figure()
-    P.plot(ws,c,'ok')
-    P.title('chi2')
-    P.figure()
-    P.plot(ws,f,'ok')
-    P.title('factor')
-    P.figure()
-    P.plot(ws,r,'ok')
-    P.title('rho')
-
-    print 'Spline'
-    c,f,r=[],[],[]
-    ss = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,1]
-    for s in ss:
-        toto=SPCS(x,y,v,obejct,specid)
-        toto.smooth(smoothing='sp',s=s*len(x))
-        toto.comp_factor()
-        c.append(toto.chi2)
-        f.append(toto.factor)
-        r.append(toto.rho)
-    #toto.do_plots()
-    P.figure()
-    P.plot(ss,c,'or')
-    P.title('chi2')
-    P.figure()
-    P.plot(ss,f,'or')
-    P.title('factor')
-    P.figure()
-    P.plot(ss,r,'or')
-    P.title('rho')
-
-def p_sn(x,y,v,num=20,factor=1,rho=0,smoothing='sg',order=2):
-    x=S.resize(x,(num,len(x)/num))
-    y=S.resize(y,(num,len(y)/num))
-    v=S.resize(v,(num,len(v)/num))
-    sn,p1,p2,corr,f,lbd=[],[],[],[],[],[]
-    rc = 1. - 2. * (rho**2)
-    rho=(rho**2)/rc
-    P.figure()
-    for xx,yy,vv in zip(x,y,v):
-        try:
-            pp1 = int(sg_find_num_points(xx,yy,vv*factor,corr=rho,pol_degree=order))
-            pp2 = spline_find_s(xx,yy,vv*factor,corr=rho)[0]
-            pp3 = spline_find_s(xx,yy,vv*factor)[0]
-            pp4 = int(sg_find_num_points(xx,yy,vv*factor))
-        except: continue
-        p1.append(pp1)
-        p2.append(pp2)
-        sn.append(S.mean(yy/S.sqrt(vv)))
-        #P.figure()
-        P.plot(xx,yy,'k')
-        sm1=smooth_spec(xx,yy,vv,s=pp2)
-        sm2=smooth_spec(xx,yy,vv,w=pp1,sfunc='sg',order=order)
-        sm3=smooth_spec(xx,yy,vv,s=pp3)
-        sm4=smooth_spec(xx,yy,vv,w=pp4,sfunc='sg')
-        #P.plot(xx,sm1,'r',label='chi2=%.2f'%(S.sum((yy-sm1)**2/vv)/(len(yy)-1)))
-        P.plot(xx,sm2,'g',label='chi2=%.2f'%(S.sum((yy-sm2)**2/vv)/(len(yy)-1)))
-        #P.plot(xx,sm3,'b',label='chi2=%.2f'%(S.sum((yy-sm3)**2/vv)/(len(yy)-1)))
-        P.plot(xx,sm4,'y',label='chi2=%.2f'%(S.sum((yy-sm3)**2/vv)/(len(yy)-1)))
-        #P.legend(loc='best')
-        #P.figure()
-        pull1=(yy-smooth_spec(xx,yy,vv,s=pp3))/S.sqrt(vv)
-        pull2=(yy-smooth_spec(xx,yy,vv,w=pp4,sfunc='sg',order=order))/S.sqrt(vv)
-        #P.plot(xx,pull1,'r',label='mean:%.2f,std:%.2f='%(S.mean(pull1),S.std(pull1)))
-        #P.plot(xx,pull2,'g',label='mean:%.2f,std:%.2f'%(S.mean(pull2),S.std(pull2)))
-        #P.legend(loc='best')
-        corr.append(autocorr(pull1,k=1,full=False))
-        f.append(autocorr(pull2,k=1,full=False))
-        lbd.append(S.mean(xx))
-    P.figure()
-    P.hist(corr,color='k',bins=int(S.sqrt(len(corr))*2),histtype='step')
-    P.hist(f,color='r',bins=int(S.sqrt(len(corr))*2),histtype='step')
-    print S.median(corr),S.median(f)
-    fig=P.figure()
-    ax = fig.add_axes([0.1,0.08,0.86,0.87],xlabel='S/N',ylabel='parameter')
-    ax.plot(p1,p2,'ok')
-    ax.plot(sn,p2,'or')
-    ax.plot(sn,p1,'ob')
-    P.figure()
-    P.plot(lbd,corr,'ok')
-    P.plot(lbd,f,'or')
-    P.figure()
-    P.plot(sn,corr,'ok')
-    P.plot(sn,f,'or')
-def s_sn(x,y,v,factor=1,rho=0):
-    s = spline_find_s(x,y,v)
-    sn=S.mean(y/S.sqrt(v))
-    return s[0],sn
-
-def w_sn(x,y,v,factor=1,rho=0):
-    w = int(sg_find_num_points(self.x,self.y,v))
-    sn=S.mean(y/S.sqrt(v))
-    return w,sn
-    
-def testsimu(f):
-    x,y,v,obejct,specid = open_spec(f)
-    toto=SPCS(x,y,v,obejct,specid)
-    toto.smooth(smoothing='sg',w=w)
-    toto.comp_factor()
-
-def func(factor,x,y,v,):
-    ysmooth = smooth_spec(x,y,v*factor)
-    pull = comp_pull(y,ysmooth,v*factor)
-    return 1.-S.std(pull)
-
-def simul_spec(x,y,v):
-    ysmooth = smooth_spec(x,y,v)
-    nd = S.random.randn(len(x))
-    return ysmooth+nd*S.sqrt(v)
-    
-def compute_rho_var(spec_file,plotpull=False,plotspec=False,sfunc='sp'):
-    sfunc is the function. Could be a spline ('sp') or a Savitzky-Golay ('sg') filter
-
-    #Load the spectrum and plot it if asked
-    x,y,v,name,idspec = open_spec(spec_file)
-
-    #Smooth the spectrum
-    ysmooth = smooth_spec(x,y,v)
-    if plotspec: plot_spec(x,y,v,ysmooth,title=name+','+idspec)
-
-    #Compute the pull and plot it if asked
-    pull = comp_pull(y,ysmooth,v)
-    if plotpull: plot_pull(x,pull,title=name+','+idspec)
-
-    #Compute the factor which gives std(pull)=1
-    factor = optimize.fsolve(func,1,args=(x,y,v))
-    print 'factor which gives std(pull)=1 is',factor
-    ysmooth = smooth_spec(x,y,v*factor)
-    pull = comp_pull(y,ysmooth,v*factor)
-    plot_pull(x,pull,title=name+','+idspec)
-
-    #Work on simulation
-    v*=factor
-    ysim = simul_spec(x,y,v)
-    ysmooth = smooth_spec(x,ysim,v)
-    plot_spec(x,ysim,v,ysmooth,title=name+','+idspec)
-    pull = comp_pull(ysim,ysmooth,v)
-    plot_pull(x,pull,title=name+','+idspec)
-    
-    return
-
-
-
-    #Compute the autocorrelation of the variance, and of the pull
-    pull_corr = autocorr(pull)
-    plot_corr(pull_corr)
-
-    pull_corr = autocorr(y)
-    plot_corr(pull_corr)
-
-    pull_corr = autocorr(v)
-    plot_corr(pull_corr)
-"""
+ 

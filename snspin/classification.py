@@ -1,15 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-################################################################################
-## Filename:          classib.py 
-## Version:           $Revision: 1.1 $
-## Description:       
-## Author:            Nicolas Chotard <nchotard@ipnl.in2p3.fr>
-## Author:            $Author: nchotard $
-## Created at:        $Date: 2014/12/30 02:39:19 $
-## Modified at:       03-06-2014 16:27:43
-## $Id: classLib.py,v 1.1 2014/12/30 02:39:19 nchotard Exp $
-################################################################################
 
 """
 Make the SNID, Branch and Wang classification sheme table for all the SNe
@@ -40,7 +29,9 @@ import numpy as N
 import pylab as P
 import scipy.stats as stats
 
-from ToolBox import MPL, Optimizer, IO, Statistics
+from ToolBox import MPL, Optimizer
+from tools import io
+from tools import statistics
 
 # Definitions ==================================================================
 
@@ -1013,8 +1004,8 @@ def test(wang=True, branch=True, benetti=True, vgrad=True,
 
     # import and data loading
     idrpath = '/Users/nicolaschotard/work/data/IDR/ACEv3'
-    idr = IO.load_anyfile(idrpath+'/META.pkl')
-    phreno = IO.load_anyfile(idrpath+'/phrenology_ACEv3.pkl')
+    idr = io.load_anyfile(idrpath+'/META.pkl')
+    phreno = io.load_anyfile(idrpath+'/phrenology_ACEv3.pkl')
     nd = merge_phreno_idr(idr,phreno)
 
     results = []
@@ -1057,10 +1048,10 @@ def table(output='html'):
     results = test()
     dw, dbr, dbe = results[0], results[1], results[2]
     
-    res_b  = IO.load_anyfile(snid_dir+'bsnip/snid_results.pkl')
-    res_s  = IO.load_anyfile(snid_dir+'snid-2.0/snid_results.pkl')
-    res_bp = IO.load_anyfile(snid_dir+'bsnip/snid_results_fixp.pkl')
-    res_sp = IO.load_anyfile(snid_dir+'snid-2.0/snid_results_fixp.pkl')
+    res_b  = io.load_anyfile(snid_dir+'bsnip/snid_results.pkl')
+    res_s  = io.load_anyfile(snid_dir+'snid-2.0/snid_results.pkl')
+    res_bp = io.load_anyfile(snid_dir+'bsnip/snid_results_fixp.pkl')
+    res_sp = io.load_anyfile(snid_dir+'snid-2.0/snid_results_fixp.pkl')
 
     if output == 'html':
         print "Object   SNID-2.0  SNID-2.0 (fp)  Silv  Silv (fp)  Wang   Branch  Benetti"
