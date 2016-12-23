@@ -55,7 +55,7 @@ def hist_binwidth(x, choice='FD', range=None, percentiles=False):
     - 'S': Scott's choice
     - 'FD': Freedman & Diaconis (1981), fast, fair if single-peaked [default]
     - 'SS': Shimazaki and Shinomoto (2007), slow, best choice if double-peaked
-    - 'BR': BirgÃ© and Rozenholc (2006), slow
+    - 'BR': Birge and Rozenholc (2006), slow
 
     Analysis is restricted to *range*=(*min*, *max*) if not `None`
     (full range by default).

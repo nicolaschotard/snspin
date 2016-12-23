@@ -11,7 +11,7 @@ import scipy as S
 from scipy import interpolate as I
 from scipy import optimize
 
-import pySnurp
+from snspin.extern import pySnurp
 from snspin.tools import statistics
 from snspin.tools.smoothing import savitzky_golay as sg
 from snspin.tools.smoothing import spline_find_s
