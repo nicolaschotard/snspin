@@ -136,11 +136,11 @@ class Craniometer(object):
                                             self.y,
                                             self.v * rc,
                                             corr=(rho**2) / rc)
-            except ValueError:
+            except TypeError:
                 s = 0.492 * len(self.x)
         try:
             s = s[0]
-        except ValueError:
+        except TypeError:
             s = s
         if verbose:
             print >> sys.stderr, 'best_s=%i' % s
@@ -198,7 +198,7 @@ class Craniometer(object):
                                                          self.y,
                                                          self.v * rc,
                                                          corr=(rho**2) / rc))
-            except ValueError:
+            except TypeError:
                 if verbose:
                     print >> sys.stderr, 'ERROR in computing of best hsize'
                 hsize = 15
@@ -343,7 +343,7 @@ class Craniometer(object):
 
         try:
             self.systematic_error(verbose=verbose)
-        except ValueError:
+        except TypeError:
             self.syst = None
             print >> sys.stderr, "ERROR in systematic_error (cranio_generator)!"
 
@@ -607,7 +607,7 @@ class Craniometer(object):
             variance = (var[(lbd >= min) & (lbd <= max)])[arg]
             return wavelength, flux, variance
 
-        except ValueError:
+        except TypeError:
             return [None, None, None]
 
     def _find_special_peak(self, min, max, maxima=False,
@@ -728,10 +728,9 @@ class Craniometer(object):
         if simu and lbd2 is None:
             lbd2, flux2, var2 = self.max_of_interval(
                 self.p3930[0], self.p3930[1])
-
         try:
             rca_value = flux2 / flux1
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, "ERROR in computing rca"
             rca_value = N.nan
@@ -746,7 +745,7 @@ class Craniometer(object):
                 try:
                     rca_simu.append(simu.rca(simu=False, syst=False,
                                              verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rca_sigma = self.std2(N.array(rca_simu)[N.isfinite(rca_simu)],
                                   rca_value)
@@ -767,7 +766,7 @@ class Craniometer(object):
                 try:
                     rca_syst.append(system.rca(syst=False, simu=False,
                                                verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rca_sigma_syst = self.std2(N.array(rca_syst)[N.isfinite(rca_syst)],
                                        rca_value)
@@ -816,7 +815,7 @@ class Craniometer(object):
                                    min=min_1,
                                    max=max_1,
                                    verbose=verbose))
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in compute of rcaS'
             rcaS_value = float(N.nan)
@@ -830,7 +829,7 @@ class Craniometer(object):
                 try:
                     rcaS_simu.append(simu.rcaS(simu=False, syst=False,
                                                verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rcaS_sigma = self.std2(N.array(rcaS_simu)[N.isfinite(rcaS_simu)],
                                    rcaS_value)
@@ -853,7 +852,7 @@ class Craniometer(object):
                 try:
                     rcaS_syst.append(system.rcaS(simu=False,
                                                  syst=False, verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rcaS_sigma_syst = self.std2(
                 N.array(rcaS_syst)[N.isfinite(rcaS_syst)], rcaS_value)
@@ -933,7 +932,7 @@ class Craniometer(object):
                                   min=min_1,
                                   max=max_1,
                                   verbose=verbose)
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in compute of rcaS2'
             rcaS2_value = float(N.nan)
@@ -948,7 +947,7 @@ class Craniometer(object):
                     rcaS2_simu.append(simu.rcaS2(simu=False,
                                                  syst=False,
                                                  verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rcaS2_sigma = self.std2(N.array(rcaS2_simu)[N.isfinite(rcaS2_simu)],
                                     rcaS2_value)
@@ -969,7 +968,7 @@ class Craniometer(object):
                     rcaS2_syst.append(system.rcaS2(simu=False,
                                                    syst=False,
                                                    verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
 
             rcaS2_sigma_syst = self.std2(
@@ -1028,7 +1027,7 @@ class Craniometer(object):
                                           max=max_1, verbose=verbose)
             rcaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                   verbose=verbose))
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in compute of rcaS'
             rcaS_value = float(N.nan)
@@ -1088,7 +1087,7 @@ class Craniometer(object):
                                           max=max_1, verbose=verbose)
             rcaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                   verbose=verbose))
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in compute of rcaS'
             rcaS_value = float(N.nan)
@@ -1142,7 +1141,7 @@ class Craniometer(object):
                                                 flux2=flux2,
                                                 verbose=verbose)) / \
                 (lbd2 - lbd1)
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR, none extrema found, try '\
                     'self.find_extrema()'
@@ -1157,7 +1156,7 @@ class Craniometer(object):
                 try:
                     edca_simu.append(simu.edca(simu=False, syst=False,
                                                verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             edca_sigma = self.std2(N.array(edca_simu)[N.isfinite(edca_simu)],
                                    edca_value)
@@ -1177,7 +1176,7 @@ class Craniometer(object):
                     edca_syst.append(system.edca(simu=False,
                                                  syst=False,
                                                  verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             edca_sigma_syst = self.std2(
                 N.array(edca_syst)[N.isfinite(edca_syst)], edca_value)
@@ -1231,7 +1230,7 @@ class Craniometer(object):
             try:
                 lbd2, flux2, var2 = self._find_special_peak(5700, 5849,
                                                             minima=True)
-            except ValueError:
+            except TypeError:
                 lbd2, flux2, var2 = None, None, None
         if simu and lbd2 is None:
             lbd2, flux2, var2 = self.max_of_interval(5700, 5849)
@@ -1249,7 +1248,7 @@ class Craniometer(object):
                                                             self.p5930[1],
                                                             maxima=True,
                                                             right=True)
-            except ValueError:
+            except TypeError:
                 lbd3, flux3, var3 = None, None, None
         if simu and lbd3 is None:
             lbd3, flux3, var3 = self.max_of_interval(self.p5930[0],
@@ -1293,7 +1292,7 @@ class Craniometer(object):
                 flux2 = (self.s[interval])[N.argmax(N.polyval(p,
                                                               self.x[interval])
                                                     - self.s[interval])]
-            except ValueError:
+            except TypeError:
                 lbd2, flux2, var2 = None, None, None
         lbd = [float(lbd1), float(lbd2), float(lbd3), float(lbd4), float(lbd5)]
         flux = [flux1, flux2, flux3, flux4, flux5]
@@ -1308,7 +1307,7 @@ class Craniometer(object):
                                           verbose=verbose)
             rsi_value = d_blue / d_red
 
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in computing of rsi, no '\
                     'wavelenght to compute rsi or maybe none extrema found, '\
@@ -1324,7 +1323,7 @@ class Craniometer(object):
                 try:
                     rsi_simu.append(simu.rsi(simu=False, syst=False,
                                              verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rsi_sigma = self.std2(N.array(rsi_simu)[N.isfinite(rsi_simu)],
                                   rsi_value)
@@ -1343,7 +1342,7 @@ class Craniometer(object):
                 try:
                     rsi_syst.append(system.rsi(simu=False, syst=False,
                                                verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
             rsi_sigma_syst = self.std2(N.array(rsi_syst)[N.isfinite(rsi_syst)],
                                        rsi_value)
@@ -1403,7 +1402,7 @@ class Craniometer(object):
 
         try:
             rsiS_value = flux1 / flux2
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, "ERROR in computing rsiS"
             rsiS_value = N.nan
@@ -1417,7 +1416,7 @@ class Craniometer(object):
                 try:
                     rsiS_simu.append(simu.rsiS(simu=False, syst=False,
                                                verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
 
             rsiS_sigma = self.std2(N.array(rsiS_simu)[N.isfinite(rsiS_simu)],
@@ -1439,7 +1438,7 @@ class Craniometer(object):
                 try:
                     rsiS_syst.append(system.rsiS(simu=False, syst=False,
                                                  verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
 
             rsiS_sigma_syst = self.std2(
@@ -1487,7 +1486,7 @@ class Craniometer(object):
                                    min=min_2,
                                    max=max_2,
                                    verbose=verbose))
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in rsiSS computing'
             rsiSS_value = float(N.nan)
@@ -1500,7 +1499,7 @@ class Craniometer(object):
             for simu in self.simulations:
                 try:
                     rsiSS_simu.append(simu.rsiSS(simu=False, verbose=False))
-                except ValueError:
+                except TypeError:
                     continue
 
             rsiSS_sigma = self.std2(rsiSS_simu, rsiSS_value)
@@ -1552,7 +1551,7 @@ class Craniometer(object):
             rsiSS_value = a / b
             rsiSS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                    verbose=verbose))
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR in compute of rsiSS'
             rsiSS_value = float(N.nan)
@@ -1649,7 +1648,7 @@ class Craniometer(object):
                                                                 maxima=True,
                                                                 right=right1,
                                                                 left=left1)
-                except ValueError:
+                except TypeError:
                     lbd1, flux1, var1 = None, None, None
 
             if simu and lbd1 is None:
@@ -1677,7 +1676,7 @@ class Craniometer(object):
                                                                 maxima=True,
                                                                 right=right2,
                                                                 left=left2)
-                except ValueError:
+                except TypeError:
                     lbd2, flux2, var2 = None, None, None
 
             if simu and lbd2 is None:
@@ -1731,7 +1730,7 @@ class Craniometer(object):
                                              flux1=flux1,
                                              flux2=flux2,
                                              verbose=verbose)
-        except ValueError:
+        except TypeError:
             if verbose:
                 print >> sys.stderr, 'ERROR, no extrema found, '\
                     'try self.find_extrema()'
@@ -1797,7 +1796,7 @@ class Craniometer(object):
                     dep_simu.append(float(simu.ewvalues['depth_ew%s' % sf]))
                     sur_simu.append(float(simu.ewvalues['surf_ew%s' % sf]))
                     fm_simu.append(float(simu.ewvalues['fmean_ew%s' % sf]))
-                except ValueError:
+                except TypeError:
                     continue
             ew_sigma = self.std2(
                 N.array(ew_simu)[N.isfinite(ew_simu)], ew_value)
@@ -1880,7 +1879,7 @@ class Craniometer(object):
                     dep_syst.append(float(system.ewvalues['depth_ew%s' % sf]))
                     sur_syst.append(float(system.ewvalues['surf_ew%s' % sf]))
                     fm_syst.append(float(system.ewvalues['fmean_ew%s' % sf]))
-                except ValueError:
+                except TypeError:
                     continue
 
             ew_sigma_syst = self.std2(N.array(ew_syst)[N.isfinite(ew_syst)],
@@ -2009,7 +2008,7 @@ class Craniometer(object):
             if lbd is not None:
                 lbd = self._get_min(lbd)
             velocity = (infodict['lrest'] - lbd) / infodict['lrest'] * c
-        except ValueError:
+        except TypeError:
             velocity = N.nan
 
         # check for the vSiII5972 velocity
@@ -2041,11 +2040,11 @@ class Craniometer(object):
                     velocity_simu.append(simul.velocity(infodict, simu=False,
                                                         syst=False,
                                                         verbose=False))
-                    lbd_simu.append(simul.velocityValues[infodict['name'] +
+                    lbd_simu.append(simul.velocityvalues[infodict['name'] +
                                                          '_lbd'])
-                    flux_simu.append(simul.velocityValues[infodict['name'] +
+                    flux_simu.append(simul.velocityvalues[infodict['name'] +
                                                           '_flux'])
-                except ValueError:
+                except TypeError:
                     continue
 
             velocity_sigma = self.std2(
@@ -2083,11 +2082,11 @@ class Craniometer(object):
                                                          simu=False,
                                                          syst=False,
                                                          verbose=False))
-                    lbd_syst.append(system.velocityValues[infodict['name'] +
+                    lbd_syst.append(system.velocityvalues[infodict['name'] +
                                                           '_lbd'])
-                    flux_syst.append(system.velocityValues[infodict['name'] +
+                    flux_syst.append(system.velocityvalues[infodict['name'] +
                                                            '_flux'])
-                except ValueError:
+                except TypeError:
                     continue
 
             binning = self.x[1] - self.x[0]
@@ -2202,9 +2201,9 @@ class Craniometer(object):
                                                         simu=False,
                                                         syst=False,
                                                         verbose=False))
-                    lbd_simu.append(simul.velocityValues[infodict['name'] +
+                    lbd_simu.append(simul.velocityvalues[infodict['name'] +
                                                          '_lbd'])
-                except ValueError:
+                except TypeError:
                     continue
 
             velocity_sigma = self.std2(
@@ -2228,9 +2227,9 @@ class Craniometer(object):
                     velocity_syst.append(system.velocity(infodict, simu=False,
                                                          syst=False,
                                                          verbose=False))
-                    lbd_syst.append(system.velocityValues[infodict['name'] +
+                    lbd_syst.append(system.velocityvalues[infodict['name'] +
                                                           '_lbd'])
-                except ValueError:
+                except TypeError:
                     continue
 
             binning = self.x[1] - self.x[0]

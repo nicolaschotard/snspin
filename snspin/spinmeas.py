@@ -5,7 +5,8 @@ import time
 import numpy as N
 import matplotlib.pyplot as P
 
-from spectrum import merge
+from snspin.spin import Craniometer, get_cranio
+from snspin.spectrum import merge
 
 
 class DrGall(object):
@@ -104,22 +105,22 @@ class DrGall(object):
 
     def values_initialization(self, verbose=False):
 
-        Values = {}
+        values = {}
         # Initialisation craniomter
-        fake_lbd = range(3000, 1000, 2)
+        fake_lbd = range(3000, 10000, 2)
         cranio = Craniometer(fake_lbd,
-                             N.zeros(len(fake_lbd)),
-                             N.zeros(len(fake_lbd)))
+                             N.ones(len(fake_lbd)),
+                             N.ones(len(fake_lbd)))
         cranio.init_only = True
 
         # Create values
-        cranio.rCa(verbose=verbose)
-        cranio.rCaS(verbose=verbose)
-        cranio.rCaS2(verbose=verbose)
+        cranio.rca(verbose=verbose)
+        cranio.rcaS(verbose=verbose)
+        cranio.rcaS2(verbose=verbose)
         cranio.rsi(verbose=verbose)
         cranio.rsiS(verbose=verbose)
         cranio.rsiSS(verbose=verbose)
-        cranio.ew(3504, 3687, 3887, 3990, 'CaiiHK', verbose=verbose)
+        cranio.ew(3504, 3687, 3887, 3990, 'caiiHK', verbose=verbose)
         cranio.ew(3830, 3963, 4034, 4150, 'siii4000', verbose=verbose)
         cranio.ew(4034, 4150, 4452, 4573, 'mgii', verbose=verbose)
         cranio.ew(5085, 5250, 5500, 5681, 'SiiW', verbose=verbose)
@@ -128,7 +129,7 @@ class DrGall(object):
         cranio.ew(5550, 5681, 5850, 6015, 'siii5972', verbose=verbose)
         cranio.ew(5850, 6015, 6250, 6365, 'siii6355', verbose=verbose)
         cranio.ew(7100, 7270, 7720, 8000, 'oi7773', verbose=verbose)
-        cranio.ew(7720, 8000, 8300, 8800, 'Caiiir', verbose=verbose)
+        cranio.ew(7720, 8000, 8300, 8800, 'caiiir', verbose=verbose)
         cranio.ew(4400, 4650, 5050, 5300, 'fe4800', verbose=verbose)
         cranio.velocity({'lmin': 3963,
                          'lmax': 4034,
@@ -157,9 +158,9 @@ class DrGall(object):
                         verbose=verbose)
 
         # Update values
-        values.update(cranio.rCavalues)
-        values.update(cranio.rCaSvalues)
-        values.update(cranio.rCaS2values)
+        values.update(cranio.rcavalues)
+        values.update(cranio.rcaSvalues)
+        values.update(cranio.rcaS2values)
         values.update(cranio.rsivalues)
         values.update(cranio.rsiSvalues)
         values.update(cranio.rsiSSvalues)
@@ -169,8 +170,8 @@ class DrGall(object):
         self.values = values
 
     def calcium_computing(self, factor=1.05, rhob=0.479, nsimu=1000,
-                          smoother="sgfilter", sbCa=None, sbsi=None,
-                          sbmg=None, wbCa=None, wbsi=None, wbmg=None,
+                          smoother="sgfilter", sbca=None, sbsi=None,
+                          sbmg=None, wbca=None, wbsi=None, wbmg=None,
                           verbose=False):
         """
         Function to compute and return all spectral indicators in the calcium
@@ -180,11 +181,11 @@ class DrGall(object):
         if self.xb is None:
             print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
                 'indictors defined in calcium zone (maybe no B channel)'
-            indicators = {'EDCa': [N.nan, N.nan],
-                          'rCa': [N.nan, N.nan],
-                          'rCaS': [N.nan, N.nan],
-                          'rCaS2': [N.nan, N.nan],
-                          'ewCaiiHK': [N.nan, N.nan],
+            indicators = {'EDca': [N.nan, N.nan],
+                          'rca': [N.nan, N.nan],
+                          'rcaS': [N.nan, N.nan],
+                          'rcaS2': [N.nan, N.nan],
+                          'ewcaiiHK': [N.nan, N.nan],
                           'ewsiii4000': [N.nan, N.nan],
                           'ewmgii': [N.nan, N.nan]}
             return indicators
@@ -1517,3 +1518,31 @@ class DrGall(object):
             print >> sys.stderr, "Control plot for iron zone saved in %s" %\
                 filename + '.' + f
         P.close()
+
+
+def test_code(idr):
+    """
+    Test the code using an SNf IDR.
+
+    Input is the path to an IDR.
+    """
+    import cPickle
+    from snspin.extern import pySnurp
+    if not idr.endswith('/'):
+        idr += '/'
+    d = cPickle.load(open(idr + 'META.pkl'))
+    sn = 'SNF20070818-001'
+    spec = '07_235_065_003'
+    z = d[sn]['host.zhelio']
+    specB = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_B'])
+    specR = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_R'])
+    specM = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_merged'])
+    specB.x /= (1. + z)
+    specR.x /= (1. + z)
+    specM.x /= (1. + z)
+    dg = DrGall(spec=specM, specb=specB, specr=specR)
+    calcium = dg.calcium_computing()
+    silicon = dg.silicon_computing()
+    oxygen = dg.oxygen_computing()
+    iron = dg.iron_computing()
+    print dg.values

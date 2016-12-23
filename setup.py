@@ -3,7 +3,7 @@
 """Setup script."""
 
 import os
-#import glob
+import glob
 import yaml
 from setuptools import setup, find_packages
 
@@ -21,7 +21,7 @@ name = 'snspin'
 packages = find_packages()
 
 # Scripts (in scripts/)
-scripts = []  # glob.glob("scripts/*.py")
+scripts = glob.glob("scripts/*.py")
 
 des = "SuperNova SPectral INdicators: Spectral indicators measurement for supernovae"
 

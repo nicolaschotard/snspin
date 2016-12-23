@@ -13,7 +13,6 @@
 """
 Code to apply Phrenology measurements on data that can come from:
    + An IDR : default behavior
-   + Our DB : if the --DB option is set.
    + A local fits file : If spectra are fed in via the argument line.
      If so, they overwrite all options (they are stored in option.specs)
 
@@ -36,16 +35,14 @@ import matplotlib
 matplotlib.use('Agg')
 import numpy as np
 
-import SNfPhrenology
-import SALTmodel
-import SnfUtil
-import SnfMetaData
+from snspin import spin
+#import SnfMetaData
 
 from ToolBox import Spectrum, IO
 #+ Dependencies that we would like to remove
 #+ pySnurp is in the IFU CVS. It would be nice to remove it since there
 #+ is Toolbox.Spectrum to replace it
-import pySnurp 
+from snspin.extern import pySnurp 
 
 code_name = os.path.basename(__file__) + ' '
 
@@ -62,21 +59,6 @@ def read_option():
                    default=None,
                    help = "Limits the IDR to the subsets selected")
     parser.add_option_group(idr)
-
-    #- Input options for DB mode
-    db = optparse.OptionGroup(parser, "DB")
-    db.add_option("--DB", action="store_true", default=False,
-                  help="Needs to be set to run in DB mode")
-    db.add_option('--specID', help="Will work only on a this particular \
-    spectrum in the list. To use with --target (ex: 07_098_116_003).",
-                  default=None)
-    db.add_option('-v', '--inver', type='int',
-                  help="Flux calibration prod version to get spectra from",
-                  default=None)
-    db.add_option('-j', '--injob',
-                  help="Flux calibration job name to get spectra from",
-                  default=None)
-    parser.add_option_group(db)
 
     #- General input options
     inp = optparse.OptionGroup(parser, "Input")
@@ -118,17 +100,12 @@ def read_option():
 
     #- Redshift and reddening tweaking options
     red = optparse.OptionGroup(parser, "Dereddening")
-#    red.add_option("--AB", dest = "AB", type = "string", help = "Name of the
-#    key corresponded to the AB value used to derredened spectra. If --AB
-#    yourkey, 'yourkey.AB' is use as key", default = None)
     red.add_option("--ebmv", type = "float",
                    help="Value of ebmv used to deredden *all* the spectra \
                    [%default]", default=None)
     red.add_option("--Rv", type = "float",
                    help="Value of Rv used to deredden spectra [%default]",
                    default=3.1)
-#    red.add_option("-c", dest = "color", action="store_true", help = "If set,
-#    all spectra will be derredened with the SALT2 color.", default=False)
     red.add_option('-z', '--redshift', type='float',
                    help="Force a redshift",
                    default = None)
@@ -158,15 +135,6 @@ def read_option():
                    help="Don't produce control plots", default=True)
     parser.add_option_group(plt)
 
-
-###    deprecated = optparse.OptionGroup(parser, "Deprecated")
-###    deprecated.add_option("-k", "--keep_all", default=False,
-###    action = "store_true",
-###                   help = "If set it will merge the yaml file read in and
-###    the phrenologie output")
-###    deprecated.add_option("--local", dest = "local", help = "Name of the
-###    directory where all the spectra are saved", default = False  )
-
     option, args = parser.parse_args()
 
     # spectra fits as args
@@ -174,24 +142,9 @@ def read_option():
 
     if option.smoother == 'spline':
         option.smoother += '_free_knot'
-#    if option.color and option.ebmv:
-#        parser.error('Error, give me only ebmv option or color option.')
-#    if option.AB is not None:
-#        if option.ebmv:
-#            parser.error('Error, give me only ebmv option or AB option.')
-#        elif option.color:
-#            parser.error('Error, give me only color option or AB option.')
 
-    if option.DB \
-           and (option.target is None \
-                or (option.inver is None \
-                    and option.injob is None)):
-        error = 'You need to set a target name (-t) and a prod version (-v)'
-        error += 'or job name (-j) to use the DB'
-        parser.error(error)
     if option.specID is not None:
         option.specID = option.specID.split(',')
-    assert not option.DB or SnfUtil.hasDB(), 'Cannot connect to the DB!'
 
     option.command_line = " ".join(sys.argv)
     option.prefix = sys.argv[0]
@@ -221,7 +174,6 @@ def read_option():
     return option
 
 
-
 def read_ascii(filename):
     """
     Read ascii files and returns a list of lines.
@@ -237,6 +189,7 @@ def read_ascii(filename):
             continue
         line_list.append(line)
     return line_list
+
 
 def read_from_idr(option):
     """
@@ -266,80 +219,6 @@ def read_from_idr(option):
     option.data_dir = option.idr
     return d
 
-def read_from_DB(option):
-    """
-    Creates an SnfMetaData dictionnary out of the DB.
-
-    The path to the files is supposed to be absolute, therefore
-    option.data_dir is set to "".
-    """
-
-    from processing.process.models import Process
-    tgt = list(option.target)[0]
-
-    # get SALT2 yaml
-    salt2 = Process.objects.filter(Fclass=700, XFclass__in=[100, 720, 800],
-                                   Pose_FK__Exp_FK__Run_FK__TargetId_FK__Name=\
-                                   tgt).order_by('-IdProcess')
-    if option.inver is not None:
-        salt2 = salt2.filter(Version=option.inver)
-    if option.injob is not None:
-        salt2 = salt2.filter(Job_FK__Name__contains=option.injob)
-
-    assert salt2.count(), 'no SALT2 YAML found in the DB!'
-    salt2 = salt2[0]
-    salt2data = IO.load_anyfile(salt2.File_FK.FullPath)
-    # make a compatible dict with the rest of the code
-    data = {'salt2.yaml': str(salt2.File_FK.FullPath)}
-    for k, v in salt2data['saltparams'].iteritems():
-        data['salt2.'+k] = v[0]
-        if v[1] != -1:
-            data['salt2.'+k+'.err'] = v[1]
-    data['host.zhelio'] = option.redshift \
-                          and option.redshift \
-                          or salt2data['target']['redshift']
-    data['target.mwebv'] = salt2data['target']['mwebv']
-
-    # loop on spectra used by SALT2
-    specs = salt2.Parent_FK.get(Fclass=680,
-                                XFclass=salt2.XFclass).Parent_FK.all().order_by('-IdProcess')
-    spectra = dict([(str(i), {})
-                    for i in sorted(set([s.File_FK.Name[:14] for s in specs
-                                         ]))])
-    # check if only a few spectra are asked for
-    if option.specID is not None:
-        for spec in spectra.keys():
-            if spec not in option.specID:
-                spectra.pop(spec)
-
-    for spec in list(spectra):
-        s = specs.filter(IdProcess__startswith=spec.replace('_', ''))
-        if s[0].Pose_FK.Exp_FK.Run_FK.Kind in ['HostGalaxy', 'FinalRef'] \
-               or spec not in salt2data['data']['exp']:
-            continue
-
-        if s.filter(Channel=4).count(): # blue
-            specB = str(s.filter(Channel=4)[0].File_FK.FullPath)
-        else:
-            specB = None
-        if s.filter(Channel=2).count(): # red
-            specR = str(s.filter(Channel=2)[0].File_FK.FullPath)
-        else:
-            specR = None
-
-        # mjd from SALT
-        w = salt2data['data']['exp'].index(spec)
-        mjd = salt2data['data']['mjd'][w]
-        spectra[spec] = {'idr.spec_B': specB,
-                         'idr.spec_R': specR,
-                         'obs.mjd' : mjd}
-
-    # put it all together
-    data['spectra'] = spectra
-    d = {tgt : data}
-
-    option.data_dir = ""
-    return SnfMetaData.SnfMetaData(d)
 
 def read_from_fits(option):
     """
@@ -361,18 +240,10 @@ def read_from_fits(option):
         print "read", inspec
         spec = pySnurp.Spectrum(inspec,keepFits=False)
         obj = spec.readKey('OBJECT')
-        assert option.redshift is not None \
-               or SnfUtil.hasDB(), 'no DB found, you need to set --redshift'
-        d.setdefault(obj, {}).setdefault('host.zhelio',
-                                         option.redshift is not None \
-                                         and option.redshift \
-                                         or SnfUtil.redshift(obj))
-        assert option.ebmv is not None \
-               or SnfUtil.hasDB(), 'no DB found, you need to set --ebmv'
-        d.setdefault(obj, {}).setdefault('target.mwebv',
-                                         option.ebmv is not None \
-                                         and option.ebmv \
-                                         or SnfUtil.sfd_ebmv(obj))
+        assert option.redshift is not None, 'you need to set --redshift'
+        d.setdefault(obj, {}).setdefault('host.zhelio', option.redshift)
+        assert option.ebmv is not None, 'you need to set --ebmv'
+        d.setdefault(obj, {}).setdefault('target.mwebv', option.ebmv)
 
         d[obj].setdefault('spectra', {}).setdefault(spec.readKey('OBSID'),
                                                     copy(default_chan))
@@ -434,19 +305,6 @@ def read_spectrum(filename, z_helio=None, mwebv=None, Rv=3.1):
 
     return SimpleSpectrum(x,y,v=v)
 
-# In read_spectrum before =======
-#+ FIXME: --AB option is broken
-#    if option.AB:
-#        spec.deredden(option.host_ebmv)
-
-# option removed
-#    if salt2color is not None:
-#        y,v = SALTmodel.decolor_flux(x,y,v,salt2color)
-# ==========
-
-# Not used anymore
-#def ebmv(AB,Rv=3.1,ab=0.9982 ,bb=1.0495):
-#    return (1./Rv)*(AB/(ab+(bb/Rv)))
 
 #=======================================
 if __name__ == '__main__':
@@ -455,9 +313,7 @@ if __name__ == '__main__':
 
     #- Read the meta-data depending on the method used
     #- If you add a method here, be sure to return a proper SnfMetaData
-    if option.DB:
-        d = read_from_DB(option)
-    elif option.specs:
+    if option.specs:
         d = read_from_fits(option)
     # search IDR by default
     elif os.path.isdir(option.idr):
@@ -652,8 +508,3 @@ if __name__ == '__main__':
         f += ".pkl"
 
     IO.dump_anyfile(d_phrenology, pkl_filename)
-    
-    #if option.out_pickle is not None:
-    #    print d_phrenology
-    #    IO.dump_anyfile(d_phrenology,
-    #                    os.path.join(option.output_dir, pkl_filename))
