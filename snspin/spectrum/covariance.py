@@ -12,12 +12,13 @@ from scipy import interpolate as I
 from scipy import optimize
 
 import pySnurp
-from tools import statistics
-from tools.smoothing import savitzky_golay as sg
-from tools.smoothing import spline_find_s, sg_find_num_points
-from . import io
+from snspin.tools import statistics
+from snspin.tools.smoothing import savitzky_golay as sg
+from snspin.tools.smoothing import spline_find_s
+from snspin.tools.smoothing import sg_find_num_points
+from snspin.tools import io
 
-class SPCS:
+class SPCS(object):
 
     """
     SpecVarCorrStudy.
@@ -182,7 +183,7 @@ class SPCS:
             P.axvline(d[-1], color='k')
             P.title(n)
 
-class SPCS_test:
+class SPCS_test(object):
                 
     """
     SpecVarCorrStudy
@@ -686,4 +687,3 @@ def spec_autocorr(dir='./'):
     ax2.set_title(r'Mean $\lambda$, Median, nMAD')
     ax3.set_title(r'Mean $\lambda$, Median, nMAD')
     ax4.set_title(r'Mean $\lambda$, Median, nMAD')
- 
