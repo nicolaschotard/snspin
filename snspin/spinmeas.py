@@ -181,7 +181,7 @@ class DrGall(object):
         if self.xb is None:
             print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
                 'indictors defined in calcium zone (maybe no B channel)'
-            indicators = {'EDca': [N.nan, N.nan],
+            indicators = {'edca': [N.nan, N.nan],
                           'rca': [N.nan, N.nan],
                           'rcaS': [N.nan, N.nan],
                           'rcaS2': [N.nan, N.nan],
@@ -328,7 +328,7 @@ class DrGall(object):
         if self.xr is None:
             print >> sys.stderr, 'ErrOr, impossible to compute spectral '\
                 'indictors defined in calcium zone (maybe no r channel)'
-            indicators = {'EDca': [N.nan, N.nan],
+            indicators = {'edca': [N.nan, N.nan],
                           'rca': [N.nan, N.nan],
                           'rcaS': [N.nan, N.nan],
                           'rcaS2': [N.nan, N.nan],
@@ -701,10 +701,10 @@ class DrGall(object):
         except ValueError:
             rcaS2 = float(N.nan)
 
-        try:
-            EDca = self.cranio_bca.EDcavalues['EDca']
-        except ValueError:
-            EDca = float(N.nan)
+        #try:
+        #    edca = self.cranio_bca.edcavalues['edca']
+        #except ValueError:
+        edca = float(N.nan)
 
         try:
             ewcaiiHK = self.cranio_bca.ewvalues['ewcaiiHK']
@@ -756,7 +756,7 @@ class DrGall(object):
         except ValueError:
             vsiii_6355 = float(N.nan)
 
-        return rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, \
+        return rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, \
             ewSiiW, ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, \
             ewSiiW_r
 
@@ -765,9 +765,9 @@ class DrGall(object):
     #=========================================================================
 
     def plot_craniobca(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where rca, rcaS, rcas2, EDca and ewcaiiHK are computed"""
+        """Plot zone where rca, rcaS, rcas2, edca and ewcaiiHK are computed"""
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr = self.cranio_bca
 
@@ -841,7 +841,7 @@ class DrGall(object):
     def plot_craniobsi(self, metrics, ax=None, filename='', verbose=True):
         """Plot zone where ewsi4000 is computed"""
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr = self.cranio_bsi
 
@@ -873,7 +873,7 @@ class DrGall(object):
                        label='_nolegend_')
             ax.plot(lbd_line, N.polyval(p_line, lbd_line), color='g')
         except ValueError:
-            print >> sys.stderr, "No parameters to plot EDca straight line"
+            print >> sys.stderr, "No parameters to plot edca straight line"
 
         try:  # Plot vlines
             for x, y in zip(cr.ewvalues['lbd_ewsiii4000'],
@@ -900,7 +900,7 @@ class DrGall(object):
     def plot_craniobmg(self, metrics, ax=None, filename='', verbose=True):
         """Plot zone where ewmgii is computed"""
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr = self.cranio_bmg
 
@@ -957,9 +957,9 @@ class DrGall(object):
             fig.savefig('ewmgii_' + filename)
 
     def plot_cranior1r5(self, metrics, ax=None, filename='', verbose=True):
-        """Plot zone where rca, rcaS, rcas2, EDca and ewcaiiHK are computed"""
+        """Plot zone where rca, rcaS, rcas2, edca and ewcaiiHK are computed"""
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr1 = self.cranio_r1
         cr5 = self.cranio_r5
@@ -1036,7 +1036,7 @@ class DrGall(object):
     def plot_cranior2(self, metrics, ax=None, filename='', verbose=True):
         """Plot zone where ewSiiW is computed"""
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr = self.cranio_r2
 
@@ -1151,7 +1151,7 @@ class DrGall(object):
     def plot_cranior3r4(self, metrics, ax=None, filename='', verbose=True):
         """Plot zone where ewSiiW is computed"""
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr3 = self.cranio_r3
         cr4 = self.cranio_r4
@@ -1247,7 +1247,7 @@ class DrGall(object):
 
     def plot_spectrum(self, metrics, ax=None, filename='', title=None, verbose=True):
 
-        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, EDca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
+        rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
 
         if ax is None:
@@ -1534,6 +1534,7 @@ def test_code(idr):
     sn = 'SNF20070818-001'
     spec = '07_235_065_003'
     z = d[sn]['host.zhelio']
+    phase = d[sn]['spectra'][spec]['salt2.phase']
     specB = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_B'])
     specR = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_R'])
     specM = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_merged'])
@@ -1546,3 +1547,7 @@ def test_code(idr):
     oxygen = dg.oxygen_computing()
     iron = dg.iron_computing()
     print dg.values
+    title = sn + ', Rest-Frame Phase=%.1f' % phase
+    dg.control_plot(filename="control_plot_name", title=title)
+    dg.plot_oxygen(filename="control_plot_name_ox", title=title)
+    dg.plot_iron(filename="control_plot_name_fe", title=title)
