@@ -446,7 +446,7 @@ def smooth_spec(x, y, v, s=None, w=15, sfunc='sp', order=2, verbose=False):
                           "above order+2"%(kernel, order)
                 kernel = int(order/2) * 2 + 3
             ysmooth = sg(y, kernel=kernel, order=order)
-        return ysmooth
+    return ysmooth
     
 def comp_pull(y, ysmooth, v):
     """Compute the pull"""
