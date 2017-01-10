@@ -211,6 +211,10 @@ class DrGall(object):
                                      smoother=smoother,
                                      verbose=verbose)
 
+        #rca = self.cranio_bca.rca(verbose=verbose)
+        #self.values.update(self.cranio_bca.rcavalues)
+        #if verbose:
+        #    print 'rca computing done, rca =', rca
         try:
             rca = self.cranio_bca.rca(verbose=verbose)
             self.values.update(self.cranio_bca.rcavalues)
