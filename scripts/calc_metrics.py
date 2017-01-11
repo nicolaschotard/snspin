@@ -58,6 +58,11 @@ def read_option():
                    help='Excluded target, or filename containing a list of \
                    targets. Can be used multiple times',
                    default=None)
+    inp.add_option('--expid',
+                   dest="expid",
+                   action="append",
+                   help="Exposure ID. Can be used multiple times",
+                   default=None)
     parser.add_option_group(inp)
 
     #- Output specific options
@@ -254,8 +259,10 @@ def read_spectrum(filename, z_helio=None, mwebv=None, Rv=3.1):
     """
     spec = pySnurp.Spectrum(filename)
     if mwebv is not None:
+        print "INFO: Correcting from MW extinction (E(B-V)=%.2f)" %mwebv
         spec.deredden(mwebv, Rv=Rv)
     if z_helio is not None:
+        print "INFO: Going to rest-frame using z=%.3f" % z_helio
         spec.deredshift(z_helio)
     return spec
 
@@ -276,7 +283,7 @@ if __name__ == '__main__':
             print 'for *all* targets'
         d = read_from_idr(option)
 
-    print "%i targets loaded."%len(d.keys())
+    print "INFO: %i targets loaded."%len(d.keys())
 
     #- Target selection
     if option.target is not None:
@@ -309,6 +316,8 @@ if __name__ == '__main__':
                                        "idr.spec_merged",
                                        "obs.exp",
                                        "salt2.phase")):
+        if option.expid is not None and expId not in option.expid:
+            continue
         #+ z_helio -> option.z
         #+ mwebv -> option.mwebv
         #+ color -> option.salt2color removed!
@@ -327,7 +336,7 @@ if __name__ == '__main__':
         if option.ebmv is not None and option.ebmv != mwebv:
             mwebv = option.ebmv
 
-        print "reading %s" % expId
+        print "INFO: Reading %s, from %s" % (expId, target_name)
         # merged
         try:
             spec_merge = read_spectrum(os.path.join(option.data_dir,
@@ -382,7 +391,7 @@ if __name__ == '__main__':
                 rsjb = [spin.stephen_ratio(spec_b, spec_r), 0.0]
             iron = DrGall.iron_computing(nsimu=option.nsimu,
                                          smoother=option.smoother,
-                                         verbose=True)
+                                         verbose=False)
         else:
             rsjb = [np.nan] * 2
 
@@ -401,9 +410,9 @@ if __name__ == '__main__':
                  and ('.' + option.unique_suffix) \
                  or ''
         tgtexp = target_name + '.' + expId
-        cpname = "control_plot.spin." + tgtexp + suffix
-        cpname_ox = "control_plot.spin.oxygen_zone." + tgtexp + suffix
-        cpname_fe = "control_plot.spin.iron_zone." + tgtexp + suffix
+        cpname = "control_plot." + tgtexp + suffix
+        cpname_ox = "control_plot.oxygen_zone." + tgtexp + suffix
+        cpname_fe = "control_plot.iron_zone." + tgtexp + suffix
         control_plot_name = os.path.join(plotdir, cpname)
         control_plot_name_ox = os.path.join(plotdir, cpname_ox)
         control_plot_name_fe = os.path.join(plotdir, cpname_fe)
@@ -411,10 +420,9 @@ if __name__ == '__main__':
         if option.plot:
             format = option.format.split(',')
             title = target_name+', Rest-Frame Phase=%.1f' % phase
+            DrGall.control_plot(filename=control_plot_name, title=title, format=format)
             try:
-                DrGall.control_plot(filename=control_plot_name,
-                                    title=title,
-                                    format=format)
+                DrGall.control_plot(filename=control_plot_name, title=title, format=format)
             except Exception, err:
                 print "<%s> WARNING: control_plot had a problem:"%\
                       code_name, err

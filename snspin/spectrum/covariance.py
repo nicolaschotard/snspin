@@ -63,7 +63,6 @@ class SPCS(object):
             try:
                 # this looks like a simple relation between average S/N
                 # works pretty well
-                print N.median(self.y / N.sqrt(self.v))
                 self.w = int(-10 * N.log(N.median(self.y / N.sqrt(self.v))) + 52)
                 if self.w < 3:
                     self.w = 3

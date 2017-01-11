@@ -281,8 +281,8 @@ class Craniometer(object):
             self.maxima = maxima
             self.minima = minima
 
-        def cranio_generator(self, nsimu=1000, rho=0.482, correl=True,
-                             factor=1, simus=None, verbose=True):
+    def cranio_generator(self, nsimu=1000, rho=0.482, correl=True,
+                         factor=1, simus=None, verbose=True):
         """
         Simulation generator.
 
@@ -336,7 +336,7 @@ class Craniometer(object):
             self.simulations[number].find_extrema(verbose=False)
 
         try:
-            self.systematic_error(verbose=verbose)
+            self.systematic_error()
         except TypeError:
             self.syst = None
             print >> sys.stderr, "ERROR in systematic_error (cranio_generator)!"
@@ -512,12 +512,12 @@ class Craniometer(object):
                 print >> sys.stderr, "ERROR. Extrema are not in the interval"
             return N.nan
         else:
-            return float(y[(x >= imin) & (x <= imax)].sum())
+            return float(y[(N.array(x) >= imin) & (N.array(x) <= imax)].sum())
 
     def _var_integration(self, x, v, imin=None, imax=None, verbose=True):
         """Compute variance of an intergration."""
         if len(v):
-            var_int = v[(x > imin) & (x < imax)].sum()
+            var_int = v[(N.array(x) > imin) & (N.array(x) < imax)].sum()
         else:
             if verbose:
                 print >> sys.stderr, "No variance for this spectrum"
@@ -579,21 +579,24 @@ class Craniometer(object):
         Lambda imin < Lambda_max
         """
         try:
+            filt = (N.array(lbd) > imin) & (N.array(lbd) < imax)
+            if not sum(filt):
+                return [None, None, None]
             if extrema == 'maxima':
                 if right:
-                    arg = N.argmax(lbd[(lbd > imin) & (lbd < imax)])
+                    arg = N.argmax(lbd[filt])
                 elif left:
-                    arg = N.argmin(lbd[(lbd > imin) & (lbd < imax)])
+                    arg = N.argmin(lbd[filt])
                 else:
-                    arg = N.argmax(smooth[(lbd > imin) & (lbd < imax)])
+                    arg = N.argmax(smooth[filt])
 
             elif extrema == 'minima':
                 if right:
-                    arg = N.argmax(lbd[(lbd > imin) & (lbd < imax)])
+                    arg = N.argmax(lbd[filt])
                 elif left:
-                    arg = N.argmin(lbd[(lbd > imin) & (lbd < imax)])
+                    arg = N.argmin(lbd[filt])
                 else:
-                    arg = N.argmin(smooth[(lbd > imin) & (lbd < imax)])
+                    arg = N.argmin(smooth[filt])
 
             wavelength = (lbd[(lbd >= imin) & (lbd <= imax)])[arg]
             flux = (smooth[(lbd >= imin) & (lbd <= imax)])[arg]
@@ -612,7 +615,8 @@ class Craniometer(object):
         limit = (self.x >= imin) & (self.x <= imax)
         maxi, mini = self._extrema(self.x[limit], self.y[limit],
                                    self.v[limit], self.s[limit], w=1)
-
+        if (maxima and not len(maxi['x'])) or (minima and not len(mini['x'])):
+            return None, None, None
         if right:
             if maxima:
                 arg = N.argmax(maxi['x'])
@@ -698,7 +702,6 @@ class Craniometer(object):
                           'rca_lbd': [N.nan, N.nan], 'rca_flux': [N.nan, N.nan]}
         if self.init_only:
             return
-
         lbd1, flux1, var1 = self._extrema_value_in_interval(self.p3590[0],
                                                             self.p3590[1],
                                                             self.maxima['x'],
@@ -708,8 +711,7 @@ class Craniometer(object):
                                                             right=True,
                                                             verbose=verbose)
         if simu and lbd1 is None:
-            lbd1, flux1, var1 = self.max_of_interval(
-                self.p3590[0], self.p3590[1])
+            lbd1, flux1, var1 = self.max_of_interval(self.p3590[0], self.p3590[1])
 
         lbd2, flux2, var2 = self._extrema_value_in_interval(self.p3930[0],
                                                             self.p3930[1],
@@ -719,8 +721,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if simu and lbd2 is None:
-            lbd2, flux2, var2 = self.max_of_interval(
-                self.p3930[0], self.p3930[1])
+            lbd2, flux2, var2 = self.max_of_interval(self.p3930[0], self.p3930[1])
         try:
             rca_value = flux2 / flux1
         except TypeError:
@@ -729,15 +730,13 @@ class Craniometer(object):
             rca_value = N.nan
 
         if simu:
-
             if not N.isfinite(rca_value):
                 return [float(N.nan), float(N.nan)]
 
             rca_simu = []
             for simu in self.simulations:
                 try:
-                    rca_simu.append(simu.rca(simu=False, syst=False,
-                                             verbose=False))
+                    rca_simu.append(simu.rca(simu=False, syst=False, verbose=False))
                 except TypeError:
                     continue
             rca_sigma = self.std2(N.array(rca_simu)[N.isfinite(rca_simu)],
@@ -753,7 +752,6 @@ class Craniometer(object):
                                   'rca_flux': [float(flux1), float(flux2)]}
 
         if syst:
-
             rca_syst = []
             for system in self.syst:
                 try:
@@ -839,7 +837,6 @@ class Craniometer(object):
                                                 float(max_2)]}
 
         if syst:
-
             rcas_syst = []
             for system in self.syst:
                 try:
@@ -1044,8 +1041,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if simu and lbd1 is None:
-            lbd1, flux1, var1 = self.max_of_interval(
-                self.p3590[0], self.p3590[1])
+            lbd1, flux1, var1 = self.max_of_interval(self.p3590[0], self.p3590[1])
 
         lbd2, flux2, var2 = self._extrema_value_in_interval(self.p3930[0],
                                                             self.p3930[1],
@@ -1055,8 +1051,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if simu and lbd2 is None:
-            lbd2, flux2, var2 = self.max_of_interval(
-                self.p3930[0], self.p3930[1])
+            lbd2, flux2, var2 = self.max_of_interval(self.p3930[0], self.p3930[1])
 
         min_1 = lbd1 - interval_1
         max_1 = lbd1 + interval_1
@@ -1112,8 +1107,7 @@ class Craniometer(object):
                                                                 extrema='maxima',
                                                                 verbose=verbose)
             if simu and lbd1 is None:
-                lbd1, flux1, var1 = self.max_of_interval(self.p3590[0],
-                                                         self.p3590[1])
+                lbd1, flux1, var1 = self.max_of_interval(self.p3590[0], self.p3590[1])
 
             lbd2, flux2, var2 = self._extrema_value_in_interval(self.p3930[0],
                                                                 self.p3930[1],
@@ -1126,8 +1120,7 @@ class Craniometer(object):
                                                                 extrema='maxima',
                                                                 verbose=verbose)
             if simu and lbd2 is None:
-                lbd2, flux2, var2 = self.max_of_interval(self.p3930[0],
-                                                         self.p3930[1])
+                lbd2, flux2, var2 = self.max_of_interval(self.p3930[0], self.p3930[1])
 
             edca_value = (self._equivalentwidth(self.x, self.y, lbd1=lbd1,
                                                 lbd2=lbd2, flux1=flux1,
@@ -1209,9 +1202,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if lbd1 is None:
-            lbd1, flux1, var1 = self.max_of_interval(self.p5603[0],
-                                                     self.p5603[1],
-                                                     verbose=verbose)
+            lbd1, flux1, var1 = self.max_of_interval(self.p5603[0], self.p5603[1])
 
         lbd2, flux2, var2 = self._extrema_value_in_interval(5700, 5849,
                                                             self.minima['x'],
@@ -1262,8 +1253,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if simu and lbd5 is None:
-            lbd5, flux5, var5 = self.max_of_interval(
-                self.p6312[0], self.p6312[1])
+            lbd5, flux5, var5 = self.max_of_interval(self.p6312[0], self.p6312[1])
         # Check if the straight line in under the smoothing function
         x = N.polyval(N.polyfit([lbd3, lbd5], [flux3, flux5], 1),
                       self.x[(self.x > lbd3) & (self.x < lbd5)]) - \
@@ -1380,8 +1370,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if simu and lbd1 is None:
-            lbd1, flux1, var1 = self.max_of_interval(
-                self.p5603[0], self.p5603[1])
+            lbd1, flux1, var1 = self.max_of_interval(self.p5603[0], self.p5603[1])
 
         lbd2, flux2, var2 = self._extrema_value_in_interval(self.p6312[0],
                                                             self.p6312[1],
@@ -1391,8 +1380,7 @@ class Craniometer(object):
                                                             extrema='maxima',
                                                             verbose=verbose)
         if simu and lbd2 is None:
-            lbd2, flux2, var2 = self.max_of_interval(
-                self.p6312[0], self.p6312[1])
+            lbd2, flux2, var2 = self.max_of_interval(self.p6312[0], self.p6312[1])
 
         try:
             rsis_value = flux1 / flux2
@@ -1571,52 +1559,53 @@ class Craniometer(object):
         [ew, ew_sigma]
         """
         # shoftcut
-        ewV = self.ewvalues
+        ewv = self.ewvalues
 
         # Initialisation
-        ewV['ew%s' % sf] = N.nan
-        ewV['lbd_ew%s' % sf] = [N.nan, N.nan]
-        ewV['flux_ew%s' % sf] = [N.nan, N.nan]
-        ewV['R%s' % sf] = N.nan
-        ewV['flux_sum_norm_ew%s' % sf] = N.nan
-        ewV['depth_norm_ew%s' % sf] = N.nan
-        ewV['depth_ew%s' % sf] = N.nan
-        ewV['depth_ew%s.err' % sf] = N.nan
-        ewV['depth_ew%s.stat' % sf] = N.nan
-        ewV['depth_ew%s.syst' % sf] = N.nan
-        ewV['depth_ew%s.mean' % sf] = N.nan
-        ewV['surf_norm_ew%s' % sf] = N.nan
-        ewV['surf_ew%s.err' % sf] = N.nan
-        ewV['surf_ew%s.stat' % sf] = N.nan
-        ewV['surf_ew%s.syst' % sf] = N.nan
-        ewV['surf_ew%s.mean' % sf] = N.nan
-        ewV['width_ew%s' % sf] = N.nan
-        ewV['ew%s.err' % sf] = N.nan
-        ewV['ew%s.stat' % sf] = N.nan
-        ewV['ew%s.syst' % sf] = N.nan
-        ewV['flux_sum_norm_ew%s.err' % sf] = N.nan
-        ewV['flux_sum_norm_ew%s.stat' % sf] = N.nan
-        ewV['flux_sum_norm_ew%s.syst' % sf] = N.nan
-        ewV['depth_norm_ew%s.err' % sf] = N.nan
-        ewV['depth_norm_ew%s.stat' % sf] = N.nan
-        ewV['depth_norm_ew%s.syst' % sf] = N.nan
-        ewV['width_ew%s.err' % sf] = N.nan
-        ewV['width_ew%s.stat' % sf] = N.nan
-        ewV['width_ew%s.syst' % sf] = N.nan
-        ewV['ew%s.mean' % sf] = N.nan
-        ewV['R%s.mean' % sf] = N.nan
-        ewV['R%s.stat' % sf] = N.nan
-        ewV['R%s.syst' % sf] = N.nan
-        ewV['R%s.err' % sf] = N.nan
-        ewV['flux_sum_norm_ew%s.mean' % sf] = N.nan
-        ewV['depth_norm_ew%s.mean' % sf] = N.nan
-        ewV['width_ew%s.mean' % sf] = N.nan
-        ewV['ew%s.med' % sf] = N.nan
-        ewV['fmean_ew%s' % sf] = N.nan
-        ewV['fmean_ew%s.err' % sf] = N.nan
-        ewV['fmean_ew%s.stat' % sf] = N.nan
-        ewV['fmean_ew%s.syst' % sf] = N.nan
-        ewV['fmean_ew%s.mean' % sf] = N.nan
+        ewv['ew%s' % sf] = N.nan
+        ewv['lbd_ew%s' % sf] = [N.nan, N.nan]
+        ewv['flux_ew%s' % sf] = [N.nan, N.nan]
+        ewv['R%s' % sf] = N.nan
+        ewv['flux_sum_norm_ew%s' % sf] = N.nan
+        ewv['depth_norm_ew%s' % sf] = N.nan
+        ewv['surf_ew%s' % sf] = N.nan
+        ewv['depth_ew%s' % sf] = N.nan
+        ewv['depth_ew%s.err' % sf] = N.nan
+        ewv['depth_ew%s.stat' % sf] = N.nan
+        ewv['depth_ew%s.syst' % sf] = N.nan
+        ewv['depth_ew%s.mean' % sf] = N.nan
+        ewv['surf_norm_ew%s' % sf] = N.nan
+        ewv['surf_ew%s.err' % sf] = N.nan
+        ewv['surf_ew%s.stat' % sf] = N.nan
+        ewv['surf_ew%s.syst' % sf] = N.nan
+        ewv['surf_ew%s.mean' % sf] = N.nan
+        ewv['width_ew%s' % sf] = N.nan
+        ewv['ew%s.err' % sf] = N.nan
+        ewv['ew%s.stat' % sf] = N.nan
+        ewv['ew%s.syst' % sf] = N.nan
+        ewv['flux_sum_norm_ew%s.err' % sf] = N.nan
+        ewv['flux_sum_norm_ew%s.stat' % sf] = N.nan
+        ewv['flux_sum_norm_ew%s.syst' % sf] = N.nan
+        ewv['depth_norm_ew%s.err' % sf] = N.nan
+        ewv['depth_norm_ew%s.stat' % sf] = N.nan
+        ewv['depth_norm_ew%s.syst' % sf] = N.nan
+        ewv['width_ew%s.err' % sf] = N.nan
+        ewv['width_ew%s.stat' % sf] = N.nan
+        ewv['width_ew%s.syst' % sf] = N.nan
+        ewv['ew%s.mean' % sf] = N.nan
+        ewv['R%s.mean' % sf] = N.nan
+        ewv['R%s.stat' % sf] = N.nan
+        ewv['R%s.syst' % sf] = N.nan
+        ewv['R%s.err' % sf] = N.nan
+        ewv['flux_sum_norm_ew%s.mean' % sf] = N.nan
+        ewv['depth_norm_ew%s.mean' % sf] = N.nan
+        ewv['width_ew%s.mean' % sf] = N.nan
+        ewv['ew%s.med' % sf] = N.nan
+        ewv['fmean_ew%s' % sf] = N.nan
+        ewv['fmean_ew%s.err' % sf] = N.nan
+        ewv['fmean_ew%s.stat' % sf] = N.nan
+        ewv['fmean_ew%s.syst' % sf] = N.nan
+        ewv['fmean_ew%s.mean' % sf] = N.nan
 
         if self.init_only:
             return
@@ -1753,38 +1742,31 @@ class Craniometer(object):
             fmean = 2 * (flux2 - self.smoother(lbd3)) \
                 / (flux2 + self.smoother(lbd3))
 
-            ewV['ew%s' % sf] = float(ew_value)
-            ewV['lbd_ew%s' % sf] = [float(lbd1), float(lbd2)]
-            ewV['flux_ew%s' % sf] = [float(flux1), float(flux2)]
-            ewV['R%s' % sf] = float(flux2 / flux1)
-            ewV['flux_sum_norm_ew%s' % sf] = float(flux_norm)
-            ewV['depth_norm_ew%s' % sf] = float(depth_n)
-            ewV['width_ew%s' % sf] = float(lbd2 - lbd1)
-            ewV['depth_ew%s' % sf] = float(depth)
-            ewV['surf_ew%s' % sf] = float(surf)
-            ewV['fmean_ew%s' % sf] = float(fmean)
+            ewv['ew%s' % sf] = float(ew_value)
+            ewv['lbd_ew%s' % sf] = [float(lbd1), float(lbd2)]
+            ewv['flux_ew%s' % sf] = [float(flux1), float(flux2)]
+            ewv['R%s' % sf] = float(flux2 / flux1)
+            ewv['flux_sum_norm_ew%s' % sf] = float(flux_norm)
+            ewv['depth_norm_ew%s' % sf] = float(depth_n)
+            ewv['width_ew%s' % sf] = float(lbd2 - lbd1)
+            ewv['depth_ew%s' % sf] = float(depth)
+            ewv['surf_ew%s' % sf] = float(surf)
+            ewv['fmean_ew%s' % sf] = float(fmean)
 
         # Compute statistiaue error
         if simu:
             if not N.isfinite(ew_value):
                 return [float(N.nan), float(N.nan)]
 
-            ew_simu, R_simu, d_simu, w_simu, f_simu, fm_simu = [
-            ], [], [], [], [], []
+            ew_simu, R_simu, d_simu, w_simu, f_simu, fm_simu = [], [], [], [], [], []
             dep_simu, sur_simu = [], []
             for simu in self.simulations:
                 try:
-                    ew_simu.append(simu.ew(lambda_min_blue,
-                                           lambda_max_blue,
-                                           lambda_min_red,
-                                           lambda_max_red,
-                                           sf,
-                                           simu=False,
-                                           syst=False,
-                                           verbose=False))
+                    ew_simu.append(simu.ew(lambda_min_blue, lambda_max_blue,
+                                           lambda_min_red, lambda_max_red,
+                                           sf, simu=False, syst=False, verbose=False))
                     R_simu.append(float(simu.ewvalues['R%s' % sf]))
-                    f_simu.append(
-                        float(simu.ewvalues['flux_sum_norm_ew%s' % sf]))
+                    f_simu.append(float(simu.ewvalues['flux_sum_norm_ew%s' % sf]))
                     d_simu.append(float(simu.ewvalues['depth_norm_ew%s' % sf]))
                     w_simu.append(float(simu.ewvalues['width_ew%s' % sf]))
                     dep_simu.append(float(simu.ewvalues['depth_ew%s' % sf]))
@@ -1818,33 +1800,33 @@ class Craniometer(object):
 
             ew_med = N.median(N.array(ew_simu)[N.isfinite(ew_simu)])
 
-            ewV['ew%s.err' % sf] = float(ew_sigma)
-            ewV['ew%s.stat' % sf] = float(ew_sigma)
-            ewV['R%s.err' % sf] = float(R_sigma)
-            ewV['R%s.stat' % sf] = float(R_sigma)
-            ewV['flux_sum_norm_ew%s.err' % sf] = float(f_sigma)
-            ewV['flux_sum_norm_ew%s.stat' % sf] = float(f_sigma)
-            ewV['depth_norm_ew%s.err' % sf] = float(d_sigma)
-            ewV['depth_norm_ew%s.stat' % sf] = float(d_sigma)
-            ewV['width_ew%s.err' % sf] = float(w_sigma)
-            ewV['width_ew%s.stat' % sf] = float(w_sigma)
-            ewV['depth_ew%s.err' % sf] = float(dep_sigma)
-            ewV['depth_ew%s.stat' % sf] = float(dep_sigma)
-            ewV['surf_ew%s.err' % sf] = float(sur_sigma)
-            ewV['surf_ew%s.stat' % sf] = float(sur_sigma)
-            ewV['fmean_ew%s.err' % sf] = float(fmean_sigma)
-            ewV['fmean_ew%s.stat' % sf] = float(fmean_sigma)
+            ewv['ew%s.err' % sf] = float(ew_sigma)
+            ewv['ew%s.stat' % sf] = float(ew_sigma)
+            ewv['R%s.err' % sf] = float(R_sigma)
+            ewv['R%s.stat' % sf] = float(R_sigma)
+            ewv['flux_sum_norm_ew%s.err' % sf] = float(f_sigma)
+            ewv['flux_sum_norm_ew%s.stat' % sf] = float(f_sigma)
+            ewv['depth_norm_ew%s.err' % sf] = float(d_sigma)
+            ewv['depth_norm_ew%s.stat' % sf] = float(d_sigma)
+            ewv['width_ew%s.err' % sf] = float(w_sigma)
+            ewv['width_ew%s.stat' % sf] = float(w_sigma)
+            ewv['depth_ew%s.err' % sf] = float(dep_sigma)
+            ewv['depth_ew%s.stat' % sf] = float(dep_sigma)
+            ewv['surf_ew%s.err' % sf] = float(sur_sigma)
+            ewv['surf_ew%s.stat' % sf] = float(sur_sigma)
+            ewv['fmean_ew%s.err' % sf] = float(fmean_sigma)
+            ewv['fmean_ew%s.stat' % sf] = float(fmean_sigma)
 
-            ewV['ew%s.mean' % sf] = float(ew_mean)
-            ewV['R%s.mean' % sf] = float(R_mean)
-            ewV['flux_sum_norm_ew%s.mean' % sf] = float(f_mean)
-            ewV['depth_norm_ew%s.mean' % sf] = float(d_mean)
-            ewV['width_ew%s.mean' % sf] = float(w_mean)
-            ewV['depth_ew%s.mean' % sf] = float(dep_mean)
-            ewV['surf_ew%s.mean' % sf] = float(sur_mean)
-            ewV['fmean_ew%s.mean' % sf] = float(fmean_mean)
+            ewv['ew%s.mean' % sf] = float(ew_mean)
+            ewv['R%s.mean' % sf] = float(R_mean)
+            ewv['flux_sum_norm_ew%s.mean' % sf] = float(f_mean)
+            ewv['depth_norm_ew%s.mean' % sf] = float(d_mean)
+            ewv['width_ew%s.mean' % sf] = float(w_mean)
+            ewv['depth_ew%s.mean' % sf] = float(dep_mean)
+            ewv['surf_ew%s.mean' % sf] = float(sur_mean)
+            ewv['fmean_ew%s.mean' % sf] = float(fmean_mean)
 
-            ewV['ew%s.med' % sf] = float(ew_med)
+            ewv['ew%s.med' % sf] = float(ew_med)
 
         # Compute systematic error
         if syst:
@@ -1911,29 +1893,29 @@ class Craniometer(object):
                 fm_sigma_syst = float(0.0)
 
             ew_sigma = N.sqrt(ew_sigma**2 + ew_sigma_syst**2)
-            ewV['ew%s.syst' % sf] = float(ew_sigma_syst)
-            ewV['ew%s.err' % sf] = float(N.sqrt(ewV['ew%s.err' % sf]**2 +
+            ewv['ew%s.syst' % sf] = float(ew_sigma_syst)
+            ewv['ew%s.err' % sf] = float(N.sqrt(ewv['ew%s.err' % sf]**2 +
                                                 ew_sigma_syst**2))
-            ewV['R%s.syst' % sf] = float(R_sigma_syst)
-            ewV['R%s.err' % sf] = float(N.sqrt(ewV['R%s.err' % sf]**2 +
+            ewv['R%s.syst' % sf] = float(R_sigma_syst)
+            ewv['R%s.err' % sf] = float(N.sqrt(ewv['R%s.err' % sf]**2 +
                                                R_sigma_syst**2))
-            ewV['flux_sum_norm_ew%s.syst' % sf] = float(f_sigma_syst)
-            ewV['flux_sum_norm_ew%s.err' % sf] = float(
-                N.sqrt(ewV['flux_sum_norm_ew%s.err' % sf]**2 + f_sigma_syst**2))
-            ewV['depth_norm_ew%s.syst' % sf] = float(d_sigma_syst)
-            ewV['depth_norm_ew%s.err' % sf] = float(
-                N.sqrt(ewV['depth_norm_ew%s.err' % sf]**2 + d_sigma_syst**2))
-            ewV['width_ew%s.syst' % sf] = float(w_sigma_syst)
-            ewV['width_ew%s.err' % sf] = float(N.sqrt(ewV['width_ew%s.err' % sf]**2
+            ewv['flux_sum_norm_ew%s.syst' % sf] = float(f_sigma_syst)
+            ewv['flux_sum_norm_ew%s.err' % sf] = float(
+                N.sqrt(ewv['flux_sum_norm_ew%s.err' % sf]**2 + f_sigma_syst**2))
+            ewv['depth_norm_ew%s.syst' % sf] = float(d_sigma_syst)
+            ewv['depth_norm_ew%s.err' % sf] = float(
+                N.sqrt(ewv['depth_norm_ew%s.err' % sf]**2 + d_sigma_syst**2))
+            ewv['width_ew%s.syst' % sf] = float(w_sigma_syst)
+            ewv['width_ew%s.err' % sf] = float(N.sqrt(ewv['width_ew%s.err' % sf]**2
                                                       + w_sigma_syst**2))
-            ewV['depth_ew%s.syst' % sf] = float(dep_sigma_syst)
-            ewV['depth_ew%s.err' % sf] = float(N.sqrt(ewV['depth_ew%s.err' % sf]**2
+            ewv['depth_ew%s.syst' % sf] = float(dep_sigma_syst)
+            ewv['depth_ew%s.err' % sf] = float(N.sqrt(ewv['depth_ew%s.err' % sf]**2
                                                       + dep_sigma_syst**2))
-            ewV['surf_ew%s.syst' % sf] = float(sur_sigma_syst)
-            ewV['surf_ew%s.err' % sf] = float(N.sqrt(ewV['surf_ew%s.err' % sf]**2 +
+            ewv['surf_ew%s.syst' % sf] = float(sur_sigma_syst)
+            ewv['surf_ew%s.err' % sf] = float(N.sqrt(ewv['surf_ew%s.err' % sf]**2 +
                                                      sur_sigma_syst**2))
-            ewV['fmean_ew%s.syst' % sf] = float(fm_sigma_syst)
-            ewV['fmean_ew%s.err' % sf] = float(N.sqrt(ewV['fmean_ew%s.err' % sf]**2
+            ewv['fmean_ew%s.syst' % sf] = float(fm_sigma_syst)
+            ewv['fmean_ew%s.err' % sf] = float(N.sqrt(ewv['fmean_ew%s.err' % sf]**2
                                                       + fm_sigma_syst**2))
 
             return [float(ew_value), float(ew_sigma)]
@@ -2290,7 +2272,7 @@ def general_ratio(specB, specR=None, lbd1=6310, lbd2=4390, v=4000):
     return integration(specR, lbd1, v=v) / integration(specB, lbd2, v=v)
 
 
-def get_cranio(x, y, v, smoother='spline_free_knot', verbose=False):
+def get_cranio(x, y, v, smoother='spline_free_knot', nsimu=1000, verbose=False):
     """Get the craniometers."""
     obj = covariance.SPCS(x, y, v)
     if smoother == 'spline_free_knot':
@@ -2299,11 +2281,10 @@ def get_cranio(x, y, v, smoother='spline_free_knot', verbose=False):
         smoothing = 'sg'
     # obj.comp_rho_f()
     obj.smooth(smoothing=smoothing)
-    obj.make_simu()
+    obj.make_simu(nsimu=nsimu)
     simus = N.array([s.y for s in obj.simus])
     cr = Craniometer(x, y, v * obj.factor_used)
-    cr.smooth(rho=obj.rho, smoother=smoother, s=obj.s, hsize=obj.w,
-              verbose=verbose)
+    cr.smooth(rho=obj.rho, smoother=smoother, s=obj.s, hsize=obj.w, verbose=False)
     cr.cranio_generator(rho=obj.rho, simus=simus, verbose=verbose)
     cr.find_extrema()
     return cr
