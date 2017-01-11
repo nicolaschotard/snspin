@@ -74,19 +74,9 @@ import re        # regular expressions
 import copy
 import warnings
 import pyfits
-import pdb
 
 NaN = float('nan')
 from math import isnan
-
-try:
-    from processing.process.models import Process
-    HasDB = True
-except:
-    HasDB = False
-
-#import SnfPhotometricity
-#from SnfPhotPipeline.IO import get_photometricratios as GPR
 
 
 def _makeIterable(obj):
@@ -944,153 +934,6 @@ class SnfMetaData(dict):
             del self[name]
 
     #----------------------------------------------------------------
-    # Get info from the DB
-
-    def get_db_info(self, save=None, merged=False):
-        """
-        Get DB info for all object of an IDR.
-        'save': if not None, dump the result in the given file name (pkl)
-        'merged': if True, merge the final dic with the current dic
-        """
-        if hasattr(self, 'DBdata') or \
-           self[self.keys()[0]].has_key('Target.IdTarget'):
-            print "DB data already present in this dictionnay or in DBdata"
-            return
-        if not HasDB:
-            print "Sorry, no access to the DB."
-            return
-
-        self.DBdata = {}
-        print "Getting data from the DB..."
-        for i, sn in enumerate(sorted(self)):
-            print "%i / %i - %s" % (i + 1, len(self), sn)
-            self.DBdata[sn] = self._get_db_info_per_sn(sn)
-        print "Done. Data stored in DBinfo"
-
-        if save is not None:
-            if not save.endswith('pkl'):
-                save += '.pkl'
-            pickle.dump(self.DBdata, open(save, 'w'), protocol=-1)
-            print "DB data saved in ", save
-
-        if merged:
-            self = load(*(self, self.DBdata))
-
-    def _get_db_info_per_sn(self, sn):
-        """
-        Get Target, Run, Exposure, Pose, Process, File and Job info for a
-        given sn and its spectra.
-        """
-
-        sndata = {'spectra': dict([(sp, {}) for sp in self[sn]['spectra']])}
-
-        for j, sp in enumerate(self[sn]['spectra']):
-            # B channel
-            idprocess = self._get_proc_id(self[sn]['spectra'][sp], 'B')
-            if idprocess is not None:
-                proc = Process.objects.get(IdProcess=idprocess)
-                sndata['spectra'][sp].update(self._get_Pose_info(proc, 'B'))
-                sndata['spectra'][sp].update(self._get_Process_info(proc, 'B'))
-                sndata['spectra'][sp].update(self._get_File_info(proc, 'B'))
-                sndata['spectra'][sp].update(self._get_Job_info(proc, 'B'))
-            # R channel
-            idprocess = self._get_proc_id(self[sn]['spectra'][sp], 'R')
-            if idprocess is not None:
-                proc = Process.objects.get(IdProcess=idprocess)
-                sndata['spectra'][sp].update(self._get_Pose_info(proc, 'R'))
-                sndata['spectra'][sp].update(self._get_Process_info(proc, 'R'))
-                sndata['spectra'][sp].update(self._get_File_info(proc, 'R'))
-                sndata['spectra'][sp].update(self._get_Job_info(proc, 'R'))
-            # not channel dependent (including MFR and photometricity info)
-            if idprocess is None:
-                continue
-            sndata.update(self._get_Target_info(proc))
-            sndata['spectra'][sp].update(self._get_Run_info(proc))
-            sndata['spectra'][sp].update(self._get_Exposure_info(proc))
-            # sndata['spectra'][sp].update(self._get_photometricity_info(proc))
-
-        #mfrs = self._get_MFR_info(sn)
-        # for sp in mfrs:
-        #    if sp in sndata['spectra']:
-        #        sndata['spectra'][sp].update(mfrs[sp])
-
-        return sndata
-
-    def _get_proc_id(self, spdic, channel):
-        key = 'proc%s.IdProcess' % channel
-        if spdic.has_key(key):
-            return spdic[key]
-        elif spdic.has_key('idr.spec_%s' % channel):
-            # get it from the spectrum and update the META dictionnary
-            spdic[key] = pyfits.getval(
-                spdic['idr.spec_%s' % channel], 'IDPROCES')
-            return spdic[key]
-        else:
-            return None
-
-    def _get_Target_info(self, proc):
-        tgd = proc.Pose_FK.Exp_FK.Run_FK.TargetId_FK.__dict__
-        return dict([('Target.' + k, v) for k, v in tgd.iteritems()])
-
-    def _get_Run_info(self, proc):
-        rund = proc.Pose_FK.Exp_FK.Run_FK.__dict__
-        return dict([('Run.' + k, v) for k, v in rund.iteritems()])
-
-    def _get_Exposure_info(self, proc):
-        expd = proc.Pose_FK.Exp_FK.__dict__
-        return dict([('Exposure.' + k, v) for k, v in expd.iteritems()])
-
-    def _get_Pose_info(self, proc, ch):
-        posed = proc.Pose_FK.__dict__
-        return dict([('Pose.' + ch + '.' + k, v) for k, v in posed.iteritems()])
-
-    def _get_Process_info(self, proc, ch):
-        procd = proc.__dict__
-        return dict([('Process.' + ch + '.' + k, v) for k, v in procd.iteritems()])
-
-    def _get_File_info(self, proc, ch):
-        filed = proc.File_FK.__dict__
-        return dict([('File.' + ch + '.' + k, v) for k, v in filed.iteritems()])
-
-    def _get_Job_info(self, proc, ch):
-        jobd = proc.Job_FK.__dict__
-        return dict([('Job.' + ch + '.' + k, v) for k, v in jobd.iteritems()])
-
-    # def _get_MFR_info(self, sn):
-    #
-    #    def get_mfrs(f, airmass=False, scale=False):
-    #        airmass = True if scale else airmass
-    #        tp = ['raw', 'airmass_corr', 'scaled'][airmass+scale]
-    #        tp += '.' if scale else "_f%i." % f
-    #        return dict((sp, dict(('MFR.' + tp + k, v)
-    #                              for k, v in item.__dict__.items()))
-    #                    for sp, item in GPR(sn, errors=True, filt=f,
-    #                                        airmass=airmass,
-    #                                        scale=scale,
-    #                                        dict_=True).items())
-    #    mfrs = []
-    #    for f in [1, 2, 3, 4, 5]:
-    #        mfrs.append(get_mfrs(f)) # raw MFR info
-    #        mfrs.append(get_mfrs(f, airmass=True)) # airmass corrected MFR info
-    #    # scaled MFR info (filter doesn't matter in this query)
-    #    mfrs.append(get_mfrs(f, scale=True))
-    #
-    #    # get the full list of spectra
-    #    sps = set(numpy.concatenate([m.keys() for m in mfrs]))
-    #    mfrs_dic = dict((sp, {}) for sp in sps)
-    #    for sp in sps:
-    #        for mfr in mfrs:
-    #            if sp in mfr:
-    #                mfrs_dic[sp].update(mfr[sp])
-    #
-    #    return mfrs_dic
-
-    # def _get_photometricity_info(self, proc):
-    #    year = proc.Pose_FK.Exp_FK.Run_FK.Year
-    #    day = proc.Pose_FK.Exp_FK.Run_FK.Day
-    #    return {'obs.photo': int(SnfPhotometricity.photometric(year, day))}
-
-    #----------------------------------------------------------------
     # Internal SnfMetaData utility functions
 
     def _add_value_err(self, data, param, value, autoerr):
@@ -1287,65 +1130,6 @@ class SnfMetaData(dict):
         return final_results
 
 # end of SnfMetaData class
-
-#-------------------------------------------------------------------------
-# I/O Functions
-
-
-def read_table(filename, prefix=''):
-    """
-    Read data in an ASCII table.
-
-    prefix : string to prepend to column names other than target/name/spectra
-
-    TO DO : Support file stream instead of just filename
-    TO DO : Add support for spectra/exposure items (currently just target level)
-    """
-
-    # Parse comment header to find column names
-    f = open(filename)
-    line = f.readline().strip()
-    while line.startswith('#') or len(line) < 2:
-        if line.startswith('#'):
-            commentline = line
-        line = f.readline().strip()
-    f.close()
-
-    columns = commentline.split()[1:]
-    data = line.split()
-    if len(columns) != len(data):
-        raise ValueError("Can't parse column names "
-                         "from last comment before data in %s" % filename)
-
-    if columns[0].lower() not in ('target', 'name', 'target.name'):
-        raise ValueError, "First column must be target, name, or target.name"
-
-    if prefix:
-        for i in range(1, len(columns)):
-            columns[i] = prefix + columns[i]
-
-    # Now read the data
-    metadata = SnfMetaData()
-    f = open(filename)
-    for line in f:
-        line = line.strip()
-        if line.startswith('#') or len(line) < 2:
-            continue
-        data = line.split()
-        for i in range(1, len(data)):
-            try:
-                data[i] = float(data[i])
-            except ValueError:
-                pass  # leave it as a string if we can't make it a float
-
-        target = data[0]
-        items = dict(zip(columns[1:], data[1:]))
-        metadata.add_to_target(target=target, items=items)
-
-    f.close()
-
-    return metadata
-
 
 #-------------------------------------------------------------------------
 
