@@ -3,7 +3,6 @@
 """Class to use spin."""
 
 import sys
-import time
 import numpy as N
 import matplotlib.pyplot as P
 
@@ -53,7 +52,7 @@ class DrGall(object):
                 self.yr = N.array(spec.y)
                 self.vr = N.array(spec.v)
             if verbose:
-                print >> sys.stderr, 'Working on merged spectrum'
+                print >> sys.stderr, 'INFO: Working on merged spectrum'
 
         elif specb or specr:
             if (specb and specb.x[0] > 4000) or (specr and specr.x[0] < 4000):
@@ -189,6 +188,9 @@ class DrGall(object):
                           'ewmgii': [N.nan, N.nan]}
             return indicators
 
+        if verbose:
+            print >> sys.stderr, '\nINFO: Computing SI on calcium zone for this spectrum'
+            
         # Create zone and craniometers
         cazone = (self.xb > 3450) & (self.xb < 4070)
         sizone = (self.xb > 3850) & (self.xb < 4150)
@@ -296,10 +298,6 @@ class DrGall(object):
             if verbose:
                 print 'Error in vsiii_4128 computing, vsiii_4000', vsiii_4000
 
-        if verbose:
-            print >> sys.stderr, 'Computing on calcium zone for this '\
-                'spectrum done\n'
-
         indicators = {'rca': rca,
                       'rcas2': rcas2,
                       'ewcaiiHK': ewcaiiHK,
@@ -335,6 +333,9 @@ class DrGall(object):
                           'vsiii_5972': [N.nan, N.nan],
                           'vsiii_6355': [N.nan, N.nan]}
             return indicators
+
+        if verbose:
+            print >> sys.stderr, '\nINFO: Computing SI on silicon zone for this spectrum'
 
         # Create zone and craniometers
         zone1 = (self.xr > 5500) & (self.xr < 6400)
@@ -530,10 +531,6 @@ class DrGall(object):
             if verbose:
                 print 'Error in vsiii_6355 computing, vsiii_6355 =', vsiii_6355
 
-        if verbose:
-            print >> sys.stderr, 'Computing on silicon zone for this spectrum done'
-            print ''.center(100, '=')
-
         indicators = {'rsi': rsi,
                       'rsis': rsis,
                       'rsiss': rsiss,
@@ -567,6 +564,9 @@ class DrGall(object):
                           'ewcaiiir': [N.nan, N.nan]}
             return indicators
 
+        if verbose:
+            print >> sys.stderr, '\nINFO: Computing SI on oxygen zone for this spectrum'
+            
         # Create zone and craniometers
         zone = (self.xr > 6500) & (self.xr < 8800)
         self.cranio_O = get_cranio(self.xr[zone],
@@ -605,11 +605,6 @@ class DrGall(object):
         except ValueError:
             pass
 
-        if verbose:
-            print >> sys.stderr, 'Computing on oxygen zone for this '\
-                'spectrum done'
-            print ''.center(100, '=')
-
         indicators = {'ewoi7773': ewoi7773,
                       'ewcaiiir': ewcaiiir}
 
@@ -629,6 +624,9 @@ class DrGall(object):
             indicators = {'ewfe4800': [N.nan, N.nan]}
             return indicators
 
+        if verbose:
+            print >> sys.stderr, '\nINFO: Computing SI on iron zone for this spectrum'
+            
         # Create zone and craniometers
         zone = (self.x_merged > 4350) & (self.x_merged < 5350)
         self.cranio_fe = get_cranio(self.x_merged[zone],
@@ -655,10 +653,6 @@ class DrGall(object):
             self.values.update(self.cranio_fe.ewvalues)
         except ValueError:
             pass
-
-        if verbose:
-            print >> sys.stderr, 'Computing on iron zone for this spectrum done'
-            print ''.center(100, '=')
 
         indicators = {'ewfe4800': ewfe4800}
 
@@ -1142,7 +1136,6 @@ class DrGall(object):
 
         ax.set_ylim(ymin=0)
         ax.set_xlim(xmin=5060, xmax=5700)
-        print filename
         if save:
             fig.savefig('ewSiiW_' + filename)
 
@@ -1261,7 +1254,7 @@ class DrGall(object):
         if title is not None:
             ax.set_title('%s' % title)
 
-    def control_plot(self, filename='', title=None, format=['png']):
+    def control_plot(self, filename='', title=None, oformat='png'):
         """
         self.cranio.control_plot(filename=filename, title=title)
 
@@ -1293,13 +1286,9 @@ class DrGall(object):
             ax7.set_ylim(ymin=0)
             ax7.set_xlim(xmin=3000, xmax=7000)
             if filename is None:
-                # unique_suffix = time.strftime("%Y-%m-%d-%H_%M_%S_UTC",
-                #                               time.gmtime())
-                filename = "control_plot"  # _" + unique_suffix
-            for f in format:
-                MetricsFig.savefig(filename + '.' + f)
-                print >> sys.stderr, "Control plot saved in %s" % filename \
-                    + '.' + f
+                filename = "control_plot"
+            MetricsFig.savefig(filename + '.' + oformat)
+            print >> sys.stderr, "Control plot saved in %s" % filename + '.' + oformat
 
         elif self.xb is not None:
             print >> sys.stderr, 'Worked on the b channel only'
@@ -1315,17 +1304,13 @@ class DrGall(object):
             ax7.set_ylim(ymin=0)
             ax7.set_xlim(xmin=self.xb[0], xmax=self.xb[-1])
             if filename is None:
-                # unique_suffix = time.strftime("%Y-%m-%d-%H_%M_%S_UTC",
-                #                               time.gmtime())
-                filename = "control_plot"  # _" + unique_suffix
+                filename = "control_plot"
             if title is not None:
                 ax7.set_title('%s, calcium zone' % title)
             else:
                 ax7.set_title('calcium zone')
-            for f in format:
-                MetricsFig.savefig(filename + '.' + f)
-                print >> sys.stderr, "Control plot saved in %s" % filename \
-                    + '.' + f
+            MetricsFig.savefig(filename + '.' + oformat)
+            print >> sys.stderr, "Control plot saved in %s" % filename + '.' + oformat
 
         elif self.xr is not None:
             print >> sys.stderr, 'Worked on the r channel only'
@@ -1341,20 +1326,16 @@ class DrGall(object):
             ax7.set_ylim(ymin=0)
             ax7.set_xlim(xmin=self.xr[0], xmax=7000)
             if filename is None:
-                # unique_suffix = time.strftime("%Y-%m-%d-%H_%M_%S_UTC",
-                #                               time.gmtime())
-                filename = "control_plot"  # _" + unique_suffix
+                filename = "control_plot"
             if title is not None:
                 ax7.set_title('%s, silicon zone' % title)
             else:
                 ax7.set_title('silicon zone')
-            for f in format:
-                MetricsFig.savefig(filename + '.' + f)
-                print >> sys.stderr, "Control plot saved in %s" % filename \
-                    + '.' + f
+            MetricsFig.savefig(filename + '.' + oformat)
+            print >> sys.stderr, "Control plot saved in %s" % filename + '.' + oformat
         P.close()
 
-    def plot_oxygen(self, filename='', title=None, format=['png']):
+    def plot_oxygen(self, filename='', title=None, oformat='png'):
 
         cr = self.cranio_O
 
@@ -1424,13 +1405,12 @@ class DrGall(object):
         ax.set_ylabel('Flux [erg/s/cm2]')
         if title is not None:
             ax.set_title(title)
-        for f in format:
-            fig.savefig(filename + '.' + f)
-            print >> sys.stderr, "Control plot for oxygen zone saved in %s" \
-                % filename + '.' + f
+        fig.savefig(filename + '.' + oformat)
+        print >> sys.stderr, "Control plot for oxygen zone saved in %s" \
+            % filename + '.' + oformat
         P.close()
 
-    def plot_iron(self, filename='', title=None, format=['png']):
+    def plot_iron(self, filename='', title=None, oformat='png'):
 
         cr = self.cranio_fe
 
@@ -1476,10 +1456,9 @@ class DrGall(object):
         ax.set_ylabel('Flux [erg/s/cm2]')
         if title is not None:
             ax.set_title(title)
-        for f in format:
-            fig.savefig(filename + '.' + f)
-            print >> sys.stderr, "Control plot for iron zone saved in %s" %\
-                filename + '.' + f
+        fig.savefig(filename + '.' + oformat)
+        print >> sys.stderr, "Control plot for iron zone saved in %s" %\
+            filename + '.' + oformat
         P.close()
 
 

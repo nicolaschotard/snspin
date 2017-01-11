@@ -16,7 +16,6 @@ import optparse
 import sys
 import os
 import re
-import time
 
 # use Agg by default (do not try to show plot windows - extremely slow over ssh)
 import matplotlib
@@ -82,8 +81,6 @@ def read_option():
                    help="Path to the output directory where the snspin \
                    data, and the control_plot directory will be saved",
                    default="./")
-
-    out.add_option("--no_unique_suffix", action="store_true", default=False)
     parser.add_option_group(out)
 
     #- Redshift and reddening tweaking options
@@ -115,10 +112,8 @@ def read_option():
     plt.add_option("--dir",
                    help="Name of the directory where control plots are saved\
                    [%default]", default="control_plots" )
-    plt.add_option("-f", '--format',
-                   help="Format of the control plot (png,eps,ps,pdf...) \
-                   [%default]",
-                   default="png")
+    plt.add_option("-f", '--oformat', help="Format of the control plot (png, eps, ps, pdf) \
+                   [%default]", default="png")
     plt.add_option("--noplot", dest="plot", action="store_false",
                    help="Don't produce control plots", default=True)
     parser.add_option_group(plt)
@@ -131,13 +126,8 @@ def read_option():
     if option.smoother == 'spline':
         option.smoother += '_free_knot'
 
-    #if option.specID is not None:
-    #    option.specID = option.specID.split(',')
-
     option.command_line = " ".join(sys.argv)
     option.prefix = sys.argv[0]
-    option.unique_suffix = time.strftime("%Y-%m-%d-%H_%M_%S_UTC",
-                                         time.gmtime())
 
     if option.target is not None:
         targets = set()
@@ -198,7 +188,7 @@ def read_from_idr(option):
     else:
         # default
         option.subset = ["training", "validation"]
-    print option.idr, option.subset, option.target
+
     # load the data
     option.data_dir = option.idr
     return SnfMetaData.load_idr(option.idr, subset=option.subset, targets=option.target)
@@ -259,10 +249,8 @@ def read_spectrum(filename, z_helio=None, mwebv=None, Rv=3.1):
     """
     spec = pySnurp.Spectrum(filename)
     if mwebv is not None:
-        print "INFO: Correcting from MW extinction (E(B-V)=%.2f)" %mwebv
         spec.deredden(mwebv, Rv=Rv)
     if z_helio is not None:
-        print "INFO: Going to rest-frame using z=%.3f" % z_helio
         spec.deredshift(z_helio)
     return spec
 
@@ -283,7 +271,7 @@ if __name__ == '__main__':
             print 'for *all* targets'
         d = read_from_idr(option)
 
-    print "INFO: %i targets loaded."%len(d.keys())
+    print "INFO: %i target(s) loaded.\n"%len(d.keys())
 
     #- Target selection
     if option.target is not None:
@@ -336,7 +324,10 @@ if __name__ == '__main__':
         if option.ebmv is not None and option.ebmv != mwebv:
             mwebv = option.ebmv
 
+        print "=" * 80
         print "INFO: Reading %s, from %s" % (expId, target_name)
+        print "INFO: Correcting from MW extinction (E(B-V)=%.2f)" %mwebv
+        print "INFO: Going to rest-frame using z=%.3f" % z_helio
         # merged
         try:
             spec_merge = read_spectrum(os.path.join(option.data_dir,
@@ -406,51 +397,42 @@ if __name__ == '__main__':
                           items=DrGall.values, autoerr=False)
 
         #Control plots
-        suffix = not option.no_unique_suffix \
-                 and ('.' + option.unique_suffix) \
-                 or ''
         tgtexp = target_name + '.' + expId
-        cpname = "control_plot." + tgtexp + suffix
-        cpname_ox = "control_plot.oxygen_zone." + tgtexp + suffix
-        cpname_fe = "control_plot.iron_zone." + tgtexp + suffix
+        cpname = tgtexp + ".control_plot"
+        cpname_ox = tgtexp + ".control_plot.oxygen_zone"
+        cpname_fe = tgtexp + ".control_plot.iron_zone"
         control_plot_name = os.path.join(plotdir, cpname)
         control_plot_name_ox = os.path.join(plotdir, cpname_ox)
         control_plot_name_fe = os.path.join(plotdir, cpname_fe)
 
         if option.plot:
-            format = option.format.split(',')
+            print "\nINFO: Making control plots"
             title = target_name+', Rest-Frame Phase=%.1f' % phase
-            DrGall.control_plot(filename=control_plot_name, title=title, format=format)
             try:
-                DrGall.control_plot(filename=control_plot_name, title=title, format=format)
+                DrGall.control_plot(filename=control_plot_name, title=title, oformat=option.oformat)
             except Exception, err:
                 print "<%s> WARNING: control_plot had a problem:"%\
                       code_name, err
             try:
-                DrGall.plot_oxygen(filename=control_plot_name_ox,
-                                   title=title,
-                                   format=format)
+                DrGall.plot_oxygen(filename=control_plot_name_ox, title=title, oformat=option.oformat)
             except Exception, err:
                 print "<%s> WARNING: control_plot for oxygen had a problem:"%\
                       code_name, err
             try:
                 DrGall.plot_iron(filename=control_plot_name_fe,
                                  title=title,
-                                 format=format)
+                                 oformat=option.oformat)
             except Exception, err:
                 print "<%s> WARNING: control_plot for iron had a problem:"%\
                       code_name, err
         print '\n'
 
         if option.save_pickles:
-            fname = "data.spin."+ tgtexp + suffix + ".pkl"
+            fname = tgtexp + ".spin_data" + ".pkl"
             filename = os.path.join(plotdir, fname)
             cPickle.dump(DrGall, open(filename, 'w'))
 
-    if option.out_file is None:
-        filename = "snspin_output.yaml"
-    else:
-        filename = option.out_file
+    filename = "snspin_output.yaml" if option.out_file is None else option.out_file
     pkl_filename = filename.replace("yaml", "pkl")
 
     f = os.path.join(option.output_dir, filename)

@@ -431,14 +431,13 @@ class SnfMetaData(dict):
                 self[name]['spectra'][ex] = {
                     'target.name': name, 'obs.exp': ex}
 
-            # Convert single elements into lists first
-            param = _makeIterable(param)
-            value = _makeIterable(value)
-
             info = self[name]['spectra'][ex]
 
             # Loop over parameter, value pairs
             if param is not None and value is not None:
+                # Convert single elements into lists first
+                param = _makeIterable(param)
+                value = _makeIterable(value)
                 for p, v in zip(param, value):
                     self._add_value_err(info, p, v, autoerr)
 
