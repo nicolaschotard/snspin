@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""Class to use spin."""
+
 import sys
 import time
 import numpy as N
@@ -11,14 +13,13 @@ from snspin.spectrum import merge
 
 class DrGall(object):
 
-    """
-    Class to manipulate and use the craniometer
-    """
+    """Class to manipulate and use the craniometer."""
 
     def __init__(self, spec=None, specb=None, specr=None,
                  spec_merged=None, verbose=True):
         """
         Spectrum initialization.
+
         Create self.x, self.y, self.v if spec is the merged spectrum
         Create self.xB, self.yB, self.vB for the blue channel if specB is given
         Create self.xr, self.yr, self.vr for the blue channel if specr is given
@@ -56,7 +57,7 @@ class DrGall(object):
 
         elif specb or specr:
             if (specb and specb.x[0] > 4000) or (specr and specr.x[0] < 4000):
-                print  >> sys.stderr, 'ErrOr, check if B channel is really B '\
+                print >> sys.stderr, 'Error, check if B channel is really B '\
                     'channel and not r channel'
                 return
             try:
@@ -104,7 +105,7 @@ class DrGall(object):
             sys.exit()
 
     def values_initialization(self, verbose=False):
-
+        """Initialize all values."""
         values = {}
         # Initialisation craniomter
         fake_lbd = range(3000, 10000, 2)
@@ -169,13 +170,11 @@ class DrGall(object):
 
         self.values = values
 
-    def calcium_computing(self, factor=1.05, rhob=0.479, nsimu=1000,
-                          smoother="sgfilter", sbca=None, sbsi=None,
-                          sbmg=None, wbca=None, wbsi=None, wbmg=None,
-                          verbose=False):
+    def calcium_computing(self, smoother="sgfilter", verbose=False):
         """
-        Function to compute and return all spectral indicators in the calcium
-        zone (Blue part of the spectrum, B channel)
+        Function to compute and return all spectral indicators in the calcium zone.
+
+        (Blue part of the spectrum, B channel)
         """
         # Test if computing is possible
         if self.xb is None:
@@ -320,10 +319,7 @@ class DrGall(object):
 
         return indicators
 
-    def silicon_computing(self, factor=1.23, rhor=0.484, nsimu=1000,
-                          smoother="sgfilter", sr1=None, sr2=None, sr3=None,
-                          sr4=None, wr1=None, wr2=None, wr3=None, wr4=None,
-                          verbose=False):
+    def silicon_computing(self, smoother="sgfilter", verbose=False):
         """
         Function to compute and retunr all spectral indicators in the silicon
         zone
@@ -557,8 +553,7 @@ class DrGall(object):
 
         return indicators
 
-    def oxygen_computing(self, factor=1.23, rhor=0.484, nsimu=1000,
-                         w=None, s=None, smoother="sgfilter", verbose=True):
+    def oxygen_computing(self, smoother="sgfilter", verbose=True):
         """
         Function to compute and return spectral indicators in the end of
         the spectrum
@@ -621,11 +616,9 @@ class DrGall(object):
 
         return indicators
 
-    def iron_computing(self, factor=1.23, rhor=0.484, nsimu=1000,
-                       smoother="sgfilter", w=None, s=None, verbose=True):
+    def iron_computing(self, smoother="sgfilter", verbose=True):
         """
-        Function to compute and return spectral indicators on the middle of
-        the spectrum (iron zone)
+        Function to compute and return spectral indicators on the middle of the spectrum (iron zone).
         """
         # Test if the computation will be possible
         if self.x_merged is None:
@@ -768,7 +761,7 @@ class DrGall(object):
     # Functions to plot control_plot of spectral indicators computing
     #=========================================================================
 
-    def plot_craniobca(self, metrics, ax=None, filename='', verbose=True):
+    def plot_craniobca(self, metrics, ax=None, filename=''):
         """Plot zone where rca, rcaS, rcas2, edca and ewcaiiHK are computed"""
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
@@ -842,7 +835,7 @@ class DrGall(object):
         if save:
             fig.savefig('calcium_' + filename)
 
-    def plot_craniobsi(self, metrics, ax=None, filename='', verbose=True):
+    def plot_craniobsi(self, metrics, ax=None, filename=''):
         """Plot zone where ewsi4000 is computed"""
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
@@ -901,7 +894,7 @@ class DrGall(object):
         if save:
             fig.savefig('ewsiii4000_' + filename)
 
-    def plot_craniobmg(self, metrics, ax=None, filename='', verbose=True):
+    def plot_craniobmg(self, metrics, ax=None, filename=''):
         """Plot zone where ewmgii is computed"""
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
@@ -960,7 +953,7 @@ class DrGall(object):
         if save:
             fig.savefig('ewmgii_' + filename)
 
-    def plot_cranior1r5(self, metrics, ax=None, filename='', verbose=True):
+    def plot_cranior1r5(self, metrics, ax=None, filename=''):
         """Plot zone where rca, rcaS, rcas2, edca and ewcaiiHK are computed"""
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
@@ -1038,7 +1031,7 @@ class DrGall(object):
         if save:
             fig.savefig('silicon_' + filename)
 
-    def plot_cranior2(self, metrics, ax=None, filename='', verbose=True):
+    def plot_cranior2(self, metrics, ax=None, filename=''):
         """Plot zone where ewSiiW is computed"""
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
@@ -1153,7 +1146,7 @@ class DrGall(object):
         if save:
             fig.savefig('ewSiiW_' + filename)
 
-    def plot_cranior3r4(self, metrics, ax=None, filename='', verbose=True):
+    def plot_cranior3r4(self, metrics, ax=None, filename=''):
         """Plot zone where ewSiiW is computed"""
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
@@ -1250,7 +1243,7 @@ class DrGall(object):
         if save:
             fig.savefig('ewsiii5972_' + filename)
 
-    def plot_spectrum(self, metrics, ax=None, filename='', title=None, verbose=True):
+    def plot_spectrum(self, metrics, ax=None, title=None):
 
         rsi, rsiS, rsiSS, rca, rcaS, rcaS2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
             ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
@@ -1303,7 +1296,7 @@ class DrGall(object):
         if title is not None:
             ax.set_title('%s' % title)
 
-    def control_plot(self, filename='', title=None, format=['png'], verbose=True):
+    def control_plot(self, filename='', title=None, format=['png']):
         """
         self.cranio.control_plot(filename=filename, title=title)
 
@@ -1396,7 +1389,7 @@ class DrGall(object):
                     + '.' + f
         P.close()
 
-    def plot_oxygen(self, filename='', title=None, format=['png'], verbose=True):
+    def plot_oxygen(self, filename='', title=None, format=['png']):
 
         cr = self.cranio_O
 
@@ -1472,7 +1465,7 @@ class DrGall(object):
                 % filename + '.' + f
         P.close()
 
-    def plot_iron(self, filename='', title=None, format=['png'], verbose=True):
+    def plot_iron(self, filename='', title=None, format=['png']):
 
         cr = self.cranio_fe
 

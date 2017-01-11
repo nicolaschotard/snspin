@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Spectral indicator definition and measurements.
-"""
+"""Spectral indicator definition and measurements."""
 
 import sys
 import numpy as N
@@ -14,9 +12,7 @@ from snspin.spectrum import covariance
 
 class Craniometer(object):
 
-    """
-    Initialization function
-    """
+    """Initialization function."""
 
     def __init__(self, wavelength, flux, variance):
         """
@@ -65,15 +61,15 @@ class Craniometer(object):
         self.p6312 = [6250, 6365]
         self.init_only = False
 
-#=========================================================================
+# =========================================================================
 # Analyse the spectrum
 # Functions to smooth the spectrum, to find extrema of the spectrum
-#=========================================================================
+# =========================================================================
 
     def smooth(self, smoother="sgfilter", rho=0.482, s=None,
                hsize=None, order=2, lim=False, verbose=False):
         """
-        Creates the smoother function and makes a smooth array out of spec.y.
+        Create the smoother function and makes a smooth array out of spec.y.
 
         Mode = 0 : number and position are fixed (smoother='spline_fix_knot')
         interpolate.LSQUnivariateSpline(self.x,
@@ -220,7 +216,7 @@ class Craniometer(object):
         self.order = order
 
     def smoother(self, lbd, verbose=False):
-        """."""
+        """Smooth the spectrum."""
         if len(self.s) != len(self.x):
             # If no smoothing function
             if verbose:
@@ -272,7 +268,6 @@ class Craniometer(object):
                                       'v':minima_v}
         and save it in self.maxima and self.minima
         """
-
         if not len(self.s):
             self.maxima = None
             self.minima = None
@@ -286,9 +281,8 @@ class Craniometer(object):
             self.maxima = maxima
             self.minima = minima
 
-    def cranio_generator(self, nsimu=1000, s=0.492, rho=0.482,
-                         correl=True, hsize=15, order=2, factor=1,
-                         simus=None, verbose=True):
+        def cranio_generator(self, nsimu=1000, rho=0.482, correl=True,
+                             factor=1, simus=None, verbose=True):
         """
         Simulation generator.
 
@@ -347,14 +341,14 @@ class Craniometer(object):
             self.syst = None
             print >> sys.stderr, "ERROR in systematic_error (cranio_generator)!"
 
-    def _correl_simulated_spectra(self, nsimu, rho=0.482, verbose=True):
-        """."""
+    def _correl_simulated_spectra(self, nsimu, rho=0.482):
+        """Correlate the noise of simulated sptectra."""
         def comp_alpha(rho):
-            """."""
+            """Compute alpha."""
             return 0.5 * (1 + N.sqrt(1 - 4 * (rho**2)))
 
         def comp_beta(rho):
-            """."""
+            """Compute beta."""
             return 0.5 * (1 - N.sqrt(1 - 4 * (rho**2)))
 
         alpha = comp_alpha(rho)
@@ -369,7 +363,7 @@ class Craniometer(object):
             + self.s
         return simulated_spectra
 
-    def systematic_error(self, verbose=True):
+    def systematic_error(self):
         """
         Comput ethe systematic error.
 
@@ -382,9 +376,9 @@ class Craniometer(object):
         """
         self.syst = []
         if self.smoother_type == 'sgfilter':
-            #- For cases where hsize is large, one has to make sure that the
-            #- window explored doesn't include cases where hsize is larger than
-            #- the size of the data
+            # For cases where hsize is large, one has to make sure that the
+            # window explored doesn't include cases where hsize is larger than
+            # the size of the data
             hsizes = N.arange(self.hsize * 0.85,
                               min(len(self.x), self.hsize * 1.15),
                               dtype=int)
@@ -406,10 +400,10 @@ class Craniometer(object):
                                          verbose=False)
                 self.syst[number].find_extrema(verbose=False)
 
-#=========================================================================
+# =========================================================================
 # Utilities to compute spectral indicators
 # Functions to intergate, compute lines ratio, variances...
-#=========================================================================
+# =========================================================================
 
     def _extrema(self, x, y, v, s, w=12, StoN=0.80):
         """
@@ -430,7 +424,7 @@ class Craniometer(object):
         # 2 functions to keep only one extrema in a window
 
         def minima(i, w):
-            """."""
+            """Get the minimun."""
             if (i > w) and (i < (len(x) - w)):
                 window = (x >= x[i - w]) & (x <= x[i + w])
                 lbdmin = (x[window])[N.argmin(s[window])]
@@ -439,7 +433,7 @@ class Craniometer(object):
                 return False
 
         def maxima(i, w):
-            """."""
+            """Get the maximum."""
             if (i > w) and (i < (len(x) - w)):
                 window = (x >= x[i - w]) & (x <= x[i + w])
                 lbdmax = (x[window])[N.argmax(s[window])]
@@ -448,7 +442,7 @@ class Craniometer(object):
                 return False
 
         def signaltonoise(i):
-            """."""
+            """Get the signal to noise."""
             good = (x > (x[i] - 20)) & (x < (x[i] + 20))
             return (y[i] / N.sqrt(v[i])) \
                 / N.mean(y[good] / N.sqrt(v[good])) >= StoN
@@ -503,27 +497,27 @@ class Craniometer(object):
 
         return maxima, minima
 
-    def _integration(self, x, y, min=None, max=None, verbose=True):
-        """."""
-        if min is None \
-                or max is None \
-                or (min >= max) \
-                or (min <= 0) \
-                or (max <= 0):
+    def _integration(self, x, y, imin=None, imax=None, verbose=True):
+        """Intergate over a area."""
+        if imin is None \
+                or imax is None \
+                or (imin >= imax) \
+                or (imin <= 0) \
+                or (imax <= 0):
             if verbose:
                 print >> sys.stderr, "ERROR in the definition of extrema"
             return N.nan
-        elif x[0] > min or x[-1] < max:
+        elif x[0] > imin or x[-1] < imax:
             if verbose:
                 print >> sys.stderr, "ERROR. Extrema are not in the interval"
             return N.nan
         else:
-            return float(y[(x >= min) & (x <= max)].sum())
+            return float(y[(x >= imin) & (x <= imax)].sum())
 
-    def _var_integration(self, x, v, min=None, max=None, verbose=True):
+    def _var_integration(self, x, v, imin=None, imax=None, verbose=True):
         """Compute variance of an intergration."""
         if len(v):
-            var_int = v[(x > min) & (x < max)].sum()
+            var_int = v[(x > imin) & (x < imax)].sum()
         else:
             if verbose:
                 print >> sys.stderr, "No variance for this spectrum"
@@ -531,8 +525,7 @@ class Craniometer(object):
         return float(var_int)
 
     def _var_rapport(self, a, b, var_a, var_b, verbose=True):
-        """Compute variance for a/b"""
-        """."""
+        """Compute variance for a/b."""
         if a and b and var_a and var_b:
             var = (1 / b**2) * var_a + (a**2) * (var_b / b**4)
         else:
@@ -545,7 +538,7 @@ class Craniometer(object):
 
     def _equivalentdepth(self, lbd1=None, lbd2=None, lbd3=None, flux1=None,
                          flux2=None, flux3=None, verbose=True):
-        """."""
+        """Compute an equivalent depth."""
         if lbd1 >= lbd2 or lbd2 >= lbd3 or lbd1 >= lbd3:
             if verbose:
                 print >> sys.stderr, 'ERROR in the definition of wavelenght '\
@@ -557,7 +550,7 @@ class Craniometer(object):
 
     def _equivalentwidth(self, x, y, lbd1=None, lbd2=None, flux1=None,
                          flux2=None, verbose=True):
-        """."""
+        """Compute an equivalent width."""
         if lbd1 >= lbd2:
             if verbose:
                 print >> sys.stderr, 'ERROR in the definition of '\
@@ -574,7 +567,7 @@ class Craniometer(object):
 
             return float(integration)
 
-    def _extrema_value_in_interval(self, min, max, lbd, var, smooth,
+    def _extrema_value_in_interval(self, imin, imax, lbd, var, smooth,
                                    extrema=None, verbose=True, right=False,
                                    left=False):
         """
@@ -583,40 +576,40 @@ class Craniometer(object):
         Function to find extrema values (lambda, flux and variance) in a given
         interval. Values are searched in self.minima and self.maxima.
         Use extrema='minima' to find minima, and extrema='maxima' to find maxima
-        Lambda min < Lambda_max
+        Lambda imin < Lambda_max
         """
         try:
             if extrema == 'maxima':
                 if right:
-                    arg = N.argmax(lbd[(lbd > min) & (lbd < max)])
+                    arg = N.argmax(lbd[(lbd > imin) & (lbd < imax)])
                 elif left:
-                    arg = N.argmin(lbd[(lbd > min) & (lbd < max)])
+                    arg = N.argmin(lbd[(lbd > imin) & (lbd < imax)])
                 else:
-                    arg = N.argmax(smooth[(lbd > min) & (lbd < max)])
+                    arg = N.argmax(smooth[(lbd > imin) & (lbd < imax)])
 
             elif extrema == 'minima':
                 if right:
-                    arg = N.argmax(lbd[(lbd > min) & (lbd < max)])
+                    arg = N.argmax(lbd[(lbd > imin) & (lbd < imax)])
                 elif left:
-                    arg = N.argmin(lbd[(lbd > min) & (lbd < max)])
+                    arg = N.argmin(lbd[(lbd > imin) & (lbd < imax)])
                 else:
-                    arg = N.argmin(smooth[(lbd > min) & (lbd < max)])
+                    arg = N.argmin(smooth[(lbd > imin) & (lbd < imax)])
 
-            wavelength = (lbd[(lbd >= min) & (lbd <= max)])[arg]
-            flux = (smooth[(lbd >= min) & (lbd <= max)])[arg]
-            variance = (var[(lbd >= min) & (lbd <= max)])[arg]
+            wavelength = (lbd[(lbd >= imin) & (lbd <= imax)])[arg]
+            flux = (smooth[(lbd >= imin) & (lbd <= imax)])[arg]
+            variance = (var[(lbd >= imin) & (lbd <= imax)])[arg]
             return wavelength, flux, variance
 
         except TypeError:
             return [None, None, None]
 
-    def _find_special_peak(self, min, max, maxima=False,
+    def _find_special_peak(self, imin, imax, maxima=False,
                            minima=False, right=False, left=False):
-        """."""
+        """Find peak when other method failed."""
         if maxima is False and minima is False:
             return None, None, None
 
-        limit = (self.x >= min) & (self.x <= max)
+        limit = (self.x >= imin) & (self.x <= imax)
         maxi, mini = self._extrema(self.x[limit], self.y[limit],
                                    self.v[limit], self.s[limit], w=1)
 
@@ -649,9 +642,9 @@ class Craniometer(object):
             else:
                 return None, None, None
 
-    def max_of_interval(self, min, max, verbose=False):
-        """."""
-        la = self.x[(self.x > min) & (self.x < max)]
+    def max_of_interval(self, imin, imax):
+        """Find maximum value in an interval."""
+        la = self.x[(self.x > imin) & (self.x < imax)]
         fa = self.smoother(la)
         arg = N.argmax(fa)
         l, f = la[arg], fa[arg]
@@ -666,11 +659,11 @@ class Craniometer(object):
         """
         return N.sqrt(N.mean(N.absolute(x - x0)**2))
 
-    def _get_min(self, lbd, plot=False):
+    def _get_min(self, lbd):
         """
         Get the minimum the flux around a given bin.
 
-        It uses the derivative of the smoothed function. 
+        It uses the derivative of the smoothed function.
         A linear interpolation is made using the given
         bin and the left and right bins.
         """
@@ -688,10 +681,10 @@ class Craniometer(object):
         else:
             return lbd
 
-#=========================================================================
+# =========================================================================
 # Compute spectral indicators on the spectrum
 # Functions to compute several spectral indicators
-#=========================================================================
+# =========================================================================
 
     def rca(self, verbose=True, simu=True, syst=True):
         """
@@ -780,7 +773,7 @@ class Craniometer(object):
 
             return [float(rca_value), float(rca_sigma)]
 
-        if simu == False and syst == False:
+        if simu is False and syst is False:
 
             if N.isfinite(rca_value):
                 self.rcavalues = {'rca': float(rca_value),
@@ -790,16 +783,16 @@ class Craniometer(object):
                                   'rca.mean': N.nan}
             return rca_value
 
-    def rcaS(self, verbose=True, simu=True, syst=True):
+    def rcas(self, verbose=True, simu=True, syst=True):
         """
-        Return the value and the error of rcaS.
+        Return the value and the error of rcas.
 
-        [rcaS, rcaS_sigma]
+        [rcas, rcas_sigma]
         """
         # Initialisation
-        self.rcaSvalues = {'rcaS': N.nan, 'rcaS.err': N.nan, 'rcaS.stat': N.nan,
-                           'rcaS.syst': N.nan, 'rcaS.mean': N.nan,
-                           'rcaS_lbd': [N.nan, N.nan, N.nan, N.nan]}
+        self.rcasvalues = {'rcas': N.nan, 'rcas.err': N.nan, 'rcas.stat': N.nan,
+                           'rcas.syst': N.nan, 'rcas.mean': N.nan,
+                           'rcas_lbd': [N.nan, N.nan, N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -809,86 +802,86 @@ class Craniometer(object):
         max_2 = 4012
 
         try:
-            rcaS_value = (self._integration(self.x, self.y, min=min_2, max=max_2,
+            rcas_value = (self._integration(self.x, self.y, imin=min_2, imax=max_2,
                                             verbose=verbose)) / \
                 (self._integration(self.x, self.y,
-                                   min=min_1,
-                                   max=max_1,
+                                   imin=min_1,
+                                   imax=max_1,
                                    verbose=verbose))
         except TypeError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of rcaS'
-            rcaS_value = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcas'
+            rcas_value = float(N.nan)
 
         if simu:
-            if not N.isfinite(rcaS_value):
+            if not N.isfinite(rcas_value):
                 return [float(N.nan), float(N.nan)]
 
-            rcaS_simu = []
+            rcas_simu = []
             for simu in self.simulations:
                 try:
-                    rcaS_simu.append(simu.rcaS(simu=False, syst=False,
+                    rcas_simu.append(simu.rcas(simu=False, syst=False,
                                                verbose=False))
                 except TypeError:
                     continue
-            rcaS_sigma = self.std2(N.array(rcaS_simu)[N.isfinite(rcaS_simu)],
-                                   rcaS_value)
-            rcaS_mean = N.mean(N.array(rcaS_simu)[N.isfinite(rcaS_simu)])
+            rcas_sigma = self.std2(N.array(rcas_simu)[N.isfinite(rcas_simu)],
+                                   rcas_value)
+            rcas_mean = N.mean(N.array(rcas_simu)[N.isfinite(rcas_simu)])
 
-            if N.isfinite(rcaS_value):
-                self.rcaSvalues = {'rcaS': float(rcaS_value),
-                                   'rcaS.err': float(rcaS_sigma),
-                                   'rcaS.stat': float(rcaS_sigma),
-                                   'rcaS.mean': float(rcaS_mean),
-                                   'rcaS_lbd': [float(min_1),
+            if N.isfinite(rcas_value):
+                self.rcasvalues = {'rcas': float(rcas_value),
+                                   'rcas.err': float(rcas_sigma),
+                                   'rcas.stat': float(rcas_sigma),
+                                   'rcas.mean': float(rcas_mean),
+                                   'rcas_lbd': [float(min_1),
                                                 float(max_1),
                                                 float(min_2),
                                                 float(max_2)]}
 
         if syst:
 
-            rcaS_syst = []
+            rcas_syst = []
             for system in self.syst:
                 try:
-                    rcaS_syst.append(system.rcaS(simu=False,
+                    rcas_syst.append(system.rcas(simu=False,
                                                  syst=False, verbose=False))
                 except TypeError:
                     continue
-            rcaS_sigma_syst = self.std2(
-                N.array(rcaS_syst)[N.isfinite(rcaS_syst)], rcaS_value)
+            rcas_sigma_syst = self.std2(
+                N.array(rcas_syst)[N.isfinite(rcas_syst)], rcas_value)
 
-            if N.isfinite(rcaS_sigma_syst):
-                rcaS_sigma = float(N.sqrt(rcaS_sigma**2 + rcaS_sigma_syst**2))
+            if N.isfinite(rcas_sigma_syst):
+                rcas_sigma = float(N.sqrt(rcas_sigma**2 + rcas_sigma_syst**2))
             else:
-                rcaS_sigma *= 2
-            self.rcaSvalues['rcaS.syst'] = float(rcaS_sigma_syst)
-            self.rcaSvalues['rcaS.err'] = float(rcaS_sigma)
+                rcas_sigma *= 2
+            self.rcasvalues['rcas.syst'] = float(rcas_sigma_syst)
+            self.rcasvalues['rcas.err'] = float(rcas_sigma)
 
-            return [float(rcaS_value), float(rcaS_sigma)]
+            return [float(rcas_value), float(rcas_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(rcaS_value):
-                self.rcaSvalues = {'rcaS': float(rcaS_value),
-                                   'rcaS_lbd': [min_1, max_1, min_2, max_2]}
-            return rcaS_value
+            if N.isfinite(rcas_value):
+                self.rcasvalues = {'rcas': float(rcas_value),
+                                   'rcas_lbd': [min_1, max_1, min_2, max_2]}
+            return rcas_value
 
-    def rcaS2(self, verbose=True, simu=True, syst=True):
+    def rcas2(self, verbose=True, simu=True, syst=True):
         """
-        New rcaS where peaks are following.
+        New rcas where peaks are following.
 
-        Return the value and the error of rcaS
-        [rcaS, rcaS_sigma]
+        Return the value and the error of rcas
+        [rcas, rcas_sigma]
         """
         interval_1 = 48
         interval_2 = 62.5
 
         # Initialisation
-        self.rcaS2values = {'rcaS2': N.nan, 'rcaS2.err': N.nan,
-                            'rcaS2.stat': N.nan,
-                            'rcaS2.syst': N.nan,
-                            'rcaS2.mean': N.nan,
-                            'rcaS2_lbd': [N.nan, N.nan, N.nan, N.nan]}
+        self.rcas2values = {'rcas2': N.nan, 'rcas2.err': N.nan,
+                            'rcas2.stat': N.nan,
+                            'rcas2.syst': N.nan,
+                            'rcas2.mean': N.nan,
+                            'rcas2_lbd': [N.nan, N.nan, N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -926,119 +919,119 @@ class Craniometer(object):
             min_2 = lbd2 - interval_2
             max_2 = lbd2 + interval_2
 
-            rcaS2_value = (self._integration(self.x, self.y, min=min_2,
-                                             max=max_2, verbose=verbose)) / \
+            rcas2_value = (self._integration(self.x, self.y, imin=min_2,
+                                             imax=max_2, verbose=verbose)) / \
                 self._integration(self.x, self.y,
-                                  min=min_1,
-                                  max=max_1,
+                                  imin=min_1,
+                                  imax=max_1,
                                   verbose=verbose)
         except TypeError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of rcaS2'
-            rcaS2_value = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcas2'
+            rcas2_value = float(N.nan)
 
         if simu:
-            if not N.isfinite(rcaS2_value):
+            if not N.isfinite(rcas2_value):
                 return [float(N.nan), float(N.nan)]
 
-            rcaS2_simu = []
+            rcas2_simu = []
             for simu in self.simulations:
                 try:
-                    rcaS2_simu.append(simu.rcaS2(simu=False,
+                    rcas2_simu.append(simu.rcas2(simu=False,
                                                  syst=False,
                                                  verbose=False))
                 except TypeError:
                     continue
-            rcaS2_sigma = self.std2(N.array(rcaS2_simu)[N.isfinite(rcaS2_simu)],
-                                    rcaS2_value)
-            rcaS2_mean = N.mean(N.array(rcaS2_simu)[N.isfinite(rcaS2_simu)])
+            rcas2_sigma = self.std2(N.array(rcas2_simu)[N.isfinite(rcas2_simu)],
+                                    rcas2_value)
+            rcas2_mean = N.mean(N.array(rcas2_simu)[N.isfinite(rcas2_simu)])
 
-            if N.isfinite(rcaS2_value):
-                self.rcaS2values = {'rcaS2': float(rcaS2_value),
-                                    'rcaS2.err': float(rcaS2_sigma),
-                                    'rcaS2.stat': float(rcaS2_sigma),
-                                    'rcaS2.mean': float(rcaS2_mean),
-                                    'rcaS2_lbd': [float(min_1), float(max_1),
+            if N.isfinite(rcas2_value):
+                self.rcas2values = {'rcas2': float(rcas2_value),
+                                    'rcas2.err': float(rcas2_sigma),
+                                    'rcas2.stat': float(rcas2_sigma),
+                                    'rcas2.mean': float(rcas2_mean),
+                                    'rcas2_lbd': [float(min_1), float(max_1),
                                                   float(min_2), float(max_2)]}
 
         if syst:
-            rcaS2_syst = []
+            rcas2_syst = []
             for system in self.syst:
                 try:
-                    rcaS2_syst.append(system.rcaS2(simu=False,
+                    rcas2_syst.append(system.rcas2(simu=False,
                                                    syst=False,
                                                    verbose=False))
                 except TypeError:
                     continue
 
-            rcaS2_sigma_syst = self.std2(
-                N.array(rcaS2_syst)[N.isfinite(rcaS2_syst)], rcaS2_value)
+            rcas2_sigma_syst = self.std2(
+                N.array(rcas2_syst)[N.isfinite(rcas2_syst)], rcas2_value)
 
-            if N.isfinite(rcaS2_sigma_syst):
-                rcaS2_sigma = float(N.sqrt(rcaS2_sigma**2 +
-                                           rcaS2_sigma_syst**2))
+            if N.isfinite(rcas2_sigma_syst):
+                rcas2_sigma = float(N.sqrt(rcas2_sigma**2 +
+                                           rcas2_sigma_syst**2))
             else:
-                rcaS2_sigma *= 2
-            self.rcaS2values['rcaS2.syst'] = float(rcaS2_sigma_syst)
-            self.rcaS2values['rcaS2.err'] = float(rcaS2_sigma)
+                rcas2_sigma *= 2
+            self.rcas2values['rcas2.syst'] = float(rcas2_sigma_syst)
+            self.rcas2values['rcas2.err'] = float(rcas2_sigma)
 
-            return [float(rcaS2_value), float(rcaS2_sigma)]
+            return [float(rcas2_value), float(rcas2_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(rcaS2_value):
-                self.rcaS2values = {'rcaS2': float(rcaS2_value),
-                                    'rcaS2_lbd': [float(min_1),
+            if N.isfinite(rcas2_value):
+                self.rcas2values = {'rcas2': float(rcas2_value),
+                                    'rcas2_lbd': [float(min_1),
                                                   float(max_1),
                                                   float(min_2),
                                                   float(max_2)],
-                                    'rcaS2.err': N.nan,
-                                    'rcaS2.stat': N.nan,
-                                    'rcaS2.mean': N.nan}
+                                    'rcas2.err': N.nan,
+                                    'rcas2.stat': N.nan,
+                                    'rcas2.mean': N.nan}
 
-            return rcaS2_value
+            return rcas2_value
 
-    def rcaSbis(self, verbose=True, simu=True):
+    def rcasbis(self, verbose=True):
         """
-        Return the value and the error of rcaSbis.
+        Return the value and the error of rcasbis.
 
-        [rcaSbis, rcaSbis_sigma]
+        [rcasbis, rcasbis_sigma]
         """
-
         min_1 = 3620
         max_1 = 3716
         min_2 = 3887
         max_2 = 4012
 
         try:
-            rcaS_value = self._integration(self.x, self.y, min=min_2,
-                                           max=max_2, verbose=verbose) / \
+            rcas_value = self._integration(self.x, self.y, imin=min_2,
+                                           imax=max_2, verbose=verbose) / \
                 self._integration(self.x, self.y,
-                                  min=min_1,
-                                  max=max_1,
+                                  imin=min_1,
+                                  imax=max_1,
                                   verbose=verbose)
-            a = self._integration(self.x, self.y, min=min_2,
-                                  max=max_2, verbose=verbose)
-            b = self._integration(self.x, self.y, min=min_1,
-                                  max=max_1, verbose=verbose)
-            var_a = self._var_integration(self.x, self.v, min=min_2,
-                                          max=max_2, verbose=verbose)
-            var_b = self._var_integration(self.x, self.v, min=min_1,
-                                          max=max_1, verbose=verbose)
-            rcaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
+            a = self._integration(self.x, self.y, imin=min_2,
+                                  imax=max_2, verbose=verbose)
+            b = self._integration(self.x, self.y, imin=min_1,
+                                  imax=max_1, verbose=verbose)
+            var_a = self._var_integration(self.x, self.v, imin=min_2,
+                                          imax=max_2, verbose=verbose)
+            var_b = self._var_integration(self.x, self.v, imin=min_1,
+                                          imax=max_1, verbose=verbose)
+            rcas_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                   verbose=verbose))
         except TypeError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of rcaS'
-            rcaS_value = float(N.nan)
-            rcaS_sigma = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcas'
+            rcas_value = float(N.nan)
+            rcas_sigma = float(N.nan)
 
-        return [float(rcaS_value), float(rcaS_sigma)]
+        return [float(rcas_value), float(rcas_sigma)]
 
-    def rcaS2bis(self, verbose=True, simu=True):
+    def rcas2bis(self, verbose=True, simu=True):
         """
-        Return the value and the error of rcaS2bis
-        [rcaS2bis, rcaS2bis_sigma]
+        Return the value and the error of rcas2bis.
+
+        [rcas2bis, rcas2bis_sigma]
         """
         interval_1 = 48
         interval_2 = 62.5
@@ -1071,29 +1064,29 @@ class Craniometer(object):
         max_2 = lbd2 + interval_2
 
         try:
-            rcaS_value = (self._integration(self.x, self.y, min=min_2,
-                                            max=max_2, verbose=verbose)) / \
+            rcas_value = (self._integration(self.x, self.y, imin=min_2,
+                                            imax=max_2, verbose=verbose)) / \
                 (self._integration(self.x, self.y,
-                                   min=min_1,
-                                   max=max_1,
+                                   imin=min_1,
+                                   imax=max_1,
                                    verbose=verbose))
-            a = self._integration(self.x, self.y, min=min_2, max=max_2,
+            a = self._integration(self.x, self.y, imin=min_2, imax=max_2,
                                   verbose=verbose)
-            b = self._integration(self.x, self.y, min=min_1, max=max_1,
+            b = self._integration(self.x, self.y, imin=min_1, imax=max_1,
                                   verbose=verbose)
-            var_a = self._var_integration(self.x, self.v, min=min_2, max=max_2,
+            var_a = self._var_integration(self.x, self.v, imin=min_2, imax=max_2,
                                           verbose=verbose)
-            var_b = self._var_integration(self.x, self.v, min=min_1,
-                                          max=max_1, verbose=verbose)
-            rcaS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
+            var_b = self._var_integration(self.x, self.v, imin=min_1,
+                                          imax=max_1, verbose=verbose)
+            rcas_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                   verbose=verbose))
         except TypeError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of rcaS'
-            rcaS_value = float(N.nan)
-            rcaS_sigma = float(N.nan)
+                print >> sys.stderr, 'ERROR in compute of rcas'
+            rcas_value = float(N.nan)
+            rcas_sigma = float(N.nan)
 
-        return [float(rcaS_value), float(rcaS_sigma)]
+        return [float(rcas_value), float(rcas_sigma)]
 
     def edca(self, verbose=True, simu=True, syst=True):
         """
@@ -1366,15 +1359,16 @@ class Craniometer(object):
 
             return rsi_value
 
-    def rsiS(self, verbose=True, simu=True, syst=True):
+    def rsis(self, verbose=True, simu=True, syst=True):
         """
-        Return the value and the error of rsiS
-        [rsiS, rsiS_sigma]
+        Return the value and the error of rsis.
+
+        [rsis, rsis_sigma]
         """
         # initialisation
-        self.rsiSvalues = {'rsiS': N.nan, 'rsiS.err': N.nan, 'rsiS.stat': N.nan,
-                           'rsiS.syst': N.nan, 'rsiS.mean': N.nan,
-                           'rsiS_lbd': [N.nan, N.nan], 'rsiS_flux': [N.nan, N.nan]}
+        self.rsisvalues = {'rsis': N.nan, 'rsis.err': N.nan, 'rsis.stat': N.nan,
+                           'rsis.syst': N.nan, 'rsis.mean': N.nan,
+                           'rsis_lbd': [N.nan, N.nan], 'rsis_flux': [N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -1401,77 +1395,77 @@ class Craniometer(object):
                 self.p6312[0], self.p6312[1])
 
         try:
-            rsiS_value = flux1 / flux2
+            rsis_value = flux1 / flux2
         except TypeError:
             if verbose:
-                print >> sys.stderr, "ERROR in computing rsiS"
-            rsiS_value = N.nan
+                print >> sys.stderr, "ERROR in computing rsis"
+            rsis_value = N.nan
 
         if simu:
-            if not N.isfinite(rsiS_value):
+            if not N.isfinite(rsis_value):
                 return [float(N.nan), float(N.nan)]
 
-            rsiS_simu = []
+            rsis_simu = []
             for simu in self.simulations:
                 try:
-                    rsiS_simu.append(simu.rsiS(simu=False, syst=False,
+                    rsis_simu.append(simu.rsis(simu=False, syst=False,
                                                verbose=False))
                 except TypeError:
                     continue
 
-            rsiS_sigma = self.std2(N.array(rsiS_simu)[N.isfinite(rsiS_simu)],
-                                   rsiS_value)
-            rsiS_mean = N.mean(N.array(rsiS_simu)[N.isfinite(rsiS_simu)])
+            rsis_sigma = self.std2(N.array(rsis_simu)[N.isfinite(rsis_simu)],
+                                   rsis_value)
+            rsis_mean = N.mean(N.array(rsis_simu)[N.isfinite(rsis_simu)])
 
-            if N.isfinite(rsiS_value):
-                self.rsiSvalues = {'rsiS': float(rsiS_value),
-                                   'rsiS.err': float(rsiS_sigma),
-                                   'rsiS.stat': float(rsiS_sigma),
-                                   'rsiS.mean': float(rsiS_mean),
-                                   'rsiS_lbd': [float(lbd1), float(lbd2)],
-                                   'rsiS_flux': [float(flux1), float(flux2)]}
+            if N.isfinite(rsis_value):
+                self.rsisvalues = {'rsis': float(rsis_value),
+                                   'rsis.err': float(rsis_sigma),
+                                   'rsis.stat': float(rsis_sigma),
+                                   'rsis.mean': float(rsis_mean),
+                                   'rsis_lbd': [float(lbd1), float(lbd2)],
+                                   'rsis_flux': [float(flux1), float(flux2)]}
 
         if syst:
 
-            rsiS_syst = []
+            rsis_syst = []
             for system in self.syst:
                 try:
-                    rsiS_syst.append(system.rsiS(simu=False, syst=False,
+                    rsis_syst.append(system.rsis(simu=False, syst=False,
                                                  verbose=False))
                 except TypeError:
                     continue
 
-            rsiS_sigma_syst = self.std2(
-                N.array(rsiS_syst)[N.isfinite(rsiS_syst)], rsiS_value)
-            if N.isfinite(rsiS_sigma_syst):
-                rsiS_sigma = float(N.sqrt(rsiS_sigma**2 + rsiS_sigma_syst**2))
+            rsis_sigma_syst = self.std2(
+                N.array(rsis_syst)[N.isfinite(rsis_syst)], rsis_value)
+            if N.isfinite(rsis_sigma_syst):
+                rsis_sigma = float(N.sqrt(rsis_sigma**2 + rsis_sigma_syst**2))
             else:
-                rsiS_sigma *= 2
-            self.rsiSvalues['rsiS.syst'] = float(rsiS_sigma_syst)
-            self.rsiSvalues['rsiS.err'] = float(rsiS_sigma)
+                rsis_sigma *= 2
+            self.rsisvalues['rsis.syst'] = float(rsis_sigma_syst)
+            self.rsisvalues['rsis.err'] = float(rsis_sigma)
 
-            return [float(rsiS_value), float(rsiS_sigma)]
+            return [float(rsis_value), float(rsis_sigma)]
 
         if simu == False and syst == False:
 
-            if N.isfinite(rsiS_value):
-                self.rsiSvalues = {'rsiS': float(rsiS_value),
-                                   'rsiS_lbd': [float(lbd1), float(lbd2)],
-                                   'rsiS_flux': [float(flux1), float(flux2)],
-                                   'rsiS.err': N.nan, 'rsiS.stat': N.nan,
-                                   'rsiS.syst': N.nan, 'rsiS.mean': N.nan}
-            return rsiS_value
+            if N.isfinite(rsis_value):
+                self.rsisvalues = {'rsis': float(rsis_value),
+                                   'rsis_lbd': [float(lbd1), float(lbd2)],
+                                   'rsis_flux': [float(flux1), float(flux2)],
+                                   'rsis.err': N.nan, 'rsis.stat': N.nan,
+                                   'rsis.syst': N.nan, 'rsis.mean': N.nan}
+            return rsis_value
 
-    def rsiSS2(self, verbose=True, simu=True):
+    def rsiss2(self, verbose=True, simu=True):
         """
-        Return the value and the error of rsiSS
-        [rsiSS, rsiSS_sigma]
+        Return the value and the error of rsiss
+        [rsiss, rsiss_sigma]
         """
         # initialisation
-        self.rsiSSvalues = {'rsiSS': N.nan, 'rsiSS.err': N.nan,
-                            'rsiSS.stat': N.nan, 'rsiSS.syst': N.nan,
-                            'rsiSS.mean': N.nan,
-                            'rsiSS_lbd': [N.nan, N.nan, N.nan, N.nan]}
+        self.rsissvalues = {'rsiss': N.nan, 'rsiss.err': N.nan,
+                            'rsiss.stat': N.nan, 'rsiss.syst': N.nan,
+                            'rsiss.mean': N.nan,
+                            'rsiss_lbd': [N.nan, N.nan, N.nan, N.nan]}
         if self.init_only:
             return
 
@@ -1480,59 +1474,59 @@ class Craniometer(object):
         min_2 = 6200
         max_2 = 6450
         try:
-            rsiSS_value = (self._integration(self.x, self.y, min=min_1,
-                                             max=max_1, verbose=verbose)) / \
+            rsiss_value = (self._integration(self.x, self.y, imin=min_1,
+                                             imax=max_1, verbose=verbose)) / \
                 (self._integration(self.x, self.y,
-                                   min=min_2,
-                                   max=max_2,
+                                   imin=min_2,
+                                   imax=max_2,
                                    verbose=verbose))
         except TypeError:
             if verbose:
-                print >> sys.stderr, 'ERROR in rsiSS computing'
-            rsiSS_value = float(N.nan)
+                print >> sys.stderr, 'ERROR in rsiss computing'
+            rsiss_value = float(N.nan)
 
         if simu:
-            if not N.isfinite(rsiSS_value):
+            if not N.isfinite(rsiss_value):
                 return [float(N.nan), float(N.nan)]
 
-            rsiSS_simu = []
+            rsiss_simu = []
             for simu in self.simulations:
                 try:
-                    rsiSS_simu.append(simu.rsiSS(simu=False, verbose=False))
+                    rsiss_simu.append(simu.rsiss(simu=False, verbose=False))
                 except TypeError:
                     continue
 
-            rsiSS_sigma = self.std2(rsiSS_simu, rsiSS_value)
-            rsiSS_mean = N.mean(rsiSS_simu)
+            rsiss_sigma = self.std2(rsiss_simu, rsiss_value)
+            rsiss_mean = N.mean(rsiss_simu)
 
-            if N.isfinite(rsiSS_value):
-                self.rsiSSvalues = {'rsiSS': float(rsiSS_value),
-                                    'rsiSS.err': float(rsiSS_sigma),
-                                    'rsiSS.stat': float(rsiSS_sigma),
-                                    'rsiSS.mean': float(rsiSS_mean),
-                                    'rsiSS_lbd': [float(min_1),
+            if N.isfinite(rsiss_value):
+                self.rsissvalues = {'rsiss': float(rsiss_value),
+                                    'rsiss.err': float(rsiss_sigma),
+                                    'rsiss.stat': float(rsiss_sigma),
+                                    'rsiss.mean': float(rsiss_mean),
+                                    'rsiss_lbd': [float(min_1),
                                                   float(max_1),
                                                   float(min_2),
                                                   float(max_2)]}
 
-            return [float(rsiSS_value), float(rsiSS_sigma)]
+            return [float(rsiss_value), float(rsiss_sigma)]
 
         else:
-            if N.isfinite(rsiSS_value):
-                self.rsiSSvalues = {'rsiSS': float(rsiSS_value),
-                                    'rsiSS_lbd': [float(min_1),
+            if N.isfinite(rsiss_value):
+                self.rsissvalues = {'rsiss': float(rsiss_value),
+                                    'rsiss_lbd': [float(min_1),
                                                   float(max_1),
                                                   float(min_2),
                                                   float(max_2)],
-                                    'rsiSS.err': N.nan, 'rsiSS.stat': N.nan,
-                                    'rsiSS.mean': N.nan, 'rsiSS.syst': N.nan}
+                                    'rsiss.err': N.nan, 'rsiss.stat': N.nan,
+                                    'rsiss.mean': N.nan, 'rsiss.syst': N.nan}
 
-            return rsiSS_value
+            return rsiss_value
 
-    def rsiSS(self, verbose=True, simu=True):
+    def rsiss(self, verbose=True, simu=True):
         """
-        Return the value and the error of rsiSS
-        [rsiSS, rsiSS_sigma]
+        Return the value and the error of rsiss
+        [rsiss, rsiss_sigma]
         """
 
         min_1 = 5500
@@ -1540,30 +1534,30 @@ class Craniometer(object):
         min_2 = 6200
         max_2 = 6450
         try:
-            a = self._integration(self.x, self.y, min=min_1, max=max_1,
+            a = self._integration(self.x, self.y, imin=min_1, imax=max_1,
                                   verbose=verbose)
-            b = self._integration(self.x, self.y, min=min_2, max=max_2,
+            b = self._integration(self.x, self.y, imin=min_2, imax=max_2,
                                   verbose=verbose)
-            var_a = self._var_integration(self.x, self.v, min=min_1, max=max_1,
+            var_a = self._var_integration(self.x, self.v, imin=min_1, imax=max_1,
                                           verbose=verbose)
-            var_b = self._var_integration(self.x, self.v, min=min_2, max=max_2,
+            var_b = self._var_integration(self.x, self.v, imin=min_2, imax=max_2,
                                           verbose=verbose)
-            rsiSS_value = a / b
-            rsiSS_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
+            rsiss_value = a / b
+            rsiss_sigma = N.sqrt(self._var_rapport(a, b, var_a, var_b,
                                                    verbose=verbose))
         except TypeError:
             if verbose:
-                print >> sys.stderr, 'ERROR in compute of rsiSS'
-            rsiSS_value = float(N.nan)
-            rsiSS_sigma = float(N.nan)
-        self.rsiSSvalues = {'rsiSS': float(rsiSS_value),
-                            'rsiSS.err': float(rsiSS_sigma),
-                            'rsiSS_lbd': [float(min_1),
+                print >> sys.stderr, 'ERROR in compute of rsiss'
+            rsiss_value = float(N.nan)
+            rsiss_sigma = float(N.nan)
+        self.rsissvalues = {'rsiss': float(rsiss_value),
+                            'rsiss.err': float(rsiss_sigma),
+                            'rsiss_lbd': [float(min_1),
                                           float(max_1),
                                           float(min_2),
                                           float(max_2)]}
 
-        return [float(rsiSS_value), float(rsiSS_sigma)]
+        return [float(rsiss_value), float(rsiss_sigma)]
 
     def ew(self, lambda_min_blue, lambda_max_blue, lambda_min_red,
            lambda_max_red, sf, verbose=True, simu=True,
@@ -1720,7 +1714,7 @@ class Craniometer(object):
                                          & (self.x < lbd2)]
                     else:
                         lbd1, flux1 = lbd1_tmp, flux1_tmp
-            #if sup and len(x[x<0]) > 5: ew_value = N.nan
+            # if sup and len(x[x<0]) > 5: ew_value = N.nan
             # else: ew_value = self._equivalentwidth(self.x, self.y,
             # lbd1=lbd1, lbd2=lbd2, flux1=flux1, flux2=flux2, verbose=verbose)
             ew_value = self._equivalentwidth(self.x,
@@ -2259,22 +2253,22 @@ class Craniometer(object):
             return [float(velocity), float(velocity_sigma)]
 
 
-#==============================================================================
+# ==============================================================================
 # Function to compute Stephen's ratio, and other general ratios
-#==============================================================================
+# ==============================================================================
 
 
 def integration(spec, lbd, v=2000.):
-    """."""
+    """Intergation over velocity bins."""
     c = 299792.458
-    min = lbd * (1 - v / c)
-    max = lbd * (1 + v / c)
+    imin = lbd * (1 - v / c)
+    imax = lbd * (1 + v / c)
     step = spec.x[1] - spec.x[0]
-    return float(N.sum(spec.y[(spec.x >= min) & (spec.x <= max)]) * step)
+    return float(N.sum(spec.y[(spec.x >= imin) & (spec.x <= imax)]) * step)
 
 
 def stephen_ratio(specB, specR=None, lbd_6415=6415, lbd_4427=4427):
-    """."""
+    """Compute SJB ratio."""
     if specR is None and (specB.x[0] < 4500 and specB.x[-1] > 6400):
         return integration(specB, lbd_6415) / integration(specB, lbd_4427)
     elif specR is not None:
@@ -2297,7 +2291,7 @@ def general_ratio(specB, specR=None, lbd1=6310, lbd2=4390, v=4000):
 
 
 def get_cranio(x, y, v, smoother='spline_free_knot', verbose=False):
-    """."""
+    """Get the craniometers."""
     obj = covariance.SPCS(x, y, v)
     if smoother == 'spline_free_knot':
         smoothing = 'sp'
