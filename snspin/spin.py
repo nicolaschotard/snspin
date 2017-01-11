@@ -253,7 +253,7 @@ class Craniometer(object):
                                 self.x[0], self.x[-1])
                             print >> sys.stderr, mess
                         return None
-                flux = N.array([float(self.s[(self.x > (l - 1)) & \
+                flux = N.array([float(self.s[(self.x > (l - 1)) &
                                              (self.x < (l + 1))])
                                 for l in lbd])
                 return flux
@@ -669,7 +669,7 @@ class Craniometer(object):
     def _get_min(self, lbd, plot=False):
         """
         Get the minimum the flux around a given bin.
-        
+
         It uses the derivative of the smoothed function. 
         A linear interpolation is made using the given
         bin and the left and right bins.
@@ -2243,7 +2243,8 @@ class Craniometer(object):
             velocity_sigma = N.sqrt(velocity_sigma ** 2 +
                                     velocity_syst_sigma**2 +
                                     velocity_syst_bin**2)
-            lbd_sigma = N.sqrt(lbd_sigma ** 2 + lbd_syst_sigma**2 + (binning)**2)
+            lbd_sigma = N.sqrt(
+                lbd_sigma ** 2 + lbd_syst_sigma**2 + (binning)**2)
 
             velo[infodict['name'] + '.syst'] = float(velocity_syst_sigma)
             velo[infodict['name'] + '.err'] = float(velocity_sigma)

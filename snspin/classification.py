@@ -21,7 +21,7 @@ See also http://snovae.in2p3.fr/nchotard/SpectralAnalysis/index.html for details
 of the analysis and some results.
 """
 
-__author__  = "Nicolas Chotard <nchotard@ipnl.in2p3.fr>"
+__author__ = "Nicolas Chotard <nchotard@ipnl.in2p3.fr>"
 __version__ = '$Id: classLib.py,v 1.1 2014/12/30 02:39:19 nchotard Exp $'
 
 import copy
@@ -34,7 +34,7 @@ from tools import io
 from tools import statistics
 
 
-# Definitions ==================================================================
+# Definitions ============================================================
 
 
 # classifications
@@ -60,43 +60,43 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
     :param bool keepall: if True, keep all the spetra in the given phase range
     :return: a dictionnary containing the results
     """
-    
+
     print "\nSub-sampling the SNe list with the 'Wang09' velocity criterium."
-    
+
     # get the velocity values
     if not keepall:
         sne, vSi, vSie, phases = get_si_at_phase(phreno, 'vSiII_6355',
-                                                  0, prange)
+                                                 0, prange)
         sne, EWSi, EWSie, phases = get_si_at_phase(phreno, 'EWSiII6355',
                                                    0, prange, sne=sne)
     else:
         sne, vSi, vSie, phases = get_si_in_range(phreno, 'vSiII_6355',
-                                                 [-prange,prange])
+                                                 [-prange, prange])
         sne = [sn for sn in set(sne)]
         sne, EWSi, EWSie, phases = get_si_in_range(phreno, 'EWSiII6355',
-                                                   [-prange,prange], sne=sne)
+                                                   [-prange, prange], sne=sne)
 
     # check for None or nan values
-    filt = (vSi==vSi) & (EWSi==EWSi) & \
-           (vSie==vSie) & (EWSie==EWSie) & \
+    filt = (vSi == vSi) & (EWSi == EWSi) & \
+           (vSie == vSie) & (EWSie == EWSie) & \
            (vSi > 0) & (EWSi > 0)
 
     if len(sne[~filt]) != 0:
         print "\nThe following SNe removed because velocity nan values:"
         print sne[~filt]
 
-    sne  = sne[filt]
+    sne = sne[filt]
     EWSi = EWSi[filt]
     vSi = vSi[filt]
     EWSie = EWSie[filt]
     vSie = vSie[filt]
     phases = phases[filt]
-    
+
     # velocity cut is already given?
     if vcut is None:
         print "\nNo given velocity cut, computing one..."
-        vcut = N.mean(vSi) + 3*N.std(vSi)
-        print "The new velocity cut is %.2f"%vcut
+        vcut = N.mean(vSi) + 3 * N.std(vSi)
+        print "The new velocity cut is %.2f" % vcut
 
     # sub-sample filters
     normf = (vSi < vcut)
@@ -113,7 +113,7 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
             d['info']['bysn'][sn] = 'norm'
         else:
             d['info']['bysn'][sn] = 'Hv'
-    
+
     # get the sub-sample lists
     d['normal'] = {'sne': sne[normf],
                    'vSi': vSi[normf],
@@ -127,33 +127,33 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
                'phases': phases[HVf],
                'EWSi': EWSi[HVf],
                'EWSi.err': EWSie[HVf]}
-    
+
     # print some info
     print "\nResults:"
-    print '\n'+" Normal SNe Ia ".center(40, '=')
-    print "  - %i SNe."%len(sne[normf])
-    print "  - mean vSi: %.2f +- %.2f (km/s)"%\
+    print '\n' + " Normal SNe Ia ".center(40, '=')
+    print "  - %i SNe." % len(sne[normf])
+    print "  - mean vSi: %.2f +- %.2f (km/s)" %\
           (N.mean(vSi[normf]), N.std(vSi[normf]))
-    print "  - mean phase: %.2f +- %.2f (days)"%\
+    print "  - mean phase: %.2f +- %.2f (days)" %\
           (N.mean(phases[normf]), N.mean(phases[normf]))
-    print '\n'+" HV SNe Ia ".center(40, '=')
-    print "  - %i SNe."%len(sne[HVf])
+    print '\n' + " HV SNe Ia ".center(40, '=')
+    print "  - %i SNe." % len(sne[HVf])
     if len(sne[HVf]) != 0:
-        print "  - mean vSi: %.2f +- %.2f (km/s)"%\
+        print "  - mean vSi: %.2f +- %.2f (km/s)" %\
               (N.mean(vSi[HVf]), N.std(vSi[HVf]))
-        print "  - mean phase: %.2f +- %.2f (days)"%\
+        print "  - mean phase: %.2f +- %.2f (days)" %\
               (N.mean(phases[HVf]), N.mean(phases[HVf]))
         print "  - HV SNe list:"
-        print "     "+"\n     ".join(sorted(d['HV']['sne']))
+        print "     " + "\n     ".join(sorted(d['HV']['sne']))
     else:
         print "Probably not tail in the velocity distribution..."
-    print "\nVelocity cutoff: %.2f km/s"%vcut
+    print "\nVelocity cutoff: %.2f km/s" % vcut
 
     if plot:
         wang_classification_plot(d, phreno, StN=2, square=False)
-        
+
     return d
-    
+
 
 def branch_classification(phreno, prange=2.5, plot=False,
                           keepall=False, sne=None):
@@ -176,7 +176,7 @@ def branch_classification(phreno, prange=2.5, plot=False,
     :return: a dictionnary containing the results
     """
     print "\nSub-sampling the SNe list with the 'Branch09' EWSi criteria."
-    
+
     # get the velocity values
     if not keepall:
         sne, EW5, EW5e, phases = get_si_at_phase(phreno, 'EWSiII5972',
@@ -185,34 +185,35 @@ def branch_classification(phreno, prange=2.5, plot=False,
                                                  0, prange, sne=sne)
     else:
         sne, EW5, EW5e, phases = get_si_in_range(phreno, 'EWSiII5972',
-                                                 [-prange,prange])
+                                                 [-prange, prange])
         sne = [sn for sn in set(sne)]
         sne, EW6, EW6e, phases = get_si_in_range(phreno, 'EWSiII6355',
-                                                 [-prange,prange], sne=sne)
-        
+                                                 [-prange, prange], sne=sne)
+
     # check for None or nan values
-    filt = (EW5==EW5) & (EW6==EW6) & \
-           (EW5e==EW5e) & (EW6e==EW6e) & \
+    filt = (EW5 == EW5) & (EW6 == EW6) & \
+           (EW5e == EW5e) & (EW6e == EW6e) & \
            (EW5 > 0) & (EW6 > 0)
 
     if len(sne[~filt]) != 0:
         print "\nThe following SNe removed because velocity nan values:"
         print sne[~filt]
-        
+
     afilt = lambda x: x[filt]
-    sne, EW5, EW5e, EW6, EW6e, phases = map(afilt, [sne, EW5, EW5e, EW6, EW6e, phases])
-    print "\n %i SNe in this sample."%(len(sne))
-        
+    sne, EW5, EW5e, EW6, EW6e, phases = map(
+        afilt, [sne, EW5, EW5e, EW6, EW6e, phases])
+    print "\n %i SNe in this sample." % (len(sne))
+
     # sub-sample filters
     BLf = (EW6 >= 105) & (EW5 < 30)
     SSf = (EW6 <= 80) & (EW5 < 30)
     CLf = (EW5 >= 30)
     CNf = (~BLf) & (~SSf) & (~CLf)
-    
+
     # save general info
     d = {}
-    d['info'] = {'prange': prange, 'bysn':{}}
-    
+    d['info'] = {'prange': prange, 'bysn': {}}
+
     # get the sub-sample lists
     stype = ['CN', 'BL', 'SS', 'CL']
     filts = [CNf, BLf, SSf, CLf]
@@ -230,20 +231,22 @@ def branch_classification(phreno, prange=2.5, plot=False,
     # print some info
     print "\nResults:"
     for i, st in enumerate(d):
-        if st == 'info': continue
-        print '\n'+(" %s "%st).center(40, '=')
-        print "  - %i SNe."%len(d[st]['sne'])
-        print "  - mean Si 5972: %.2f +- %.2f (A)"%\
+        if st == 'info':
+            continue
+        print '\n' + (" %s " % st).center(40, '=')
+        print "  - %i SNe." % len(d[st]['sne'])
+        print "  - mean Si 5972: %.2f +- %.2f (A)" %\
               (N.mean(d[st]['EWSiII5972']), N.std(d[st]['EWSiII5972']))
-        print "  - mean Si 5972: %.2f +- %.2f (A)"%\
+        print "  - mean Si 5972: %.2f +- %.2f (A)" %\
               (N.mean(d[st]['EWSiII6355']), N.std(d[st]['EWSiII6355']))
-        print "  - mean phase: %.2f +- %.2f (days)"%\
+        print "  - mean phase: %.2f +- %.2f (days)" %\
               (N.mean(d[st]['phases']), N.mean(d[st]['phases']))
 
     if plot:
         branch_classification_plot(copy.deepcopy(d), phreno, StN=2)
-        
+
     return d
+
 
 def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                            degree=1, StN=4, jack=True, plot=False):
@@ -262,16 +265,17 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                             maximum light will be taken.
     :return: a dictionnary containing the results
     """
-    
+
     print "\nSub-sampling the SNe list with the 'Benetti05' classification."
 
     from ToolBox.Wrappers import SALT2model
-    
+
     # some functions
     getallp = lambda d: N.array([d[id]['salt2.phase'] for id in d])
-    getallv = lambda d: N.array([d[id]['phrenology.%s'%indic] for id in d])
-    getallve = lambda d:N.array([d[id]['phrenology.%s.err'%indic] for id in d])
-    
+    getallv = lambda d: N.array([d[id]['phrenology.%s' % indic] for id in d])
+    getallve = lambda d: N.array(
+        [d[id]['phrenology.%s.err' % indic] for id in d])
+
     # get all the indicator values for all the SNe
     sne = sorted([sn for sn in phreno])
     z = [phreno[sn]['salt2.Redshift'] for sn in sne]
@@ -288,10 +292,10 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
     for i, sn in enumerate(sne):
 
         p, ind, inde = ph[i], Ind[i], Inde[i]
-        
+
         # filt nan values
-        filt = (p==p) & (ind > 0) & \
-               (ind==ind) & (inde==inde)
+        filt = (p == p) & (ind > 0) & \
+               (ind == ind) & (inde == inde)
         p, ind, inde = p[filt], ind[filt], inde[filt]
 
         # filt for phase range
@@ -299,32 +303,32 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
         p, ind, inde = p[pfilt], ind[pfilt], inde[pfilt]
 
         # filt for signal to noise ratio
-        sfilt = (ind/inde >= StN)
+        sfilt = (ind / inde >= StN)
         p, ind, inde = p[sfilt], ind[sfilt], inde[sfilt]
-        
+
         # fit it
         if jack:
             minp = degree + 3
         else:
             minp = degree + 2
         if not len(p) >= minp:
-            print "%s non fitted, not enought values (%i)."%(sn, len(p))
+            print "%s non fitted, not enought values (%i)." % (sn, len(p))
             continue
         else:
             if not jack:
                 res = polyfit(p, ind, dy=inde, degree=degree)
-                print "%i/%i %s: %i value in [%.1f,%.1f]. slope: %.2f"%\
-                      (i+1, len(sne), sn, len(p),
+                print "%i/%i %s: %i value in [%.1f,%.1f]. slope: %.2f" %\
+                      (i + 1, len(sne), sn, len(p),
                        prange[0], prange[1], res['params'][0])
-                res['Jparams']  = res['params']
+                res['Jparams'] = res['params']
                 res['Jdparams'] = res['dparams']
             else:
                 # jackknifing to get a proper error
                 ress = []
                 for j in range(len(p)):
-                    pj = N.concatenate([p[:j], p[j+1:]])
-                    indj = N.concatenate([ind[:j], ind[j+1:]])
-                    indej = N.concatenate([inde[:j], inde[j+1:]])
+                    pj = N.concatenate([p[:j], p[j + 1:]])
+                    indj = N.concatenate([ind[:j], ind[j + 1:]])
+                    indej = N.concatenate([inde[:j], inde[j + 1:]])
                     res = polyfit(pj, indj, dy=indej, degree=degree)
                     ress.append(res)
                 res = polyfit(p, ind, dy=inde, degree=degree)
@@ -332,36 +336,37 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                 par1 = N.mean([r['params'][1] for r in ress])
                 err0 = N.std([r['params'][0] for r in ress])
                 err1 = N.std([r['params'][1] for r in ress])
-                res['Jparams']  = [par0, par1]
+                res['Jparams'] = [par0, par1]
                 res['Jdparams'] = [err0, err1]
-            
-                print "%i/%i %s: %i value in [%.1f,%.1f]. slope: %.2f +- %.2f"%\
-                      (i+1, len(sne), sn, len(p), prange[0], prange[1],
+
+                print "%i/%i %s: %i value in [%.1f,%.1f]. slope: %.2f +- %.2f" %\
+                      (i + 1, len(sne), sn, len(p), prange[0], prange[1],
                        res['Jparams'][0], res['Jdparams'][0])
-                
+
         if plot:
             fig = P.figure()
             ax = fig.add_subplot(111,
                                  xlabel='phase',
                                  ylabel=indic,
-                                 title=sn+', s = %.2f += %.2f'%\
+                                 title=sn + ', s = %.2f += %.2f' %
                                  (res['Jparams'][0], res['Jdparams'][0]))
             ax.plot(p, ind, 'ok', mew=1.5, ms=8)
             ax.errorbar(p, ind, yerr=inde, capsize=None,
                         color='k', lw=1, ls='None')
-            ax.plot(p, N.polyval([res['Jparams'][0], res['Jparams'][1]], p), 'r')
-            fig.savefig('figures/%s_%s.png'%(sn, indic))
+            ax.plot(p, N.polyval(
+                [res['Jparams'][0], res['Jparams'][1]], p), 'r')
+            fig.savefig('figures/%s_%s.png' % (sn, indic))
             P.close()
-        
+
         # save results
         dm15, dm15e = SALT2model.x1_to_dm15(x1[i], x1e[i])
         results[sn] = res
         results[sn]['salt2'] = {'x1': x1[i],
-                            'x1.err': x1e[i],
-                            'color': color[i],
-                            'color.err': colore[i],
-                            'dm15': dm15,
-                            'dm15.err': dm15e}
+                                'x1.err': x1e[i],
+                                'color': color[i],
+                                'color.err': colore[i],
+                                'dm15': dm15,
+                                'dm15.err': dm15e}
 
     # general info
     results['info'] = {'indic': indic,
@@ -374,7 +379,7 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
     for sn in results:
         if sn == 'info':
             continue
-        vsi  = results[sn]['Jparams'][0]
+        vsi = results[sn]['Jparams'][0]
         dm15 = results[sn]['salt2']['dm15']
 
         if dm15 > 1.7:
@@ -388,7 +393,7 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
         elif vsi > 75 and dm15 >= 1.5 and dm15 <= 1.7:
             t = 'HVG-FAINT'
         elif vsi < 65 and dm15 >= 1.5 and dm15 <= 1.7:
-            t = 'LVG-FAINT'  
+            t = 'LVG-FAINT'
         elif vsi >= 65 and vsi <= 75 and dm15 >= 1.5 and dm15 <= 1.7:
             t = 'LVG-HVG-FAINT'
 
@@ -396,7 +401,7 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
 
     if plot:
         benetti_classification_plot(results, idr=phreno)
-        
+
     return results
 
 
@@ -420,17 +425,17 @@ def get_si_at_phase(phreno, si, pvalue, prange, sne=None, saltp='salt2'):
     else:
         sne = sorted(sne)
     specs = [get_id_at_phase(phreno[sn], pvalue) for sn in sne]
-    phases = N.array([phreno[sn]['spectra'][sp][saltp+'.phase'] \
+    phases = N.array([phreno[sn]['spectra'][sp][saltp + '.phase']
                       / (1. + phreno[sn]['salt2.Redshift'])
                       for sn, sp in zip(sne, specs)])
-    values = [phreno[sn]['spectra'][sp]['phrenology.'+si]
+    values = [phreno[sn]['spectra'][sp]['phrenology.' + si]
               for sn, sp in zip(sne, specs)]
-    valuese = [phreno[sn]['spectra'][sp]['phrenology.'+si+'.err']
+    valuese = [phreno[sn]['spectra'][sp]['phrenology.' + si + '.err']
                for sn, sp in zip(sne, specs)]
 
     # apply the phase filter
-    pfilter = (N.array(phases)>=(pvalue-prange)) & \
-              (N.array(phases)<=(pvalue+prange))
+    pfilter = (N.array(phases) >= (pvalue - prange)) & \
+              (N.array(phases) <= (pvalue + prange))
     fsne = N.array(sne)[pfilter]
     fvalues = N.array(values)[pfilter]
     fvaluese = N.array(valuese)[pfilter]
@@ -444,8 +449,8 @@ def get_id_at_phase(d, p, saltp='salt2'):
     Get the id name of the closest spectra to the phase p.
     """
     ids = N.array([i for i in d['spectra']])
-    phases = N.array([d['spectra'][i][saltp+'.phase'] for i in ids]) \
-             / (1. + d['salt2.Redshift'])
+    phases = N.array([d['spectra'][i][saltp + '.phase'] for i in ids]) \
+        / (1. + d['salt2.Redshift'])
     return ids[N.argmin(N.abs(phases - p))]
 
 
@@ -466,12 +471,12 @@ def get_si_in_range(phreno, si, prange, sne=None):
         sne = sorted([sn for sn in phreno if sn != 'DATASET'])
     else:
         sne = sorted(sne)
-        
+
     phases = N.concatenate([[phreno[sn]['spectra'][sp]['salt2.phase']
                              for sp in phreno[sn]['spectra']] for sn in sne])
-    values = N.concatenate([[phreno[sn]['spectra'][sp]['phrenology.'+si]
+    values = N.concatenate([[phreno[sn]['spectra'][sp]['phrenology.' + si]
                              for sp in phreno[sn]['spectra']] for sn in sne])
-    valuese = N.concatenate([[phreno[sn]['spectra'][sp]['phrenology.'+si+'.err']
+    valuese = N.concatenate([[phreno[sn]['spectra'][sp]['phrenology.' + si + '.err']
                               for sp in phreno[sn]['spectra']] for sn in sne])
     sne = N.concatenate([[sn for sp in phreno[sn]['spectra']] for sn in sne])
 
@@ -500,6 +505,7 @@ def merge_phreno_idr(idr, phreno):
         del ndic['DATASET']
     return ndic
 
+
 def polyfit(x, y, dy=None, degree=1):
     """
     Polynomial fit of degree 1 or 2 (default is 1) for the given input.
@@ -516,15 +522,17 @@ def polyfit(x, y, dy=None, degree=1):
     # Initialization of the parameters
     if degree == 1:
         params = [1, 0]
+
         def model(p):
             a, b = p
-            return a*x + b
+            return a * x + b
     else:
         params = [1, 1, 0]
+
         def model(p):
             a, b, c = p
-            return a*x**2 + b*x + c
-        
+            return a * x**2 + b * x + c
+
     # Set the data and model
     D = Optimizer.DataSet(y)
     M = Optimizer.Model(model)
@@ -547,7 +555,7 @@ def polyfit(x, y, dy=None, degree=1):
                'dof': dof,
                'pvalue': pvalue,
                'fitter': mnt}
-    
+
     return results
 
 
@@ -569,7 +577,7 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     :param dictionnary idr: the idr dictionnary. If given, the 'bad' sample
                             will be show in red on the plot.
     :param string name: name of the figure is you want to save it (name.ext)
-    
+
     Note:
      - all the sne, vSi and EWSi array (n or HV) must have the same length,
        and must not contain nan values.
@@ -583,7 +591,7 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     filtn = ((dn['vSi'] / dn['vSi.err']) > StN) & \
             ((dn['EWSi'] / dn['EWSi.err']) > StN)
     ntot = len(dn['vSi'][filtn]) + len(dHV['vSi'][filtHV])
-    
+
     # figure
     fig = P.figure(dpi=120)
 
@@ -595,15 +603,15 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
 
     # plot
     ax.plot(dn['vSi'][filtn], dn['EWSi'][filtn], 'o',
-            mec='k', mfc='None', mew=1.5, ms=8, label='Normal (%i)'%\
+            mec='k', mfc='None', mew=1.5, ms=8, label='Normal (%i)' %
             len(dn['vSi'][filtn]))
     ax.errorbar(dn['vSi'][filtn], dn['EWSi'][filtn],
                 xerr=dn['vSi.err'][filtn], yerr=dn['EWSi.err'][filtn],
                 capsize=None, color='k', lw=1, ls='None')
     ax.plot(dHV['vSi'][filtHV], dHV['EWSi'][filtHV], 's',
-            mec='b', mfc='None', mew=1.5, ms=8, label='HV (%i)'%\
+            mec='b', mfc='None', mew=1.5, ms=8, label='HV (%i)' %
             len(dHV['vSi'][filtHV]))
-    
+
     ax.errorbar(dHV['vSi'][filtHV], dHV['EWSi'][filtHV],
                 xerr=dHV['vSi.err'][filtHV], yerr=dHV['EWSi.err'][filtHV],
                 capsize=None, color='b', lw=1, ls='None')
@@ -612,10 +620,10 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     ax.axvline(d['info']['vcut'], color='r', ls='--')
     ax.axhline(N.mean(dn['EWSi'][filtn]), color='k', ls='--')
 
-    vsi = N.concatenate([dn['vSi'][filtn],dHV['vSi'][filtHV]])
+    vsi = N.concatenate([dn['vSi'][filtn], dHV['vSi'][filtHV]])
     bins = Statistics.hist_bins(vsi)
     ax2.hist(vsi, lw=1, color='k', bins=bins, normed=True, alpha=0.7)
-    loc, scale=stats.norm.fit(vsi)
+    loc, scale = stats.norm.fit(vsi)
     xx = N.linspace(8000, 15000, 1000)
     gauss = stats.norm.pdf(xx, loc=loc, scale=scale)
     ax2.fill_between(xx, gauss, color='k', alpha=0.15)
@@ -626,38 +634,38 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
 
     # legend
     ax.legend(loc='upper left', numpoints=1,
-              prop={'size':'x-large'}) #.draw_frame(False)
+              prop={'size': 'x-large'})  # .draw_frame(False)
 
     if square:
         ax.axvspan(13600, 16200, ymin=0.44, ymax=0.97,
-                   fc='None', ec='b',lw=2, ls='dashdot')
+                   fc='None', ec='b', lw=2, ls='dashdot')
         ax.text(14900, 148, "?", rotation=0, size='x-large',
                 va='center', ha='center', color='b')
         ax.set_xlim(xmin=7000, xmax=16400)
-        ax.set_ylim(ymin=20, ymax=200) 
-    
-    
+        ax.set_ylim(ymin=20, ymax=200)
+
     # annotate the HV SNe
-    for i,sn in enumerate(dHV['sne'][filtHV]):
+    for i, sn in enumerate(dHV['sne'][filtHV]):
         if sn == 'PTF09dnp':
-            vc=0.98
+            vc = 0.98
         else:
-            vc=1.01
-        ax.text(1.01*dHV['vSi'][filtHV][i], vc*dHV['EWSi'][filtHV][i],
+            vc = 1.01
+        ax.text(1.01 * dHV['vSi'][filtHV][i], vc * dHV['EWSi'][filtHV][i],
                 sn, rotation=20, ha='left', va='bottom',
                 size='small', color='b')
 
     if name is not None:
         fig.savefig(name)
     else:
-        sne = N.concatenate([dn['sne'][filtn],dHV['sne'][filtHV]])
-        vSi = N.concatenate([dn['vSi'][filtn],dHV['vSi'][filtHV]])
-        EWSi = N.concatenate([dn['EWSi'][filtn],dHV['EWSi'][filtHV]])
-        line, = ax.plot(vSi,EWSi,'k.', ms=1)
-        browser = MPL.PointBrowser(vSi,EWSi,sne,line)
+        sne = N.concatenate([dn['sne'][filtn], dHV['sne'][filtHV]])
+        vSi = N.concatenate([dn['vSi'][filtn], dHV['vSi'][filtHV]])
+        EWSi = N.concatenate([dn['EWSi'][filtn], dHV['EWSi'][filtHV]])
+        line, = ax.plot(vSi, EWSi, 'k.', ms=1)
+        browser = MPL.PointBrowser(vSi, EWSi, sne, line)
         print "You should be able to browse the points to get the object name."
         P.show()
-    
+
+
 def branch_classification_plot(d, idr=None, name=None, StN=3):
     """
     This plot is usually done in the EWSiII 6355 vs vSiII 6533 space.
@@ -676,7 +684,7 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     :param dictionnary idr: the idr dictionnary. If given, the 'bad' sample
                             will be show in red on the plot.
     :param string name: name of the figure is you want to save it (name.ext)
-    
+
     Note:
      - all the sne, vSi and EWSi array (of a given key) must have the same
      length, and must not contain nan values.
@@ -687,7 +695,7 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     BL = d['BL']
     SS = d['SS']
     CL = d['CL']
-    
+
     sne = N.concatenate([CN['sne'], BL['sne'], SS['sne'], CL['sne']])
     EWSi5 = N.concatenate([CN['EWSiII5972'], BL['EWSiII5972'],
                            SS['EWSiII5972'], CL['EWSiII5972']])
@@ -697,12 +705,12 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
                            SS['EWSiII6355'], CL['EWSiII6355']])
     EWSi6e = N.concatenate([CN['EWSiII6355.err'], BL['EWSiII6355.err'],
                             SS['EWSiII6355.err'], CL['EWSiII6355.err']])
-    
+
     # figure
     fig = P.figure(dpi=120)
 
     # axe
-    ax = fig.add_axes([0.09,0.09,0.69,0.69])
+    ax = fig.add_axes([0.09, 0.09, 0.69, 0.69])
     ax.set_xlabel(r'EW SiII 6355 [$\AA$]', fontsize='x-large')
     ax.set_ylabel(r'EW SiII 5972 [$\AA$]', fontsize='x-large')
 
@@ -710,28 +718,28 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     # CN
     ax.plot(CN['EWSiII6355'], CN['EWSiII5972'], 'o',
             mec='k', mfc='k', mew=1.5, ms=8,
-            label='CN (%i)'%len(CN['EWSiII6355']))
+            label='CN (%i)' % len(CN['EWSiII6355']))
     ax.errorbar(CN['EWSiII6355'], CN['EWSiII5972'],
-                xerr=CN['EWSiII6355.err'], yerr=CN['EWSiII5972.err'], 
-                color='k', lw=1, ls='None') 
+                xerr=CN['EWSiII6355.err'], yerr=CN['EWSiII5972.err'],
+                color='k', lw=1, ls='None')
     # BL
     ax.plot(BL['EWSiII6355'], BL['EWSiII5972'], 's',
             mec='b', mfc='b', mew=1.5, ms=8,
-            label='BL (%i)'%len(BL['EWSiII6355']))
+            label='BL (%i)' % len(BL['EWSiII6355']))
     ax.errorbar(BL['EWSiII6355'], BL['EWSiII5972'],
                 xerr=BL['EWSiII6355.err'], yerr=BL['EWSiII5972.err'],
                 color='b', lw=1, ls='None')
     # SS
     ax.plot(SS['EWSiII6355'], SS['EWSiII5972'], '^',
             mec='g', mfc='g', mew=1.5, ms=8,
-            label='SS (%i)'%len(SS['EWSiII6355']))
+            label='SS (%i)' % len(SS['EWSiII6355']))
     ax.errorbar(SS['EWSiII6355'], SS['EWSiII5972'],
                 xerr=SS['EWSiII6355.err'], yerr=SS['EWSiII5972.err'],
                 color='g', lw=1, ls='None')
     # CL
     ax.plot(CL['EWSiII6355'], CL['EWSiII5972'], 'd',
             mec='r', mfc='r', mew=1.5, ms=8,
-            label='CL (%i)'%len(CL['EWSiII6355']))
+            label='CL (%i)' % len(CL['EWSiII6355']))
     ax.errorbar(CL['EWSiII6355'], CL['EWSiII5972'],
                 xerr=CL['EWSiII6355.err'], yerr=CL['EWSiII5972.err'],
                 color='r', lw=1, ls='None')
@@ -744,37 +752,37 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     ax.legend(loc='upper left', numpoints=1)
 
     # histo (top)
-    ax2 = fig.add_axes([0.09,0.79,0.69,0.19], sharex=ax)
+    ax2 = fig.add_axes([0.09, 0.79, 0.69, 0.19], sharex=ax)
     EW6 = N.concatenate([CN['EWSiII6355'], BL['EWSiII6355'],
                          SS['EWSiII6355'], CL['EWSiII6355']])
     bins = Statistics.hist_bins(EW6)
-    ax2.hist([CN['EWSiII6355'],BL['EWSiII6355'],
-              SS['EWSiII6355'],CL['EWSiII6355']],
-             lw=0, color=['k','b','g','r'], bins=bins, normed=True,
+    ax2.hist([CN['EWSiII6355'], BL['EWSiII6355'],
+              SS['EWSiII6355'], CL['EWSiII6355']],
+             lw=0, color=['k', 'b', 'g', 'r'], bins=bins, normed=True,
              alpha=0.7, histtype='barstacked')
     ax2.set_ylabel('Normed distr.')
     ax2.xaxis.set_tick_params(label1On=False)
     ax2.set_yticks([])
-        
+
     # histo (right)
-    ax3 = fig.add_axes([0.79,0.09,0.19,0.69], sharey=ax)
+    ax3 = fig.add_axes([0.79, 0.09, 0.19, 0.69], sharey=ax)
     EW5 = N.concatenate([CN['EWSiII5972'], BL['EWSiII5972'],
                          SS['EWSiII5972'], CL['EWSiII5972']])
     bins = Statistics.hist_bins(EW5)
-    ax3.hist([CN['EWSiII5972'],BL['EWSiII5972'],
-              SS['EWSiII5972'],CL['EWSiII5972']],
-             lw=0, color=['k','b','g','r'], bins=bins, normed=True,
+    ax3.hist([CN['EWSiII5972'], BL['EWSiII5972'],
+              SS['EWSiII5972'], CL['EWSiII5972']],
+             lw=0, color=['k', 'b', 'g', 'r'], bins=bins, normed=True,
              alpha=0.7, histtype='barstacked',
              orientation='horizontal')
     ax3.set_xlabel('Normed distr.')
     ax3.yaxis.set_tick_params(label1On=False)
     ax3.set_xticks([])
-    
+
     # annotate the HV SNe
     HVSNe = ['PTF09dnl', 'PTF09dnp', 'SN2004ef',
              'SN2005ir', 'SN2007qe', 'SNF20080920-000']
     SNE = N.concatenate([CN['sne'], BL['sne'], SS['sne'], CL['sne']])
-    for i,sn in enumerate(SNE):
+    for i, sn in enumerate(SNE):
         if sn not in HVSNe:
             continue
         if sn.startswith('SNF'):
@@ -783,10 +791,10 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
             sn = sn[4:]
         elif sn.startswith('PTF'):
             sn = sn[3:]
-        ax.text(1.01*EW6[i], 1.01*EW5[i], sn, rotation=20,
+        ax.text(1.01 * EW6[i], 1.01 * EW5[i], sn, rotation=20,
                 ha='left', va='bottom', size='small', color='b')
 
-    for i,sn in enumerate(CL['sne']):
+    for i, sn in enumerate(CL['sne']):
         if sn.startswith('SNF'):
             sn = sn[6:]
         elif sn.startswith('SN'):
@@ -795,17 +803,18 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
             sn = sn[3:]
         if CL['EWSiII5972'][i] < 60:
             continue
-        ax.text(1.01*CL['EWSiII6355'][i], 1.01*CL['EWSiII5972'][i],
+        ax.text(1.01 * CL['EWSiII6355'][i], 1.01 * CL['EWSiII5972'][i],
                 sn, rotation=0, size='medium')
 
     if name is not None:
         fig.savefig(name)
     else:
-        line, = ax.plot(EWSi6,EWSi5,'k.', ms=1)
-        browser = MPL.PointBrowser(EWSi6,EWSi5,sne,line)
+        line, = ax.plot(EWSi6, EWSi5, 'k.', ms=1)
+        browser = MPL.PointBrowser(EWSi6, EWSi5, sne, line)
         print "You should be able to browse the points to get the object name."
         P.show()
-        
+
+
 def benetti_classification_plot(res, idr=None, name=None, clean=False,
                                 vcut=10, x1cut=2.5, StN=3, xaxis='dm15'):
     """
@@ -826,15 +835,15 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
                             will be show in red on the plot.
     :param string name: name of the figure is you want to save it (name.ext)
     :param string xaxis: 'dm15' or 'x1'.
-    
+
     Note:
      - all the sne, vSi and EWSi array (of a given key) must have the same
      length, and must not contain nan values.
 
     """
     # get the data
-    sne  = N.array([sn for sn in res if sn != 'info'])
-    vsi  = N.array([res[sn]['Jparams'][0] for sn in sne])
+    sne = N.array([sn for sn in res if sn != 'info'])
+    vsi = N.array([res[sn]['Jparams'][0] for sn in sne])
     vsie = N.array([res[sn]['Jdparams'][0] for sn in sne])
     dm15 = N.array([res[sn]['salt2']['dm15'] for sn in sne])
     dm15e = N.array([res[sn]['salt2']['dm15.err'] for sn in sne])
@@ -852,23 +861,24 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
         xvalf = (xval <= x1cut)
     else:
         raise KeyError("Error: option xaxis must be 'dm15' or 'x1'")
-    
+
     # figure
     fig = P.figure(dpi=120)
 
     # axe
-    ax = fig.add_axes([0.1,0.08,0.88,0.87])
+    ax = fig.add_axes([0.1, 0.08, 0.88, 0.87])
 
     # plot
     if clean:
         filt = (-vsi >= vcut) & xvalf & \
                (N.abs(vsi) / vsie >= StN) & (xval / xvale >= StN)
         sne, xval, xvale, x1, x1e, vsi, vsie = sne[filt], \
-                                               xval[filt], xvale[filt], \
-                                               x1[filt], x1e[filt], \
-                                               vsi[filt], vsie[filt]
-    
-    ax.plot(xval,-vsi, 'o', mec='k', mfc='None', mew=1.5, ms=8, label='All SNe')
+            xval[filt], xvale[filt], \
+            x1[filt], x1e[filt], \
+            vsi[filt], vsie[filt]
+
+    ax.plot(xval, -vsi, 'o', mec='k', mfc='None',
+            mew=1.5, ms=8, label='All SNe')
     ax.errorbar(xval, -vsi, xerr=xvale, yerr=vsie, capsize=None,
                 color='k', lw=1, ls='None')
 
@@ -877,18 +887,18 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
         if 'DATASET' in idr:
             del idr['DATASET']
         filt = N.array([((sn in idr) & (idr[sn]['idr.subset'] == 'bad'))
-                for sn in sne], dtype='bool')
-        ax.plot(xval[filt],-vsi[filt], 'ro', 
-                ms=3, label='"Bad" LC (%i)'%(len(xval[filt])))
+                        for sn in sne], dtype='bool')
+        ax.plot(xval[filt], -vsi[filt], 'ro',
+                ms=3, label='"Bad" LC (%i)' % (len(xval[filt])))
 
     # annotate some points
-    for i,sn in enumerate(sne):
+    for i, sn in enumerate(sne):
         if xval[i] > 0.8 and vsi[i] < 0 and not clean:
             continue
         if clean \
-               and -vsi[i] > 15 \
-               and xval[i] < 1.6 \
-               and -vsi[i] < 110:
+                and -vsi[i] > 15 \
+                and xval[i] < 1.6 \
+                and -vsi[i] < 110:
             continue
         if sn.startswith('SNF'):
             sn = sn[6:]
@@ -896,22 +906,22 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
             sn = sn[4:]
         elif sn.startswith('PTF'):
             sn = sn[3:]
-        ax.text(1.01*xval[i], -1.01*vsi[i],
+        ax.text(1.01 * xval[i], -1.01 * vsi[i],
                 sn, rotation=0, size='x-small')
-    
+
     # hline
     ax.axhline(-0.01, ls='--', color='k')
     if clean:
         ax.axhspan(65, 75, color='b', alpha=0.1, label='LVG-HVG transition')
         ax.axvspan(1.5, 1.7, color='r', alpha=0.1, label='Faint transition')
-        ax.text(0.82, 4, 'LVG',size='x-large', color='g')
-        ax.text(1.75, 150, 'FAINT',size='x-large', color='r')
-        ax.text(0.9, 150, 'HVG',size='x-large', color='b')
-        
+        ax.text(0.82, 4, 'LVG', size='x-large', color='g')
+        ax.text(1.75, 150, 'FAINT', size='x-large', color='r')
+        ax.text(0.9, 150, 'HVG', size='x-large', color='b')
+
     # legend labels and title
     ax.legend(loc='best', numpoints=1).draw_frame(False)
-    ax.set_title('%i SNe, %.1f < p < %.1f '%\
-                 (len(sne),res['info']['prange'][0],res['info']['prange'][1]))
+    ax.set_title('%i SNe, %.1f < p < %.1f ' %
+                 (len(sne), res['info']['prange'][0], res['info']['prange'][1]))
     ax.set_xlabel('xval (from SALT2)')
     ax.set_ylabel(r'-$\dot{v}$ [km/s/day]')
 
@@ -921,74 +931,75 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
     if name is not None:
         fig.savefig(name)
     else:
-        line, = ax.plot(xval,-vsi,'k.', ms=1)
-        browser = MPL.PointBrowser(xval,-vsi,sne,line)
+        line, = ax.plot(xval, -vsi, 'k.', ms=1)
+        browser = MPL.PointBrowser(xval, -vsi, sne, line)
         print "You should be able to browse the points to get the object name."
         P.show()
 
+
 def vg_vs_v_plot(diw, dibe, idr=None):
-    
+
     # get the velocity gradient data
-    sne  = N.array([sn for sn in dibe if sn != 'info'])
+    sne = N.array([sn for sn in dibe if sn != 'info'])
 
     # get the velocity data
     dn = diw['normal']
     dHV = diw['HV']
-    snev = N.concatenate([diw['normal']['sne'],diw['HV']['sne']])
-    vsi  = N.concatenate([diw['normal']['vSi'],diw['HV']['vSi']])
-    vsie = N.concatenate([diw['normal']['vSi.err'],diw['HV']['vSi.err']])
+    snev = N.concatenate([diw['normal']['sne'], diw['HV']['sne']])
+    vsi = N.concatenate([diw['normal']['vSi'], diw['HV']['vSi']])
+    vsie = N.concatenate([diw['normal']['vSi.err'], diw['HV']['vSi.err']])
 
-    ft = [False]*len(snev)
+    ft = [False] * len(snev)
     filt = N.array([True and sn in sne or False for sn in snev], dtype='bool')
     snev = snev[filt]
     vsi = vsi[filt]
     vsie = vsie[filt]
 
-    vgsi  = N.array([dibe[sn]['Jparams'][0] for sn in snev])
+    vgsi = N.array([dibe[sn]['Jparams'][0] for sn in snev])
     vgsie = N.array([dibe[sn]['Jdparams'][0] for sn in snev])
-    
-    print len(vsi),len(vgsi)
+
+    print len(vsi), len(vgsi)
     print vsi
     print vgsi
     # figure
     fig = P.figure(dpi=120)
 
     # axe
-    ax = fig.add_axes([0.1,0.08,0.88,0.87])
+    ax = fig.add_axes([0.1, 0.08, 0.88, 0.87])
 
     # plot
-    
-    ax.plot(vsi,-vgsi, 'o', mec='k', mfc='None', mew=2, label='All SNe')
+
+    ax.plot(vsi, -vgsi, 'o', mec='k', mfc='None', mew=2, label='All SNe')
     ax.errorbar(vsi, -vgsi, xerr=vsie, yerr=vgsie, capsize=None,
                 color='k', lw=1, ls='None')
 
-        
     # legend labels and title
     ax.legend(loc='best', numpoints=1).draw_frame(False)
-    #ax.set_title('%i SNe, %.1f < p < %.1f '%\
+    # ax.set_title('%i SNe, %.1f < p < %.1f '%\
     #             (len(sne),res['info']['prange'][0],res['info']['prange'][1]))
     ax.set_ylabel(r'-$\dot{v}$ [km/s/day]')
     ax.set_xlabel('vSi 6355')
 
+
 def vg_v_vs_zplot(diw, dibe, idr=None):
-    
+
     # get the velocity gradient data
-    sne  = N.array([sn for sn in dibe if sn != 'info'])
+    sne = N.array([sn for sn in dibe if sn != 'info'])
 
     # get the velocity data
     dn = diw['normal']
     dHV = diw['HV']
     snev = N.concatenate([diw['normal']['sne'], diw['HV']['sne']])
-    vsi  = N.concatenate([diw['normal']['vSi'], diw['HV']['vSi']])
+    vsi = N.concatenate([diw['normal']['vSi'], diw['HV']['vSi']])
     vsie = N.concatenate([diw['normal']['vSi.err'], diw['HV']['vSi.err']])
 
-    ft = [False]*len(snev)
+    ft = [False] * len(snev)
     filt = N.array([True and sn in sne or False for sn in snev], dtype='bool')
     snev = snev[filt]
     vsi = vsi[filt]
     vsie = vsie[filt]
 
-    vgsi  = N.array([dibe[sn]['Jparams'][0] for sn in snev])
+    vgsi = N.array([dibe[sn]['Jparams'][0] for sn in snev])
     vgsie = N.array([dibe[sn]['Jdparams'][0] for sn in snev])
 
     z = N.array([idr[sn]['salt2.Redshift'] for sn in snev])
@@ -996,21 +1007,21 @@ def vg_v_vs_zplot(diw, dibe, idr=None):
     fig = P.figure(dpi=120)
 
     # axe
-    ax = fig.add_axes([0.1,0.08,0.88,0.87])
+    ax = fig.add_axes([0.1, 0.08, 0.88, 0.87])
 
     # plot
-    
-    ax.plot(vsi,z, 'o', mec='k', mfc='None', mew=2, label='All SNe')
+
+    ax.plot(vsi, z, 'o', mec='k', mfc='None', mew=2, label='All SNe')
     ax.errorbar(vsi, z, xerr=vsie, capsize=None,
                 color='k', lw=1, ls='None')
 
-        
     # legend labels and title
     ax.legend(loc='best', numpoints=1).draw_frame(False)
-    #ax.set_title('%i SNe, %.1f < p < %.1f '%\
+    # ax.set_title('%i SNe, %.1f < p < %.1f '%\
     #             (len(sne),res['info']['prange'][0],res['info']['prange'][1]))
     ax.set_ylabel(r'-$\dot{v}$ [km/s/day]')
     ax.set_xlabel('vSi 6355')
+
 
 def test(wang=True, branch=True, benetti=True, vgrad=True,
          wname=None, brname=None, bename=None, prange=5,
@@ -1018,9 +1029,9 @@ def test(wang=True, branch=True, benetti=True, vgrad=True,
 
     # import and data loading
     idrpath = '/Users/nicolaschotard/work/data/IDR/ACEv3'
-    idr = io.load_anyfile(idrpath+'/META.pkl')
-    phreno = io.load_anyfile(idrpath+'/phrenology_ACEv3.pkl')
-    nd = merge_phreno_idr(idr,phreno)
+    idr = io.load_anyfile(idrpath + '/META.pkl')
+    phreno = io.load_anyfile(idrpath + '/phrenology_ACEv3.pkl')
+    nd = merge_phreno_idr(idr, phreno)
 
     results = []
 
@@ -1033,7 +1044,7 @@ def test(wang=True, branch=True, benetti=True, vgrad=True,
     # branch
     if branch:
         dib = branch_classification(nd, prange=prange, keepall=keepall)
-        branch_classification_plot(dib, idr=idr, name=brname,StN=0)
+        branch_classification_plot(dib, idr=idr, name=brname, StN=0)
         results.append(dib)
 
     # benetti
@@ -1047,12 +1058,13 @@ def test(wang=True, branch=True, benetti=True, vgrad=True,
         diw = wang_classification(nd, prange=prange, keepall=keepall)
         dibe = benetti_classification(nd)
         vg_vs_v_plot(diw, dibe, idr=idr)
-        
+
         # v vs redshift
         vg_v_vs_zplot(diw, dibe, idr=idr)
-    
+
     P.show()
     return results
+
 
 def table(output='html'):
     """
@@ -1061,9 +1073,9 @@ def table(output='html'):
     snid_dir = '/Users/nicolaschotard/work/data/snid/runs/'
     results = test()
     dw, dbr, dbe = results[0], results[1], results[2]
-    
-    res_b  = io.load_anyfile(snid_dir + 'bsnip/snid_results.pkl')
-    res_s  = io.load_anyfile(snid_dir + 'snid-2.0/snid_results.pkl')
+
+    res_b = io.load_anyfile(snid_dir + 'bsnip/snid_results.pkl')
+    res_s = io.load_anyfile(snid_dir + 'snid-2.0/snid_results.pkl')
     res_bp = io.load_anyfile(snid_dir + 'bsnip/snid_results_fixp.pkl')
     res_sp = io.load_anyfile(snid_dir + 'snid-2.0/snid_results_fixp.pkl')
 
@@ -1083,12 +1095,12 @@ def table(output='html'):
         if sn not in dbr['info']['bysn']:
             dbr['info']['bysn'][sn] = ''
         if sn not in dbe:
-            dbe[sn] = {'type':''}
-            
+            dbe[sn] = {'type': ''}
+
         if output == 'html':
             print '<tr align="center"> <td> %s </td> <td> %s </td> <td> %s '\
                   '</td> <td> %s </td> <td> %s </td> <td> %s </td> <td> %s '\
-                  '</td> <td> %s </td> </tr>'%\
+                  '</td> <td> %s </td> </tr>' %\
                   (sn,
                    res_s[sn]['general']['subtype'],
                    res_sp[sn]['general']['subtype'],
@@ -1099,7 +1111,7 @@ def table(output='html'):
                    dbe[sn]['type'])
 
         elif output == 'tex':
-            print '%s & %s & %s & %s & %s & %s & %s & %s \\\ '%\
+            print '%s & %s & %s & %s & %s & %s & %s & %s \\\ ' %\
                   (sn,
                    res_s[sn]['general']['subtype'],
                    res_sp[sn]['general']['subtype'],

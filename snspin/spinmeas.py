@@ -212,8 +212,8 @@ class DrGall(object):
                                      verbose=verbose)
 
         #rca = self.cranio_bca.rca(verbose=verbose)
-        #self.values.update(self.cranio_bca.rcavalues)
-        #if verbose:
+        # self.values.update(self.cranio_bca.rcavalues)
+        # if verbose:
         #    print 'rca computing done, rca =', rca
         try:
             rca = self.cranio_bca.rca(verbose=verbose)
@@ -705,9 +705,9 @@ class DrGall(object):
         except ValueError:
             rcaS2 = float(N.nan)
 
-        #try:
+        # try:
         #    edca = self.cranio_bca.edcavalues['edca']
-        #except ValueError:
+        # except ValueError:
         edca = float(N.nan)
 
         try:
@@ -989,7 +989,8 @@ class DrGall(object):
         ax.axvspan(cr5.rsiSSvalues['rsiSS_lbd'][2],
                    cr5.rsiSSvalues['rsiSS_lbd'][3],
                    ymin=0, ymax=1, facecolor='y', alpha=0.25)
-        # except ValueError: print >> sys.stderr, "No parameters to plot rsiSS zone"
+        # except ValueError: print >> sys.stderr, "No parameters to plot rsiSS
+        # zone"
 
         try:  # Plot the rsi points and lines
             lbd_line1 = cr1.x[(cr1.xr >= cr1.rsivalues['rsi_lbd'][0])

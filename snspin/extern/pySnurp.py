@@ -1,13 +1,13 @@
 ######################################################################
-## Filename:      pySnurp.py
-## Version:       $Revision: 1.137 $
-## Description:   Simple module providing few FITS-based I/O classes.
-## Author:        Yannick Copin <yannick@ipnl.in2p3.fr>
-## Author:        $Author: ycopin $
-## Created at:    Tue Oct 18 11:42:37 2005
-## Modified at:   Tue Apr 27 18:04:54 2010
-## Modified by:   Yannick Copin <ycopin@ipnl.in2p3.fr>
-## $Id: pySnurp.py,v 1.137 2015/05/18 08:23:53 ycopin Exp $
+# Filename:      pySnurp.py
+# Version:       $Revision: 1.137 $
+# Description:   Simple module providing few FITS-based I/O classes.
+# Author:        Yannick Copin <yannick@ipnl.in2p3.fr>
+# Author:        $Author: ycopin $
+# Created at:    Tue Oct 18 11:42:37 2005
+# Modified at:   Tue Apr 27 18:04:54 2010
+# Modified by:   Yannick Copin <ycopin@ipnl.in2p3.fr>
+# $Id: pySnurp.py,v 1.137 2015/05/18 08:23:53 ycopin Exp $
 ######################################################################
 
 """
@@ -35,6 +35,7 @@ import warnings
 warnings.filterwarnings("ignore", "Overwriting existing file")
 
 # Spectrum class ##############################
+
 
 class Spectrum:
     """
@@ -129,7 +130,7 @@ class Spectrum:
 
         self._fits = pyfits.open(self.filename,
                                  mode=mode, ignore_missing_end=True)
-        extnames = [ h.name for h in self._fits ]  # "PRIMARY", etc.
+        extnames = [h.name for h in self._fits]  # "PRIMARY", etc.
 
         try:
             spec = self._fits[self.ext]      # Spectrum extension
@@ -143,8 +144,9 @@ class Spectrum:
 
         self.npts = self._hdr['NAXIS1']
         self.step = self._hdr['CDELT1']
-        self.start= self._hdr['CRVAL1'] - (self._hdr['CRPIX1'] - 1) * self.step
-        self.end  = self.start + (self.npts - 1) * self.step
+        self.start = self._hdr['CRVAL1'] - \
+            (self._hdr['CRPIX1'] - 1) * self.step
+        self.end = self.start + (self.npts - 1) * self.step
         self.x = numpy.linspace(self.start, self.end, self.npts)  # Wavelength
         self.y = spec.data.copy()                                 # Signal
 
@@ -217,7 +219,7 @@ class Spectrum:
         # Add mandatory keywords
         self._hdr['SIMPLE'] = True
         self._hdr['BITPIX'] = -64
-        self._hdr['NAXIS']  = 1
+        self._hdr['NAXIS'] = 1
         self._hdr['NAXIS1'] = self.npts
         self._hdr['CDELT1'] = self.step
         self._hdr['CRPIX1'] = 1
@@ -240,11 +242,12 @@ class Spectrum:
             # Update FITS-header
             self._hdr['NAXIS1'] = self.npts
             self._hdr['CDELT1'] = self.step
-            self._hdr['CRVAL1'] = self.start + (self._hdr['CRPIX1'] - 1) * self.step
+            self._hdr['CRVAL1'] = self.start + \
+                (self._hdr['CRPIX1'] - 1) * self.step
 
             # Remove any prior VARIANCE/COVARiance extensions if any:
             # they will then be re-added as needed
-            extnames = [ ext.name for ext in self._fits ]
+            extnames = [ext.name for ext in self._fits]
             for extname in ("VARIANCE", "COVAR"):
                 if extname in extnames:
                     i = self._fits.index_of(extname)
@@ -253,9 +256,9 @@ class Spectrum:
             if self.hasVar and kwargs.pop('varext', True):
                 # Add variance spectrum as extension VARIANCE
                 assert len(self.v) == self.npts, \
-                       "Variance extension (%d px) " \
-                       "is not coherent with signal (%d px)" % \
-                       (len(self.v), self.npts)
+                    "Variance extension (%d px) " \
+                    "is not coherent with signal (%d px)" % \
+                    (len(self.v), self.npts)
                 var = pyfits.ImageHDU(self.v, name='VARIANCE')
                 var.header['CRVAL1'] = (
                     self.start + (self._hdr['CRPIX1'] - 1) * self.step)
@@ -266,18 +269,18 @@ class Spectrum:
             if self.hasCov and kwargs.pop('covext', True):
                 # Add covariance array as extension COVAR
                 assert self.cov.shape == (self.npts, self.npts), \
-                       "Covariance extension %s " \
-                       "is not coherent with signal (%d px)" % \
-                       (self.cov.shape, self.npts)
+                    "Covariance extension %s " \
+                    "is not coherent with signal (%d px)" % \
+                    (self.cov.shape, self.npts)
                 # Add lower-tri COVARiance matrix as an image extension
                 # cov = pyfits.CompImageHDU(numpy.tril(self.cov), name='COVAR')
                 cov = pyfits.ImageHDU(numpy.tril(self.cov), name='COVAR')
                 cov.header['CRVAL1'] = cov.header['CRVAL2'] = (
                     self.start + (self._hdr['CRPIX1'] - 1) * self.step)
                 cov.header['CDELT1'] = cov.header['CDELT2'] = \
-                                       self.step
+                    self.step
                 cov.header['CRPIX1'] = cov.header['CRPIX2'] = \
-                                       self._hdr['CRPIX1']
+                    self._hdr['CRPIX1']
                 self._fits.append(cov)
 
         # Update required keywords
@@ -428,8 +431,9 @@ class Spectrum:
         if 'T' in date:
             warnings.warn("%s: non-standard DATE-OBS '%s'" % (self.name, date),
                           SyntaxWarning)
-            date = date.split('T')[0]    # Some DATE-OBS are YYYY-MM-DDTHH:MM:SS
-        YY, MM, DD = [ int(x) for x in date.split('-') ]
+            # Some DATE-OBS are YYYY-MM-DDTHH:MM:SS
+            date = date.split('T')[0]
+        YY, MM, DD = [int(x) for x in date.split('-')]
         if YY < 1900:                    # Some dates have year~100
             YY += 1900
 
@@ -438,7 +442,7 @@ class Spectrum:
             warnings.warn("%s: non-standard UTC '%s'" % (self.name, ut),
                           SyntaxWarning)
             ut = ut.split('T')[1]
-        hh, mm, ss = [ int(x) for x in ut.split(':') ]
+        hh, mm, ss = [int(x) for x in ut.split(':')]
 
         return datetime.datetime(YY, MM, DD, hh, mm, ss)
 
@@ -487,7 +491,6 @@ class Spectrum:
                     MWRV=(Rv, "R_V used for MW E(B-V) correction"),
                     MWLAW=(law, "Extinction law used for MW correction"))
 
-
     def deredshift(self, z, exp=3):
         """
         Deredshift spectrum from z to 0, and apply a (1+z)**exp flux-correction.
@@ -524,7 +527,7 @@ class Spectrum:
             return
 
         ra = self.readKey('RA')         # 'HH:MM:SS.SSS'
-        dec= self.readKey('DEC')        # 'DD:mm:ss.sss'
+        dec = self.readKey('DEC')        # 'DD:mm:ss.sss'
         jd = self.readKey('JD')         # Julian date
         if verbose:
             print "Skycalc object: RA=%s, Dec=%s, JD=%f" % (ra, dec, jd)
@@ -578,7 +581,8 @@ class Spectrum:
         if tokens is None:            # Historical filenaming
             varname = 'var_' + bname  # Prefix bname with 'var_'
         else:                         # DB filenaming
-            tokens[7] = '%03d' % (int(tokens[7])+1)  # Increase XFclass by one
+            # Increase XFclass by one
+            tokens[7] = '%03d' % (int(tokens[7]) + 1)
             varname = tokens[0] + '_'.join(tokens[1:-1]) + tokens[-1]
 
         outname = os.path.join(path, varname)        # Add path to varname
@@ -591,13 +595,14 @@ class Spectrum:
 
 read_spectrum = Spectrum.read_spectrum  # Helper function
 
+
 def match_DBname(name):
     """A DB-name is PYY_DOY_RRR_SSS_C_FFF_XXX_VV-vv_NNNS."""
 
     dbpattern = '(.*)' + '_'.join(['(\d{2})'] +          # Prefix, YY
-                                  ['(\d{3})']*3 +        # DOY, RRR, SSS
+                                  ['(\d{3})'] * 3 +        # DOY, RRR, SSS
                                   ['(\d{1})'] +          # C
-                                  ['(\d{3})']*2 +        # FFF, XXX
+                                  ['(\d{3})'] * 2 +        # FFF, XXX
                                   ['(\d{2}-\d{2})'] +    # VV-vv
                                   ['(\d{3})']) + '(.*)'  # NNN, Suffix
     search = re.search(dbpattern, name)
@@ -605,6 +610,7 @@ def match_DBname(name):
         return None
     else:                       # Splitted match
         return list(search.groups())
+
 
 def get_channel(name):
     """Get channel 'B' or 'R' fron historical or DB-style filename."""
@@ -618,11 +624,12 @@ def get_channel(name):
             X = None
     else:                        # DB filenaming
         try:
-            X = {'2':'R', '4':'B'}[tokens[5]]
+            X = {'2': 'R', '4': 'B'}[tokens[5]]
         except KeyError:
             X = None
 
     return X
+
 
 def get_extension(name, default=0):
     """Return name, EXT from name[ext], using default ext if unspecified."""
@@ -641,6 +648,7 @@ def get_extension(name, default=0):
 
     return bname, ext
 
+
 def group_spectra(args):
     """Return a obsId dictionary { 'YY_DDD_RRR_SSS':[specnames] }."""
 
@@ -649,8 +657,8 @@ def group_spectra(args):
         fname = arg.split(',')[0]       # arg could be spec, var_spec
         # Look for 'YY_DDD_RRR_SSS' in filename or files ending by _[B, R]
         search = lambda x: \
-                 re.search('(\d{2}_\d{3}_\d{3}_\d{3})', os.path.basename(x)) \
-                 or re.search('.+(?=_[B,R])', os.path.basename(x))
+            re.search('(\d{2}_\d{3}_\d{3}_\d{3})', os.path.basename(x)) \
+            or re.search('.+(?=_[B,R])', os.path.basename(x))
         if search(fname) is None:              # Failed search returns None
             # Maybe in the header?
             hname = pyfits.getheader(fname).get('FILENAME', 'None')
@@ -665,6 +673,7 @@ def group_spectra(args):
         odict.setdefault(name, []).append(arg)  # Or collections.defaultdict
 
     return odict
+
 
 def isSorted(x, increasing=None, strictly=False):
     """
@@ -721,8 +730,8 @@ class RefTable:
             ffile.index_of(ext)
         except KeyError:
             raise KeyError("Cannot find extension %s among %s" %
-                           (str(ext), [ "%d:%s" % (i, ffile[i].name)
-                                        for i in xrange(len(ffile)) ]))
+                           (str(ext), ["%d:%s" % (i, ffile[i].name)
+                                       for i in xrange(len(ffile))]))
         if keepHdr:             # Make a copy of requested header
             self.hdr = ffile[ext].header.copy()
         try:                    # Make a copy of requested columns
@@ -730,8 +739,8 @@ class RefTable:
             if self.ny == 1:
                 self.y = ffile[ext].data.field(self.colY).copy()
             else:
-                self.y = numpy.array([ ffile[ext].data.field(col).copy()
-                                       for col in self.colY ])
+                self.y = numpy.array([ffile[ext].data.field(col).copy()
+                                      for col in self.colY])
         except NameError:
             raise NameError("Cannot find requested columns %s, %s among %s" %
                             (self.colX, self.colY, ffile[ext].data.names))
@@ -778,8 +787,8 @@ class RefTable:
             if cols is None:      # Interpolate all columns
                 cols = xrange(self.ny)
             xx = numpy.asarray(x)
-            res = numpy.array([ interpolator(xsort, ysort[i])(xx)
-                                for i in cols ])
+            res = numpy.array([interpolator(xsort, ysort[i])(xx)
+                               for i in cols])
             return res.squeeze()  # Keep it simple
 
 
@@ -834,7 +843,7 @@ class QMagn:
                 ('photo', 'i'),    # 1:photometric, 0:non-photo, -1:unknown
                 ('airmass', 'f')]
         for f in self.filters:
-            desc.extend([(f, 'f'), ('d'+f, 'f')]) # magn, dmagn
+            desc.extend([(f, 'f'), ('d' + f, 'f')])  # magn, dmagn
 
         # Read magnitudes: name object date airmass X1 dX1 X2 dX2...
         try:
@@ -875,7 +884,7 @@ class QMagn:
         """Apply a selection on self.data (leave self.fulldata intact)."""
 
         if not name:
-            name = "selection #%d" % (len(self.selection)+1)
+            name = "selection #%d" % (len(self.selection) + 1)
 
         self.selection.append((name, selection))
         self.data = self.data[selection]
@@ -910,16 +919,17 @@ class QMagn:
 
         if filtername is None:
             return dict(zip(self.filters,
-                            [ self.get_magn(f, error=error)
-                              for f in self.filters ]))  # {filter:magns}
+                            [self.get_magn(f, error=error)
+                             for f in self.filters]))  # {filter:magns}
         else:
             assert filtername in self.filters, "Unknown filter %s" % filtername
             m = self.data[filtername]         # (nepochs,)
             if not error:
                 return m
             else:
-                dm = self.data['d'+filtername]
-                return numpy.column_stack((m, dm))       # [m, dm].T (nepochs, 2)
+                dm = self.data['d' + filtername]
+                # [m, dm].T (nepochs, 2)
+                return numpy.column_stack((m, dm))
 
     def __str__(self):
 
@@ -932,12 +942,12 @@ class QMagn:
                 ("Flux" if self.mode == 'FLX' else "Magnitude",
                  self.filename, self.units,
                  self.nepochs,
-                 self.num2date(numdates[ 0]).strftime('%Y-%m-%d'),
+                 self.num2date(numdates[0]).strftime('%Y-%m-%d'),
                  self.num2date(numdates[-1]).strftime('%Y-%m-%d'),
                  self.nfilters, self.filters)
             if self.selection:
                 s += "\nSelections: %s" % \
-                    (' + '.join([ name for name, sel in self.selection ]))
+                    (' + '.join([name for name, sel in self.selection]))
         return s
 
     def discard_ref(self, maxdt=180):
@@ -951,7 +961,7 @@ class QMagn:
 
         assert (dt >= 0).all(), "Dates are not sorted."
 
-        largedt, = numpy.where(dt>maxdt)    # More than maxdt apart
+        largedt, = numpy.where(dt > maxdt)    # More than maxdt apart
         if len(largedt):                    # Existence of ref. frames
             ref = largedt[0] + 1            # Index of 1st ref. frame
             print "Discarding %d reference points from %s" % \
@@ -994,8 +1004,8 @@ class QMagn:
         self.data = numpy.concatenate((self.data, other.data))
         if conflict != 'append':
             choice = {'first': 0, 'last': -1}[conflict]
-            self.data = self.data[[ (self.numdates == d).nonzero()[0][choice]
-                                    for d in set(self.numdates) ]]
+            self.data = self.data[[(self.numdates == d).nonzero()[0][choice]
+                                   for d in set(self.numdates)]]
 
     def dump(self, filename):
         """Dump to filename"""
@@ -1026,13 +1036,13 @@ class QMagn:
         out.write("\n")
 
         for i in xrange(len(self.data)):
-            out.write(  "%34s" % self.data['obsid'][i])
+            out.write("%34s" % self.data['obsid'][i])
             out.write("  %15s" % self.data['object'][i])
             out.write("  %17s" % self.data['date'][i])
-            out.write("  %+d"  % self.data['photo'][i])
+            out.write("  %+d" % self.data['photo'][i])
             out.write("  %.2f" % self.data['airmass'][i])
             for f in self.filters:
-                out.write(fmt % (self.data[f][i], self.data['d'+f][i]))
+                out.write(fmt % (self.data[f][i], self.data['d' + f][i]))
             out.write("\n")
 
         out.close()
@@ -1049,15 +1059,15 @@ class QMagn:
             w = self.data['object'] == obj  # (nepochs,)
             mags, dmags = numpy.array([
                 self.get_magn(f)[w]
-                for f in self.filters ]).T  # 2 x (nepochs, nfilters)
+                for f in self.filters]).T  # 2 x (nepochs, nfilters)
             for exp, jd, mag, dmag, phot in zip(
                     self.data['obsid'][w], self.get_jdates()[w],
                     mags, dmags,
                     self.data['photo'][w]):
-                expdata = [['.'.join(['obs', 'mjd']), jd-2400000.5],
+                expdata = [['.'.join(['obs', 'mjd']), jd - 2400000.5],
                            ['.'.join(['obs', 'photo']), phot],
                            # dummy phase - days from 1 January 2004
-                           ['.'.join(['qmagn', 'phase']), jd-2453005.5]]
+                           ['.'.join(['qmagn', 'phase']), jd - 2453005.5]]
                 for m, dm, f in zip(mag, dmag, self.filters):
                     expdata.extend([
                         ['.'.join([prefix, f]) if prefix else f, m],

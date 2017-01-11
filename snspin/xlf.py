@@ -61,7 +61,8 @@ class OneSpecXLF:
         c : light velocity in km/s
         """
         # compute the number of bins
-        num = int(N.log(wmax/wmin)/N.log((2*c/sampling+1.)/(2*c/sampling-1.)))
+        num = int(N.log(wmax / wmin) /
+                  N.log((2 * c / sampling + 1.) / (2 * c / sampling - 1.)))
         # 500 km/s bins
         x_smooth = N.logspace(N.log10(wmin), N.log10(wmax), num)
         # check nan values
@@ -69,15 +70,15 @@ class OneSpecXLF:
 
         y_smooth = []
         for xi in x_smooth:
-            dw = xi*v/c
-            ii = (xi-dw < self.x) & (self.x < xi + dw) & notNaN
+            dw = xi * v / c
+            ii = (xi - dw < self.x) & (self.x < xi + dw) & notNaN
             ngood = len(self.x[ii])
-            if ngood > 2*d: #checking for overfitting
-                #smoothing
+            if ngood > 2 * d:  # checking for overfitting
+                # smoothing
                 coeff = N.polyfit(self.x[ii], self.y[ii], d)
                 y_smooth.append(N.polyval(coeff, xi))
             else:
-                print >> sys.stderr, "Failed to calc XLF for w=%.1f"%xi
+                print >> sys.stderr, "Failed to calc XLF for w=%.1f" % xi
                 y_smooth.append(N.NaN)
 
         self.velocity_smooth = v
@@ -91,8 +92,8 @@ class OneSpecXLF:
         # XLF widths array before cut
         dw = self.x_smooth * velocity / c
         # remove edges wavelengths
-        filt = (self.x_smooth-dw > self.x_smooth[0]) & \
-               (self.x_smooth+dw < self.x_smooth[-1])
+        filt = (self.x_smooth - dw > self.x_smooth[0]) & \
+               (self.x_smooth + dw < self.x_smooth[-1])
         # apply the filter. Create the XLFs central wavelengths
         wXLF = self.x_smooth[filt]
 
@@ -113,7 +114,7 @@ class OneSpecXLF:
             # integration with the trapeze method
             Fline = 0.5 * (Flo + Fhi) * (xhi - xlo)
             Ftot = trapz(x=ww, y=yy)
-            xlf.append((Ftot-Fline) / Ftot)
+            xlf.append((Ftot - Fline) / Ftot)
 
             # for plot purpose
             flo.append(yy[0])
@@ -139,6 +140,7 @@ class OneSpecXLF:
         xlf = N.interp(w, self.xlf_x, self.xlf)
         return xlf
 
+
 def XLFs(idr):
     """
     Compute the XLF values for all the spectra of all the SNe
@@ -151,12 +153,13 @@ def XLFs(idr):
         XLF = N.array([OneSpecXLF(x, y, wmin=idr.lmin, wmax=idr.lmax)
                        for x, y in zip(X, Y)])
         idr.data[sn]['xlf.X'] = N.array([xlf.xlf_x for xlf in XLF])
-        idr.data[sn]['xlf.Y'] = N.array([xlf.xlf   for xlf in XLF])
+        idr.data[sn]['xlf.Y'] = N.array([xlf.xlf for xlf in XLF])
         # WRONG variance!!!
-        idr.data[sn]['xlf.V'] = N.array([xlf.xlf/10   for xlf in XLF])
-        #all the velocity are the same, take only the last one
+        idr.data[sn]['xlf.V'] = N.array([xlf.xlf / 10 for xlf in XLF])
+        # all the velocity are the same, take only the last one
         idr.data[sn]['xlf.velocity'] = xlf.xlf_velocity
         idr.data[sn]['xlf.objects'] = XLF
+
 
 def plot_XLFs(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
     """
@@ -167,8 +170,9 @@ def plot_XLFs(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
     for x, y, p in zip(X, Y, phase):
         fig = P.figure(dpi=dpi)
         ax = fig.add_axes(axes, xlabel='Wavelength [A]', ylabel='XLF')
-        ax.plot(x, y, label='%.1f'%p)
+        ax.plot(x, y, label='%.1f' % p)
         ax.legend(loc='best').draw_frame(False)
+
 
 def plot_XLFs_time(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
     """
@@ -182,7 +186,8 @@ def plot_XLFs_time(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
     ax = fig.add_axes(axes, xlabel='Rest-phase', ylabel='XLF')
     for y, c in zip(Y, col):
         ax.plot(phase, y, color=c)
-        #ax.legend(loc='best').draw_frame(False)
+        # ax.legend(loc='best').draw_frame(False)
+
 
 def plot_XLFs_time_all_sne(idr, wl=4000, dpi=80, axes=[0.09, 0.08, 0.87, 0.87]):
     """
@@ -194,17 +199,19 @@ def plot_XLFs_time_all_sne(idr, wl=4000, dpi=80, axes=[0.09, 0.08, 0.87, 0.87]):
 
     for i, sn in enumerate(idr.data):
 
-        #Check if the given wavelength exists for the current SN
+        # Check if the given wavelength exists for the current SN
         wls = idr.data[sn]['xlf.X'][0]
         if wl > wls.max() or wl < wls.min():
-            print "skipping %s"%sn; continue
+            print "skipping %s" % sn
+            continue
 
-        b = N.argmin(N.abs(wls-wl))
+        b = N.argmin(N.abs(wls - wl))
         phases = idr.data[sn]['data.phases']
         xlf = N.array([idr.data[sn]['xlf.Y'][j][b]
                        for j, p in enumerate(phases)])
         ax.plot(phases, xlf, color=col[i])
-    ax.set_title('Wavelength is %i [A]'%int(wl))
+    ax.set_title('Wavelength is %i [A]' % int(wl))
+
 
 def fit(X, Y, V, P):
     """
@@ -233,34 +240,35 @@ def mag_vs_XLF(idr, phase=0, window=1, w_mag=4000, w_XLF=4000):
     WARNING: the mean value of the magnitude distribution is subtracted
              to blind the analysis.
     """
-    #shortcut
+    # shortcut
     d = idr.data
     p = 'data.phase'
 
-    #Select the wavelengths
+    # Select the wavelengths
     i = N.argmin(N.abs(d[d.keys()[0]]['mag.X'][0] - w_mag))
     j = N.argmin(N.abs(d[d.keys()[0]]['xlf.X'][0] - w_XLF))
 
-    #Select the sne having a spectrum in the selcted phase windows
+    # Select the sne having a spectrum in the selcted phase windows
     sne = [sn for sn in d
            if len(d[sn][p][N.abs(d[sn][p] - phase) < window]) > 0]
 
-    #Select the closest spectra to the choosen phase
+    # Select the closest spectra to the choosen phase
     mags = N.array([d[sn]['mag.Y'][N.argmin(N.abs(d[sn][p] - phase))][i]
                     for sn in sne])
     XLFs = N.array([d[sn]['xlf.Y'][N.argmin(N.abs(d[sn][p] - phase))][j]
                     for sn in sne])
     corr, correrrm, correrrp = Statistics.correlation(mags, XLFs, error=True)
 
-    #Make the figure
+    # Make the figure
     fig = P.figure()
     ax = fig.add_subplot(111)
-    ax.plot(XLFs, mags-N.mean(mags), 'ok')
-    ax.annotate(r'$\rho$=%.2f$\pm$%.2f'%(corr, (correrrm+correrrp)/2.),
+    ax.plot(XLFs, mags - N.mean(mags), 'ok')
+    ax.annotate(r'$\rho$=%.2f$\pm$%.2f' % (corr, (correrrm + correrrp) / 2.),
                 (0.02, 0.95), xycoords='axes fraction')
-    ax.set_xlabel(r'XLF [$\AA$], wl=%.i'%w_XLF)
-    ax.set_ylabel(r'$\delta$M [mag], wl=%.i'%w_XLF)
+    ax.set_xlabel(r'XLF [$\AA$], wl=%.i' % w_XLF)
+    ax.set_ylabel(r'$\delta$M [mag], wl=%.i' % w_XLF)
     P.show()
+
 
 def param_vs_XLF(idr, param, phase=0, window=2.5, w_XLF=4000):
     """
@@ -284,7 +292,7 @@ def param_vs_XLF(idr, param, phase=0, window=2.5, w_XLF=4000):
     j = N.argmin(N.abs(d[d.keys()[0]]['xlf.X'][0] - w_XLF))
 
     # select the sne having a spectrum in the selcted phase windows
-    sne = [sn for sn in d if len(d[sn][p][N.abs(d[sn][p] - phase) \
+    sne = [sn for sn in d if len(d[sn][p][N.abs(d[sn][p] - phase)
                                           < window]) > 0]
 
     # select the closest spectra to the choosen phase
@@ -295,11 +303,13 @@ def param_vs_XLF(idr, param, phase=0, window=2.5, w_XLF=4000):
 
     # mMake the figure
     fig = P.figure()
-    ax = fig.add_subplot(111, xlabel=r'XLF [$\AA$], wl=%.i'%w_XLF, ylabel=param)
+    ax = fig.add_subplot(
+        111, xlabel=r'XLF [$\AA$], wl=%.i' % w_XLF, ylabel=param)
     ax.plot(XLFs, para, 'ok')
-    ax.annotate(r'$\rho$=%.2f$\pm$%.2f'%(corr, (correrrm+correrrp)/2.),
+    ax.annotate(r'$\rho$=%.2f$\pm$%.2f' % (corr, (correrrm + correrrp) / 2.),
                 (0.02, 0.95), xycoords='axes fraction')
     P.show()
+
 
 def mag_vs_XLFcorr(idr, phase=0, window=1, w_mag=4000):
     """
@@ -322,22 +332,23 @@ def mag_vs_XLFcorr(idr, phase=0, window=1, w_mag=4000):
     i = N.argmin(N.abs(d[d.keys()[0]]['mag.X'][0] - w_mag))
 
     # select the sne having a spectrum in the selcted phase windows
-    sne = [sn for sn in d if len(d[sn][p][N.abs(d[sn][p] -\
+    sne = [sn for sn in d if len(d[sn][p][N.abs(d[sn][p] -
                                                 phase) < window]) > 0]
 
     # select the closest spectra to the choosen phase
-    mags = N.array([d[sn]['mag.Y'][N.argmin(N.abs(d[sn][p] - phase)) ][i]
+    mags = N.array([d[sn]['mag.Y'][N.argmin(N.abs(d[sn][p] - phase))][i]
                     for sn in sne])
     corrs, corrserr = [], []
     for j in range(len(d[d.keys()[0]]['xlf.X'][0])):
         xlf = N.array([d[sn]['xlf.Y'][N.argmin(N.abs(d[sn][p] - phase))][j]
                        for sn in sne])
-        corr, correrrm, correrrp = Statistics.correlation(mags, xlf, error=True)
+        corr, correrrm, correrrp = Statistics.correlation(
+            mags, xlf, error=True)
         corrs.append(corr)
         corrserr.append(N.mean([correrrm, correrrp]))
 
     corrs, corrserr = map(N.array, [corrs, corrserr])
-    #Make the figure
+    # Make the figure
     fig = P.figure()
     ax = fig.add_subplot(111)
     ax.plot(d[d.keys()[0]]['xlf.X'][0], corrs, 'k')
@@ -345,6 +356,7 @@ def mag_vs_XLFcorr(idr, phase=0, window=1, w_mag=4000):
     ax.set_xlabel(r'Wavelegnth [$\AA$]')
     ax.set_ylabel(r'$\rho$(XLF, mag)')
     P.show()
+
 
 def map_corr_XLF(idr, phase=0, window=2.5, w_mag=4000, plotpoints=True):
     """
@@ -357,20 +369,20 @@ def map_corr_XLF(idr, phase=0, window=2.5, w_mag=4000, plotpoints=True):
     i = N.argmin(N.abs(d[d.keys()[0]]['mag.X'][0] - w_mag))
 
     # select the sne having a spectrum in the selcted phase windows
-    sne = [sn for sn in d if len(d[sn][p][N.abs(d[sn][p] -\
+    sne = [sn for sn in d if len(d[sn][p][N.abs(d[sn][p] -
                                                 phase) < window]) > 0]
     print "Number of sne kept:", len(sne)
 
-    #Take the XLF for a given phase
-    XLFs = N.array([d[sn]['xlf.Y'][N.argmin(N.abs(d[sn][p] - phase)) ]
+    # Take the XLF for a given phase
+    XLFs = N.array([d[sn]['xlf.Y'][N.argmin(N.abs(d[sn][p] - phase))]
                     for sn in sne])
-    mags = N.array([d[sn]['mag.Y'][N.argmin(N.abs(d[sn][p] - phase)) ][i]
+    mags = N.array([d[sn]['mag.Y'][N.argmin(N.abs(d[sn][p] - phase))][i]
                     for sn in sne])
 
     wlength = d[sn]['xlf.X'][0]
     matrix = N.abs(N.corrcoef(XLFs.T))
     ylabel = r'$\rho$'
-    title = r"XLFs correlation map of %i sne at p=%i$\pm$%i days"%\
+    title = r"XLFs correlation map of %i sne at p=%i$\pm$%i days" %\
             (len(sne), phase, window)
     cmap = P.cm.jet
 
@@ -383,26 +395,28 @@ def map_corr_XLF(idr, phase=0, window=2.5, w_mag=4000, plotpoints=True):
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1, 0.08, 0.88, 0.90])
 
-    #Plot the values for each wavelength difference
+    # Plot the values for each wavelength difference
     if plotpoints:
         for i in range(len(wlength)):
-            ax.plot([wlength[i]-wlength[0]]*len(values[i]), values[i],
+            ax.plot([wlength[i] - wlength[0]] * len(values[i]), values[i],
                     'ok', alpha=0.1)
 
-    #Plot the mean and the median
-    ax.errorbar(wlength-wlength[0], means, yerr=stds, color='r', label='mean')
-    ax.errorbar(wlength-wlength[0], med, yerr=nmad, color='c', label='median')
+    # Plot the mean and the median
+    ax.errorbar(wlength - wlength[0], means,
+                yerr=stds, color='r', label='mean')
+    ax.errorbar(wlength - wlength[0], med,
+                yerr=nmad, color='c', label='median')
 
-    #Set the title and labels
+    # Set the title and labels
     ax.set_xlabel(r'$\Delta \lambda$ $[\AA]$', size='x-large')
     ax.set_ylabel(ylabel, size='x-large')
-    #ax.set_title(title)
+    # ax.set_title(title)
 
-    #Set legend and limits
+    # Set legend and limits
     ax.legend(loc='best')
-    ax.set_xlim(xmin=-20, xmax=wlength[-1]-wlength[0]+20)
+    ax.set_xlim(xmin=-20, xmax=wlength[-1] - wlength[0] + 20)
 
-    #Plot the matrix
+    # Plot the matrix
     wlength = [wlength[0], wlength[-1], wlength[-1], wlength[0]]
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.08, 0.09, 0.88, 0.86], title=title)
@@ -413,6 +427,7 @@ def map_corr_XLF(idr, phase=0, window=2.5, w_mag=4000, plotpoints=True):
     ax.set_ylabel(r'Wavelength [$\AA$]', size='large')
 
     P.show()
+
 
 def plot_XLFs_measurement(xlf_obj, title='toto'):
     """
@@ -436,6 +451,7 @@ def plot_XLFs_measurement(xlf_obj, title='toto'):
     ax1.axhline(0, color='k')
     P.show()
 
+
 def compare_result():
     """
     Comparer les resultats des XLFs avec differente valeur de la largeur,
@@ -443,6 +459,7 @@ def compare_result():
     (utiliser une interpollation des XLFs aux bonnes lingueur d'onde.).
     """
     pass
+
 
 def apply_pca(idr, phase=0, window=2.5):
     """

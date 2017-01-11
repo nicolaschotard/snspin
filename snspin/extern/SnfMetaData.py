@@ -88,9 +88,11 @@ except:
 #import SnfPhotometricity
 #from SnfPhotPipeline.IO import get_photometricratios as GPR
 
+
 def _makeIterable(obj):
 
     return (obj,) if not hasattr(obj, '__iter__') else obj
+
 
 def load(*files):
     """
@@ -99,6 +101,7 @@ def load(*files):
     """
     metadata = SnfMetaData(*files)
     return metadata
+
 
 class SnfMetaData(dict):
     """
@@ -261,7 +264,7 @@ class SnfMetaData(dict):
                                                  *l_spectrum_key_keep)):
                     for i, value_name in enumerate(l_spectrum_key_keep):
                         d_copy.add_to_spec(sn_name, l_value[0],
-                                           param=value_name, value=l_value[i+1])
+                                           param=value_name, value=l_value[i + 1])
 
         return d_copy
 
@@ -313,8 +316,8 @@ class SnfMetaData(dict):
                     else:
                         if conflict == 'first':
                             print >> sys.stderr, \
-                                  "Skipping key %s already in target %s" % \
-                                  (key, name)
+                                "Skipping key %s already in target %s" % \
+                                (key, name)
                         else:
                             raise ValueError(
                                 '%s %s already in metadata' % (name, key))
@@ -340,8 +343,8 @@ class SnfMetaData(dict):
             for exp, specinfo in tgtinfo['spectra'].iteritems():
                 if exp in self[name]['spectra']:
                     for key, value in specinfo.iteritems():
-                        if (key not in self[name]['spectra'][exp] or \
-                            conflict == 'last'):
+                        if (key not in self[name]['spectra'][exp] or
+                                conflict == 'last'):
                             self[name]['spectra'][exp][key] = value
                         else:
                             if conflict == 'first':
@@ -380,7 +383,7 @@ class SnfMetaData(dict):
 
         for name in target:
             if name not in self:
-                self[str(name)] = {'spectra':dict(), 'target.name':str(name)}
+                self[str(name)] = {'spectra': dict(), 'target.name': str(name)}
 
             # Convert single elements into lists first
             param = _makeIterable(param)
@@ -421,11 +424,12 @@ class SnfMetaData(dict):
 
         for name, ex in zip(target, exp):
             if name not in self:
-                self[name] = {'spectra':dict(), 'target.name':name}
+                self[name] = {'spectra': dict(), 'target.name': name}
             if 'spectra' not in self[name]:
                 self[name]['spectra'] = dict()
             if ex not in self[name]['spectra']:
-                self[name]['spectra'][ex] = {'target.name':name, 'obs.exp':ex}
+                self[name]['spectra'][ex] = {
+                    'target.name': name, 'obs.exp': ex}
 
             # Convert single elements into lists first
             param = _makeIterable(param)
@@ -468,7 +472,7 @@ class SnfMetaData(dict):
         sort_by = kwargs.pop("sort_by", None)
         squeeze = kwargs.pop("squeeze", True)
 
-        if not args: # Return list of target names by default = meta.targets()
+        if not args:  # Return list of target names by default = meta.targets()
             return_list = self._get_values('target', 'target.name', **kwargs)
         else:
             return_list = self._get_values('target', *args, **kwargs)
@@ -477,7 +481,8 @@ class SnfMetaData(dict):
             # sort_list is the array we want to sort by.  Use a stable
             # merge, especially useful for spectra.
             sort_list = self._get_values('target', sort_by, **kwargs)
-            if kwargs.get("structured", False): # return_list is a struct. arr.
+            # return_list is a struct. arr.
+            if kwargs.get("structured", False):
                 i_sorted = numpy.argsort(sort_list[sort_by], kind="mergesort")
                 return_list = return_list[i_sorted]
             else:                       # return_list is a list of arrays
@@ -510,9 +515,9 @@ class SnfMetaData(dict):
         """
 
         sort_by = kwargs.pop("sort_by", None)
-        squeeze = kwargs.pop("squeeze", True) # Backward compatibility
+        squeeze = kwargs.pop("squeeze", True)  # Backward compatibility
 
-        if not args: # Return *all* spectra-level dicts (no filter applied)
+        if not args:  # Return *all* spectra-level dicts (no filter applied)
             return_list = [specinfo
                            for tgtinfo in self.itervalues()
                            for specinfo in tgtinfo['spectra'].itervalues()]
@@ -523,7 +528,8 @@ class SnfMetaData(dict):
             # sort_list is the array we want to sort by.  Use a stable
             # merge, especially useful for spectra.
             sort_list = self._get_values('spectrum', sort_by, **kwargs)
-            if kwargs.get("structured", False): # return_list is a struct. arr.
+            # return_list is a struct. arr.
+            if kwargs.get("structured", False):
                 i_sorted = numpy.argsort(sort_list[sort_by], kind="mergesort")
                 return_list = return_list[i_sorted]
             else:                       # return_list is a list of arrays
@@ -587,7 +593,7 @@ class SnfMetaData(dict):
             data = self.spectra(*args, **kwargs)
 
         rows = list()
-        header = '# ' + str(args[0]).ljust(colwidth-3) + ' '
+        header = '# ' + str(args[0]).ljust(colwidth - 3) + ' '
         header += ' '.join([str(x).ljust(colwidth) for x in args[1:]])
         rows.append(header)
 
@@ -618,7 +624,7 @@ class SnfMetaData(dict):
         only_target = kwargs.pop('only_target', False)
 
         kwargs.setdefault('squeeze', False)
-        kwargs.setdefault('structured', True) # Return a structured array
+        kwargs.setdefault('structured', True)  # Return a structured array
         if only_target:
             data = self.targets(*args, **kwargs)
         else:
@@ -659,7 +665,6 @@ class SnfMetaData(dict):
         if not only_spectrum:
             # Target-level special key
             keys.add('nspec')
-
 
         keys = filter(lambda key: key is not None, keys)
         # Regexp selection on keys
@@ -799,7 +804,7 @@ class SnfMetaData(dict):
 
         if len(kwargs) > 1:
             for key, value in kwargs.iteritems():
-                self.add_filter(**{key:value})
+                self.add_filter(**{key: value})
         else:
             for key, value in kwargs.iteritems():
                 key = key.replace('__', '.')
@@ -813,8 +818,8 @@ class SnfMetaData(dict):
                     keyword = key
                     xfilter = value
                     label = value.__name__ \
-                            if hasattr(value, '__name__') \
-                            else 'Undefined selection'
+                        if hasattr(value, '__name__') \
+                        else 'Undefined selection'
                 # Check for Fortran/Django-like suffixes and make
                 # lambda filters
                 elif key.endswith('.eq'):
@@ -850,18 +855,19 @@ class SnfMetaData(dict):
                     xfilter = lambda x: x >= value
                     label = '%s >= %s' % (keyword, value)
                 # Other filter types
-                elif key.endswith('.within'): # tuple of (min, max) range
+                elif key.endswith('.within'):  # tuple of (min, max) range
                     keyword = key[:-7]
                     xfilter = lambda x: (value[0] <= x < value[1])
                     label = '%s <= %s < %s' % (value[0], keyword, value[1])
-                elif key.endswith('.inside'): # tuple of (min, max) range
+                elif key.endswith('.inside'):  # tuple of (min, max) range
                     keyword = key[:-7]
                     xfilter = lambda x: (value[0] <= x < value[1])
                     label = '%s <= %s < %s' % (value[0], keyword, value[1])
-                elif key.endswith('.outside'): # tuple of (min, max) range
+                elif key.endswith('.outside'):  # tuple of (min, max) range
                     keyword = key[:-8]
                     xfilter = lambda x: not value[0] <= x < value[1]
-                    label = 'not (%s <= %s < %s)'% (value[0], keyword, value[1])
+                    label = 'not (%s <= %s < %s)' % (
+                        value[0], keyword, value[1])
                 elif key.endswith('.in'):     # discreet list
                     keyword = key[:-3]
                     xfilter = lambda x: x in value
@@ -906,7 +912,7 @@ class SnfMetaData(dict):
         # Loop over targets making list of bad ones.
         # Wait until end to remove them to not mess up the iteration
         bad_targets = set()                # Set of targets to be discarded
-        for name, tgtinfo in self.iteritems(): # Loop over targets
+        for name, tgtinfo in self.iteritems():  # Loop over targets
             for key, (xfilter, label) in self._filters.iteritems():
                 if key in tgtinfo and not xfilter(tgtinfo[key]):
                     bad_targets.add(name)
@@ -922,7 +928,7 @@ class SnfMetaData(dict):
                 for expid, specinfo in tgtinfo['spectra'].iteritems()
                 for key, (xfilter, label) in self._filters.iteritems()
                 if key in specinfo and not xfilter(specinfo[key])
-                )
+            )
 
             for expid in bad_spectra:   # Remove bad spectra from current target
                 if verbose:
@@ -958,7 +964,7 @@ class SnfMetaData(dict):
         self.DBdata = {}
         print "Getting data from the DB..."
         for i, sn in enumerate(sorted(self)):
-            print "%i / %i - %s" % (i+1, len(self), sn)
+            print "%i / %i - %s" % (i + 1, len(self), sn)
             self.DBdata[sn] = self._get_db_info_per_sn(sn)
         print "Done. Data stored in DBinfo"
 
@@ -1002,10 +1008,10 @@ class SnfMetaData(dict):
             sndata.update(self._get_Target_info(proc))
             sndata['spectra'][sp].update(self._get_Run_info(proc))
             sndata['spectra'][sp].update(self._get_Exposure_info(proc))
-            #sndata['spectra'][sp].update(self._get_photometricity_info(proc))
+            # sndata['spectra'][sp].update(self._get_photometricity_info(proc))
 
         #mfrs = self._get_MFR_info(sn)
-        #for sp in mfrs:
+        # for sp in mfrs:
         #    if sp in sndata['spectra']:
         #        sndata['spectra'][sp].update(mfrs[sp])
 
@@ -1017,40 +1023,41 @@ class SnfMetaData(dict):
             return spdic[key]
         elif spdic.has_key('idr.spec_%s' % channel):
             # get it from the spectrum and update the META dictionnary
-            spdic[key] = pyfits.getval(spdic['idr.spec_%s'%channel], 'IDPROCES')
+            spdic[key] = pyfits.getval(
+                spdic['idr.spec_%s' % channel], 'IDPROCES')
             return spdic[key]
         else:
             return None
 
     def _get_Target_info(self, proc):
         tgd = proc.Pose_FK.Exp_FK.Run_FK.TargetId_FK.__dict__
-        return dict([('Target.'+k, v) for k, v in tgd.iteritems()])
+        return dict([('Target.' + k, v) for k, v in tgd.iteritems()])
 
     def _get_Run_info(self, proc):
         rund = proc.Pose_FK.Exp_FK.Run_FK.__dict__
-        return dict([('Run.'+k, v) for k, v in rund.iteritems()])
+        return dict([('Run.' + k, v) for k, v in rund.iteritems()])
 
     def _get_Exposure_info(self, proc):
         expd = proc.Pose_FK.Exp_FK.__dict__
-        return dict([('Exposure.'+k, v) for k, v in expd.iteritems()])
+        return dict([('Exposure.' + k, v) for k, v in expd.iteritems()])
 
     def _get_Pose_info(self, proc, ch):
         posed = proc.Pose_FK.__dict__
-        return dict([('Pose.'+ch+'.'+k, v) for k, v in posed.iteritems()])
+        return dict([('Pose.' + ch + '.' + k, v) for k, v in posed.iteritems()])
 
     def _get_Process_info(self, proc, ch):
         procd = proc.__dict__
-        return dict([('Process.'+ch+'.'+k, v) for k, v in procd.iteritems()])
+        return dict([('Process.' + ch + '.' + k, v) for k, v in procd.iteritems()])
 
     def _get_File_info(self, proc, ch):
         filed = proc.File_FK.__dict__
-        return dict([('File.'+ch+'.'+k, v) for k, v in filed.iteritems()])
+        return dict([('File.' + ch + '.' + k, v) for k, v in filed.iteritems()])
 
     def _get_Job_info(self, proc, ch):
         jobd = proc.Job_FK.__dict__
-        return dict([('Job.'+ch+'.'+k, v) for k, v in jobd.iteritems()])
+        return dict([('Job.' + ch + '.' + k, v) for k, v in jobd.iteritems()])
 
-    #def _get_MFR_info(self, sn):
+    # def _get_MFR_info(self, sn):
     #
     #    def get_mfrs(f, airmass=False, scale=False):
     #        airmass = True if scale else airmass
@@ -1079,7 +1086,7 @@ class SnfMetaData(dict):
     #
     #    return mfrs_dic
 
-    #def _get_photometricity_info(self, proc):
+    # def _get_photometricity_info(self, proc):
     #    year = proc.Pose_FK.Exp_FK.Run_FK.Year
     #    day = proc.Pose_FK.Exp_FK.Run_FK.Day
     #    return {'obs.photo': int(SnfPhotometricity.photometric(year, day))}
@@ -1091,7 +1098,7 @@ class SnfMetaData(dict):
         """Parse if value is (value, err) pair and add to dictionary data"""
         if autoerr and hasattr(value, '__iter__') and len(value) == 2:
             data[param] = value[0]
-            data[param+'.err'] = value[1]
+            data[param + '.err'] = value[1]
         else:
             data[param] = value
 
@@ -1119,7 +1126,7 @@ class SnfMetaData(dict):
                 for specinfo in tgtinfo['spectra'].itervalues():
                     if phasename not in specinfo and dateobs in specinfo:
                         dobs = specinfo[dateobs]
-                        specinfo[phasename] = (dobs - tgtdatemax)/(1+z)
+                        specinfo[phasename] = (dobs - tgtdatemax) / (1 + z)
 
         # target.name, obs.exp
         for name, target in self.iteritems():
@@ -1147,7 +1154,7 @@ class SnfMetaData(dict):
             # good. OTOH, if a target level keyword pass filters, no
             # need to test all spectra.
             if key in tgtinfo:
-                if not xfilter(tgtinfo[key]): # No more hope for this target
+                if not xfilter(tgtinfo[key]):  # No more hope for this target
                     return dict()
                 else:
                     continue                  # Move on to next filter
@@ -1157,9 +1164,9 @@ class SnfMetaData(dict):
             # We assume that everything is good and will remove what
             # is not.
             for expid, specinfo in tgtinfo['spectra'].iteritems():
-                if expid not in goodspecs: # the spectrum was already discarded
+                if expid not in goodspecs:  # the spectrum was already discarded
                     continue
-                if key in specinfo: # we found the key in this spectrum
+                if key in specinfo:  # we found the key in this spectrum
                     if not xfilter(specinfo[key]):
                         # but the spectrum doesn't pass the filter: we pop it
                         goodspecs.remove(expid)
@@ -1219,8 +1226,8 @@ class SnfMetaData(dict):
                     # the *selected* spectra.
                     tgtinfo['nspec'] = len(self._good_spectra(tgtinfo))
 
-                if name not in cache: # Look for spectra and cache result
-                    cache[name] = self._good_spectra(tgtinfo) # Filter spectra
+                if name not in cache:  # Look for spectra and cache result
+                    cache[name] = self._good_spectra(tgtinfo)  # Filter spectra
                     if level == 'target':                     # Select spectra
                         cache[name] = self._spec_selector(
                             cache[name], **self._spec_selector_kwargs)
@@ -1231,12 +1238,12 @@ class SnfMetaData(dict):
                         print "WARNING: No spectrum found for target", name
                         if arg in tgtinfo:  # Target-level keyword
                             results[arg].append(tgtinfo[arg])
-                        else: # Could be spectrum-level keyword, but no spec!
+                        else:  # Could be spectrum-level keyword, but no spec!
                             results[arg].append(NaN)
                 elif level == 'target':   # One entry per target
                     if arg in tgtinfo:
                         results[arg].append(tgtinfo[arg])
-                    else: # There might be more than one selected spectrum
+                    else:  # There might be more than one selected spectrum
                         vals = [spectra[expid].get(arg, NaN)
                                 for expid in sorted(spectra)]
                         if len(vals) == 1:
@@ -1244,7 +1251,7 @@ class SnfMetaData(dict):
                         results[arg].append(vals)
                 else:                   # One entry per spectrum
                     if arg in tgtinfo:  # One target key per spectrum
-                        results[arg].extend([tgtinfo[arg]]*len(spectra))
+                        results[arg].extend([tgtinfo[arg]] * len(spectra))
                     else:
                         results[arg].extend(
                             [spectra[expid].get(arg, NaN)
@@ -1258,16 +1265,16 @@ class SnfMetaData(dict):
             iNaN = set(i
                        for values in results.itervalues()
                        for i, value in enumerate(values)
-                       if isnan(value)) # NaN detection
+                       if isnan(value))  # NaN detection
 
-            for i in sorted(iNaN, reverse=True): # Remove tagged targets
+            for i in sorted(iNaN, reverse=True):  # Remove tagged targets
                 for arg in results:
                     del results[arg][i]
 
         # Convert results into list of numpy arrays
         final_results = [numpy.array(results[arg]) for arg in args]
 
-        if structured: # Convert a list of arrays into a structured array
+        if structured:  # Convert a list of arrays into a structured array
             # Construct structured dtype [ (arg, dtype, shape) ]. Note
             # that on target level, some entries may have multiple
             # values (say 2), hence the need for array elements of
@@ -1284,6 +1291,7 @@ class SnfMetaData(dict):
 
 #-------------------------------------------------------------------------
 # I/O Functions
+
 
 def read_table(filename, prefix=''):
     """
@@ -1375,10 +1383,11 @@ def phase_selector(spectra, phase_nearest=0.0, phase_name='salt2.phase'):
         return dict()
     else:                # Look for closest phase, i.e. smallest delta
         best_expid = min(phases)[1]
-        return {best_expid:spectra[best_expid]}
+        return {best_expid: spectra[best_expid]}
 
 #-------------------------------------------------------------------------
 # Internal Data Release function(s)
+
 
 def load_idr(metafile, salt=False, subset=('training', 'validation'),
              targets=None, saltprefix='salt2'):
@@ -1426,7 +1435,7 @@ def load_idr(metafile, salt=False, subset=('training', 'validation'),
                             'idr.spec_restframe', 'idr.spec_logbin'):
                     filename = os.path.join(meta.idrpath, specinfo[key])
                     if not os.path.exists(filename):
-                        ### print 'Spec file missing', filename
+                        # print 'Spec file missing', filename
                         del specinfo[key]
 
     # Load salt2 info if requested and needed
@@ -1439,7 +1448,7 @@ def load_idr(metafile, salt=False, subset=('training', 'validation'),
             if os.path.exists(saltfile):
                 meta.merge(saltfile)
             else:
-                ### print 'SALT2 file missing', saltfile
+                # print 'SALT2 file missing', saltfile
                 pass
 
     if targets:
@@ -1448,7 +1457,8 @@ def load_idr(metafile, salt=False, subset=('training', 'validation'),
                 targets = numpy.loadtxt(targets, dtype='string')
         except (TypeError, IOError,):     # 'targets' is a (list of) target(s)
             targets = _makeIterable(targets)
-        remove_targets = set(meta.keys()) - set(targets) # Discard other targets
+        remove_targets = set(meta.keys()) - \
+            set(targets)  # Discard other targets
     else:
         remove_targets = set()
 
