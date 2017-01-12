@@ -14,13 +14,11 @@ There should be dependant on:
     - and ??
 """
 
+import sys
 import numpy as N
 import pylab as P
-import sys
 from scipy.integrate import trapz
 
-import LoadIDR as L
-import pca as PCA
 from ToolBox import Statistics, MPL
 
 
@@ -32,7 +30,8 @@ class OneSpecXLF:
 
     def __init__(self, x, y, v=None, err=False, wmin=3350, wmax=8800):
         """
-        Initialization is made with a regular spectrum:
+        Initialization is made with a regular spectrum.
+
         x: wavelength
         y: flux
         v: variance
@@ -46,7 +45,7 @@ class OneSpecXLF:
 
         self.smooth(wmin=wmin, wmax=wmax)
         self.calcXLF()
-        if err:
+        if err is not False:
             self.calcXLF_err()
 
     def smooth(self, v=3000, wmin=3350, wmax=8800,
@@ -86,9 +85,7 @@ class OneSpecXLF:
         self.y_smooth = N.array(y_smooth)
 
     def calcXLF(self, velocity=6000.0, c=299972.0):
-        """
-        Calculate XLF along the same wavelength steps as was used for smoothing
-        """
+        """Calculate XLF along the same wavelength steps as was used for smoothing."""
         # XLF widths array before cut
         dw = self.x_smooth * velocity / c
         # remove edges wavelengths
@@ -130,21 +127,16 @@ class OneSpecXLF:
         self.flo = N.array(flo)
         self.fhi = N.array(fhi)
 
-    def calcXLF_err(self):
-        pass
-
     def XLF(self, w, err=False, spectra=False):
-        """
-        Returns XLF at wavelength w from interpolation of precalculated XLF
-        """
+        """Returns XLF at wavelength w from interpolation of precalculated XLF."""
         xlf = N.interp(w, self.xlf_x, self.xlf)
         return xlf
 
 
 def XLFs(idr):
     """
-    Compute the XLF values for all the spectra of all the SNe
-    stored in a LoadIDR object.
+    Compute the XLF values for all the spectra of all the SNe.
+
     Return the same object, with idr.data.[sn]['xlf.'] data.
     """
     for sn in idr.data:
@@ -177,6 +169,8 @@ def plot_XLFs(X, Y, phase, dpi=80, axes=None):
 
 def plot_XLFs_time(X, Y, phase, dpi=80, axes=None):
     """
+    XLF versuss time as a function of wavelength.
+
     X: wavelength array of all the spectra [x1, x2, x3, ...]
     Y: flux array of all the spectra [y1, y2, y3, ...]
     with x1 and y1 corresponds to the first spectrum and so on
@@ -192,9 +186,7 @@ def plot_XLFs_time(X, Y, phase, dpi=80, axes=None):
 
 
 def plot_XLFs_time_all_sne(idr, wl=4000, dpi=80, axes=None):
-    """
-
-    """
+    """Plot XLFs as a function of time for individual SN."""
     axes = [0.09, 0.08, 0.87, 0.87] if axes is None else axes
     fig = P.figure(dpi=dpi)
     ax = fig.add_axes(axes, xlabel='Rest-phase', ylabel='XLF')
@@ -214,20 +206,6 @@ def plot_XLFs_time_all_sne(idr, wl=4000, dpi=80, axes=None):
                        for j, p in enumerate(phases)])
         ax.plot(phases, xlf, color=col[i])
     ax.set_title('Wavelength is %i [A]' % int(wl))
-
-
-def fit(X, Y, V, P):
-    """
-    Simple model, for a SN i:
-    M(lbd, t, i) = alpha(lbd, t) * XLF(lbd, t, i) + Ebmv(i)*Rv(i)*A(lbd)/A(V)
-
-    Input:
-    X: the wavelength
-    Y: the flux
-    V: the variance
-    P: the phases of each spectrum
-    """
-    pass
 
 
 def mag_vs_XLF(idr, phase=0, window=1, w_mag=4000, w_XLF=4000):
@@ -316,7 +294,7 @@ def param_vs_XLF(idr, param, phase=0, window=2.5, w_XLF=4000):
 
 def mag_vs_XLFcorr(idr, phase=0, window=1, w_mag=4000):
     """
-    Do a simple plot of corr(magnitude, XLF) vs wavelgenth
+    Do a simple plot of corr(magnitude, XLF) vs wavelgenth.
 
     options:
         phase: spectra choosen as close as possible to this phase...
@@ -362,8 +340,7 @@ def mag_vs_XLFcorr(idr, phase=0, window=1, w_mag=4000):
 
 
 def map_corr_XLF(idr, phase=0, window=2.5, w_mag=4000, plotpoints=True):
-    """
-    """
+    """XLFs correlation map."""
     # shortcut
     d = idr.data
     p = 'data.phases'
@@ -436,7 +413,6 @@ def plot_XLFs_measurement(xlf_obj, title='toto'):
     """
     Comtrol plot for XLF measurements, for a given spectrum.
     """
-
     x = N.linspace(3000, 10000, 1000)
     y = N.random.randn(1000)
     fig = P.figure(dpi=150)
@@ -454,27 +430,3 @@ def plot_XLFs_measurement(xlf_obj, title='toto'):
     ax1.axhline(0, color='k')
     P.show()
 
-
-def compare_result():
-    """
-    Comparer les resultats des XLFs avec differente valeur de la largeur,
-    ainsi que meme valeur de la largeur mais avec different smoothing
-    (utiliser une interpollation des XLFs aux bonnes lingueur d'onde.).
-    """
-    pass
-
-
-def apply_pca(idr, phase=0, window=2.5):
-    """
-    apply a pca over the XLF
-    XLF are taken for spectra having a phase between phase +/ window
-    at most one for each SN
-    """
-    XLFs = L.get_data_at_phase(idr, phase=phase, window=window, data='XLF')
-
-    pca = PCA.PCA(XLFs)
-
-    return pca
-
-
-# End of XLF.py

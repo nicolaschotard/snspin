@@ -67,7 +67,7 @@ class Craniometer(object):
 # =========================================================================
 
     def smooth(self, smoother="sgfilter", rho=0.482, s=None,
-               hsize=None, order=2, lim=False, verbose=False):
+               hsize=None, order=2, lim=None, verbose=False):
         """
         Create the smoother function and makes a smooth array out of spec.y.
 
@@ -200,7 +200,7 @@ class Craniometer(object):
                 hsize = 15
         if (hsize * 2) + 1 < (order + 2):
             hsize = 10  # order/2.+1
-        if self.lim and hsize < self.lim:
+        if self.lim is not None and hsize < self.lim:
             hsize = self.lim   # for oxygen zone only
         if verbose:
             print >> sys.stderr, 'best_w=%i' % hsize
@@ -310,8 +310,7 @@ class Craniometer(object):
                 simulated_spectra = self._correl_simulated_spectra(nsimu, rho=rho)
             else:
                 normal_distribution = N.random.randn(nsimu, len(self.x))
-                simulated_spectra = normal_distribution * (N.sqrt((self.v))) \
-                                    + self.s
+                simulated_spectra = normal_distribution * (N.sqrt((self.v))) + self.s
         # Smooth and save simulated spectra
         for simulated_spectrum, number in zip(simulated_spectra, range(nsimu)):
             self.simulations.append(Craniometer(self.x,
@@ -566,8 +565,7 @@ class Craniometer(object):
             return float(integration)
 
     def _extrema_value_in_interval(self, imin, imax, lbd, var, smooth,
-                                   extrema=None, verbose=True, right=False,
-                                   left=False):
+                                   extrema=None, right=False, left=False):
         """
         Find extrema.
 
@@ -1990,7 +1988,7 @@ class Craniometer(object):
 
         # check for the vSiII5972 velocity
         # if < 8000 km/s, check the curvature of the spectral area
-        if N.isfinite(velocity) and velocity <  8000  and infodict['name'] == 'vSiII_5972':
+        if N.isfinite(velocity) and velocity < 8000 and infodict['name'] == 'vSiII_5972':
             filt = (self.x > 5650) & (self.x < 5950)
             pol = N.polyfit(self.x[filt], self.s[filt], 2)
             if pol[0] * 1e6 <= 0.55:

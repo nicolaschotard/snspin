@@ -1,14 +1,4 @@
-######################################################################
-# Filename:      pySnurp.py
-# Version:       $Revision: 1.137 $
-# Description:   Simple module providing few FITS-based I/O classes.
-# Author:        Yannick Copin <yannick@ipnl.in2p3.fr>
-# Author:        $Author: ycopin $
-# Created at:    Tue Oct 18 11:42:37 2005
-# Modified at:   Tue Apr 27 18:04:54 2010
-# Modified by:   Yannick Copin <ycopin@ipnl.in2p3.fr>
-# $Id: pySnurp.py,v 1.137 2015/05/18 08:23:53 ycopin Exp $
-######################################################################
+#!/usr/bin/env python
 
 """
 Simple module providing few FITS-based I/O classes and other facilities
@@ -20,33 +10,32 @@ Simple module providing few FITS-based I/O classes and other facilities
 * Flux and date conversion routines: now in ToolBox.Astro.Coords
 """
 
-__author__ = "Yannick Copin <ycopin@ipnl.in2p3.fr>"
-__version__ = "$Id: pySnurp.py,v 1.137 2015/05/18 08:23:53 ycopin Exp $"
-
 import os
 import re
-
+import warnings
 import numpy
 import pyfits
 
-import warnings
+
 # Ignore warnings from pyfits.writeto
 # (https://github.com/spacetelescope/PyFITS/issues/43)
 warnings.filterwarnings("ignore", "Overwriting existing file")
 
+
 # Spectrum class ##############################
 
 
-class Spectrum:
-    """
-    Class to read and manage a spectrum from a FITS file (NAXIS=1),
-    including the associated [co]variance from an extension or an
-    external file.
-    """
+class Spectrum(object):
 
-    def __init__(self, name, varname=None, keepFits=True):
+    """Class to read and manage a spectrum from a FITS file (NAXIS=1)."""
+
+    def __init__(self, name, varname=None, keepfits=True):
         """
         Spectrum initialization.
+
+        Class to read and manage a spectrum from a FITS file (NAXIS=1)
+        including the associated [co]variance from an extension or an
+        external file.
 
         Note: use helper function [Spectrum.]read_spectrum method for
         a transparent use.
@@ -56,15 +45,15 @@ class Spectrum:
         if name is None:        # Blank instance
             return
         self._readFits(name,    # Read signal [and variance if any]
-                       mode='update' if keepFits else 'readonly')
-        if not keepFits:
+                       mode='update' if keepfits else 'readonly')
+        if not keepfits:
             self.close()
         if varname:             # Override variance extension if any
             if self.varname:    # Set by _readFits from var. extension
                 warnings.warn("%s: VARIANCE extension overriden by %s" %
                               (name, varname), RuntimeWarning)
             self.varname = varname
-            V = Spectrum(varname, varname=None, keepFits=keepFits)
+            V = Spectrum(varname, varname=None, keepfits=keepfits)
             assert (V.npts, V.start, V.step) == (self.npts, self.start, self.step), \
                 "Incompatible variance spectrum '%s' wrt. to spectrum '%s'" % \
                 (varname, name)
@@ -82,17 +71,16 @@ class Spectrum:
 
     @property
     def hasVar(self):
-
+        """Check if variance exists."""
         return hasattr(self, 'v') and self.v is not None
 
     @property
     def hasCov(self):
-
+        """Check if covariance exists."""
         return hasattr(self, 'cov') and self.cov is not None
 
     def close(self):
         """Close FITS file (if any) and forget about it."""
-
         if self._fits is not None:
             self._fits.close()
             self._fits = None
@@ -120,11 +108,10 @@ class Spectrum:
 
     def _readFits(self, name, mode='readonly'):
         """
-        Initialize a Spectrum from FITS spectrum name. 'name' can be
-        'name[ext]', in which case only extension 'ext' is
-        considered.
-        """
+        Initialize a Spectrum from FITS spectrum name. 
 
+        'name' can be 'name[ext]', in which case only extension 'ext' is considered.
+        """
         # Decipher name and extension from name[EXT]
         self.filename, self.ext = get_extension(name)
 
@@ -191,7 +178,6 @@ class Spectrum:
 
     def readKey(self, keyword, default=None):
         """Read a single keyword, defaulting to *default* if any."""
-
         if default is None:
             return self._hdr[keyword]
         else:
@@ -199,10 +185,11 @@ class Spectrum:
 
     def setKey(self, keywords=(), **kwargs):
         """
+        Set keywords.
+
         Set keywords from *keywords*=((key, val[, comment]),) or kwargs
         'key=val' or 'key=(val, comment)'.
         """
-
         for key in keywords:
             name, val = key[0], key[1:]   # name, (value, [comment])
             self._hdr[name.upper()] = val
@@ -211,7 +198,6 @@ class Spectrum:
 
     def resetHeader(self):
         """Delete all non-standard keywords."""
-
         # Delete all reference keywords
         for k in self._hdr.items():
             del self._hdr[k[0]]
@@ -225,10 +211,9 @@ class Spectrum:
         self._hdr['CRPIX1'] = 1
         self._hdr['CRVAL1'] = self.start
 
-    def writeto(self, outName, force=False, hdrOnly=False,
+    def writeto(self, outname, force=False, hdrOnly=False,
                 keywords=(), **kwargs):
         """Save Spectrum to new FITS-file."""
-
         if self._fits is None:          # FITS file has been closed
             raise IOError("Cannot write to disk to closed FITS file")
         else:
@@ -292,30 +277,30 @@ class Spectrum:
             clobber = True              # Overwrite existing file
         else:
             clobber = False             # DO NOT overwrite existing file...
-            if os.path.exists(outName):
-                ans = raw_input("Overwrite output file '%s'? [N/y] " % outName)
+            if os.path.exists(outname):
+                ans = raw_input("Overwrite output file '%s'? [N/y] " % outname)
                 if ans and ans[0].lower() == 'y':
                     clobber = True      # ...except if confirmed
                 else:
-                    warnings.warn("Output file %s not overwritten" % outName)
+                    warnings.warn("Output file %s not overwritten" % outname)
                     return
 
         # Reset header from local copy self._hdr
         spec.header = self._hdr
         # Fix missing keywords (but should be OK)
-        self._fits.writeto(outName, clobber=clobber, output_verify='silentfix')
-        self.name = outName
-        self.filename = outName
+        self._fits.writeto(outname, clobber=clobber, output_verify='silentfix')
+        self.name = outname
+        self.filename = outname
 
-    def gaussianFilter(self, sigma, excl=None, inplace=True):
+    def gaussian_filter(self, sigma, excl=None, inplace=True):
         """
-        Apply a gaussian smoothing to a Spectrum, w/ possible
-        ExlcDomain. Sigma in A. If not inplace, the smoothed signal is
+        Apply a gaussian smoothing to a Spectrum, w/ possible ExlcDomain. 
+
+        Sigma in A. If not inplace, the smoothed signal is
         returned and the spectrum is not modified.
 
         TODO: - linearly interpolate excluded bands before smoothing
         """
-
         from scipy.ndimage import filters
 
         # Linear interpolation over excluded domains
@@ -339,11 +324,10 @@ class Spectrum:
 
     def sgFilter(self, hsize=11, order=4, excl=None, inplace=True):
         """
-        Apply a Savitzky-Golay smoothing to a Spectrum, w/ possible
-        ExlcDomain. If not inplace, the smoothed signal is returned
-        and the spectrum is not modified.
-        """
+        Apply a Savitzky-Golay smoothing to a Spectrum, w/ possible ExlcDomain. 
 
+        If not inplace, the smoothed signal is returned and the spectrum is not modified.
+        """
         from snspin.tools.smoothing import savitzky_golay
 
         # Linear interpolation over excluded domains
@@ -364,7 +348,6 @@ class Spectrum:
 
     def findRange(self, range=(None, None)):
         """Find pixel indices corresponding to world-coord range."""
-
         rmin, rmax = range                 # Requested range
         lmin, lmax = self.start, self.end  # Actual range
 
@@ -392,7 +375,6 @@ class Spectrum:
 
     def truncate(self, range=(None, None), verbose=False):
         """Truncate spectrum to world-coord range."""
-
         rmin, rmax = range                 # Requested range
         lmin, lmax = self.start, self.end  # Actual range
 
@@ -417,11 +399,13 @@ class Spectrum:
 
 
     def deredden(self, ebmv, law='OD94', Rv=3.1):
-        """Deredden spectrum using E(B-V) and a nextinction law:
+        """
+        Deredden spectrum using E(B-V) and a nextinction law.
 
         :param float ebmv: E(B-V) value.
         :param int law: Extinction law. Could be CCM89, OD94, FM98 or G08
-        :param float Rv: Value for Rv. Default is 3.1"""
+        :param float Rv: Value for Rv. Default is 3.1
+        """
         from ToolBox.Astro.Extinction import extinctionFactor
 
         if hasattr(self, 'zorig'):      # Spectrum has been deredshifted
@@ -451,7 +435,6 @@ class Spectrum:
         exp=3 is for erg/s/cm2/A spectra to be latter corrected using proper
         (comoving) distance but *not* luminosity distance.
         """
-
         zp1 = 1. + z
         self.x /= zp1           # Wavelength correction
         self.step /= zp1
@@ -470,12 +453,12 @@ class Spectrum:
                     ZEXP=(exp, "Flux correction applied is (1+z)**zexp"))
 
     @classmethod
-    def read_spectrum(cls, arg, keepFits=True):
+    def read_spectrum(cls, arg, keepfits=True):
         """
-        Return an initiated Spectrum from arg=name[, var_name], including
-        proper deciphering of arg.
-        """
+        Return an initiated Spectrum from arg=name[, var_name].
 
+        includ a proper deciphering of arg.
+        """
         innames = arg.split(',')     # Check for spectrum, var_spectrum
         specname = innames[0]
         if len(innames) == 2:        # Explicit specName, var_specName
@@ -484,17 +467,17 @@ class Spectrum:
             varname = cls.get_varname(specname, exists=True)
 
         # Set variance if any
-        return cls(specname, varname=varname, keepFits=keepFits)
+        return cls(specname, varname=varname, keepfits=keepfits)
 
     @staticmethod
     def get_varname(specname, exists=False):
         """
-        Return variance spectrum name associated to spectrum 'specname',
-        for historical or DB filenaming. Assumes variance spectrum is
+        Return variance spectrum name associated to spectrum 'specname'.
+
+        For historical or DB filenaming. Assumes variance spectrum is
         located in same directory as spectrum. If exists, test if
         variance file exists or return None.
         """
-
         path, bname = os.path.split(specname)
 
         tokens = match_DBname(bname)
@@ -518,7 +501,6 @@ read_spectrum = Spectrum.read_spectrum  # Helper function
 
 def match_DBname(name):
     """A DB-name is PYY_DOY_RRR_SSS_C_FFF_XXX_VV-vv_NNNS."""
-
     dbpattern = '(.*)' + '_'.join([r'(\d{2})'] +          # Prefix, YY
                                   [r'(\d{3})'] * 3 +        # DOY, RRR, SSS
                                   [r'(\d{1})'] +          # C
@@ -534,7 +516,6 @@ def match_DBname(name):
 
 def get_extension(name, default=0):
     """Return name, EXT from name[ext], using default ext if unspecified."""
-
     # Decipher name and extension from name[EXT]
     search = re.search(r'(.*)\[(.*)\]', name)
     if search:
