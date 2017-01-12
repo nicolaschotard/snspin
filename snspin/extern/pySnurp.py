@@ -519,12 +519,12 @@ read_spectrum = Spectrum.read_spectrum  # Helper function
 def match_DBname(name):
     """A DB-name is PYY_DOY_RRR_SSS_C_FFF_XXX_VV-vv_NNNS."""
 
-    dbpattern = '(.*)' + '_'.join(['(\d{2})'] +          # Prefix, YY
-                                  ['(\d{3})'] * 3 +        # DOY, RRR, SSS
-                                  ['(\d{1})'] +          # C
-                                  ['(\d{3})'] * 2 +        # FFF, XXX
-                                  ['(\d{2}-\d{2})'] +    # VV-vv
-                                  ['(\d{3})']) + '(.*)'  # NNN, Suffix
+    dbpattern = '(.*)' + '_'.join([r'(\d{2})'] +          # Prefix, YY
+                                  [r'(\d{3})'] * 3 +        # DOY, RRR, SSS
+                                  [r'(\d{1})'] +          # C
+                                  [r'(\d{3})'] * 2 +        # FFF, XXX
+                                  [r'(\d{2}-\d{2})'] +    # VV-vv
+                                  [r'(\d{3})']) + '(.*)'  # NNN, Suffix
     search = re.search(dbpattern, name)
     if search is None:          # No match
         return None
@@ -536,7 +536,7 @@ def get_extension(name, default=0):
     """Return name, EXT from name[ext], using default ext if unspecified."""
 
     # Decipher name and extension from name[EXT]
-    search = re.search('(.*)\[(.*)\]', name)
+    search = re.search(r'(.*)\[(.*)\]', name)
     if search:
         bname, ext = search.groups()
     else:

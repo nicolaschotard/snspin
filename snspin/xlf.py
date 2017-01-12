@@ -161,12 +161,13 @@ def XLFs(idr):
         idr.data[sn]['xlf.objects'] = XLF
 
 
-def plot_XLFs(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
+def plot_XLFs(X, Y, phase, dpi=80, axes=None):
     """
     X: wavelength array of all the spectra [x1, x2, x3, ...]
     Y: flux array of all the spectra [y1, y2, y3, ...]
     with x1 and y1 corresponds to the first spectrum and so on
     """
+    axes = [0.09, 0.08, 0.87, 0.9] if axes is None else axes
     for x, y, p in zip(X, Y, phase):
         fig = P.figure(dpi=dpi)
         ax = fig.add_axes(axes, xlabel='Wavelength [A]', ylabel='XLF')
@@ -174,12 +175,13 @@ def plot_XLFs(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
         ax.legend(loc='best').draw_frame(False)
 
 
-def plot_XLFs_time(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
+def plot_XLFs_time(X, Y, phase, dpi=80, axes=None):
     """
     X: wavelength array of all the spectra [x1, x2, x3, ...]
     Y: flux array of all the spectra [y1, y2, y3, ...]
     with x1 and y1 corresponds to the first spectrum and so on
     """
+    axes = [0.09, 0.08, 0.87, 0.9] if axes is None else axes
     Y = Y.T
     col = P.cm.jet(range(len(X[0])))
     fig = P.figure(dpi=dpi)
@@ -189,10 +191,11 @@ def plot_XLFs_time(X, Y, phase, dpi=80, axes=[0.09, 0.08, 0.87, 0.9]):
         # ax.legend(loc='best').draw_frame(False)
 
 
-def plot_XLFs_time_all_sne(idr, wl=4000, dpi=80, axes=[0.09, 0.08, 0.87, 0.87]):
+def plot_XLFs_time_all_sne(idr, wl=4000, dpi=80, axes=None):
     """
 
     """
+    axes = [0.09, 0.08, 0.87, 0.87] if axes is None else axes
     fig = P.figure(dpi=dpi)
     ax = fig.add_axes(axes, xlabel='Rest-phase', ylabel='XLF')
     col = P.cm.jet(N.linspace(0, 1, len(idr.data)))

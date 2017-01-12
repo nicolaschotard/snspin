@@ -206,9 +206,9 @@ def extremum_tck_bias_var(x0, x, var, tck):
     covX = spline_covariance(x, var, tck)
     par, covD = derivatives_covariance(x0, tck, covX)
     x0, e = solution(par)
-    G = gradpar(par, e)
-    S = secondpar(par, e)
-    return bias_var(covD, G, S)
+    gp = gradpar(par, e)
+    sp = secondpar(par, e)
+    return bias_var(covD, gp, sp)
 
 
 def alltogether(x, y, sigma, x0, nloop):
@@ -224,9 +224,9 @@ def alltogether(x, y, sigma, x0, nloop):
         covX = spline_covariance(x, var, tck)
         par, covD = derivatives_covariance(x0, tck, covX)
         xtrm_rel, e = solution(par)
-        G = gradpar(par, e)
-        S = secondpar(par, e)
-        bias, var = bias_var(covD, G, S)
+        gp = gradpar(par, e)
+        sp = secondpar(par, e)
+        bias, var = bias_var(covD, gp, sp)
         xtrm_l.append(xtrm_rel + x0)
         bias_l.append(bias)
         var_l.append(var)

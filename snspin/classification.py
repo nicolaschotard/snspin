@@ -1082,13 +1082,13 @@ def table(output='html'):
     if output == 'html':
         print "Object   SNID-2.0  SNID-2.0 (fp)  Silv  Silv (fp)  Wang   Branch  Benetti"
     elif output == 'tex':
-        print '\\begin{table}'
-        print '\\caption{Spectral classification.}'
-        print '\\centering'
-        print '\\begin{tabular}{cccccccc}'
-        print '\\\ \hline \hline'
-        print "Object & SNID-2.0 & SNID-2.0 (fp) & Silv & Silv (fp) & Wang "\
-              "& Branch & Benetti \\\ \hline \hline"
+        print r'\\begin{table}'
+        print r'\\caption{Spectral classification.}'
+        print r'\\centering'
+        print r'\\begin{tabular}{cccccccc}'
+        print r'\\\ \hline \hline'
+        print r"Object & SNID-2.0 & SNID-2.0 (fp) & Silv & Silv (fp) & Wang "\
+              r"& Branch & Benetti \\\ \hline \hline"
     for sn in sorted(res_b):
         if sn not in dw['info']['bysn']:
             dw['info']['bysn'][sn] = ''
@@ -1111,7 +1111,7 @@ def table(output='html'):
                    dbe[sn]['type'])
 
         elif output == 'tex':
-            print '%s & %s & %s & %s & %s & %s & %s & %s \\\ ' %\
+            print r'%s & %s & %s & %s & %s & %s & %s & %s \\\ ' %\
                   (sn,
                    res_s[sn]['general']['subtype'],
                    res_sp[sn]['general']['subtype'],
@@ -1122,10 +1122,10 @@ def table(output='html'):
                    dbe[sn]['type'])
 
     if output == 'tex':
-        print '\hline'
-        print '\end{tabular}'
-        print '\label{table:classification}'
-        print '\end{table}'
+        print r'\hline'
+        print r'\end{tabular}'
+        print r'\label{table:classification}'
+        print r'\end{table}'
 
 """
 <table  cellpadding="6" border="1" align="center">

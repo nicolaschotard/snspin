@@ -99,7 +99,7 @@ class SPCS(object):
             print 'Corr = ', self.rho
 
         if self.verbose:
-            print "Factor used: ", self.factor
+            print "Factor used: ", self.factor_used
             print "Correlation coefficient:", self.rho
 
     def make_simu(self, nsimu=1000):
@@ -605,8 +605,11 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
         return Rho
 
 
-def control_case_rho_var(rhos=[0, 0.1, 0.2, 0.3, 0.4, 0.5], factor=1):
+def control_case_rho_var(rhos=None, factor=1):
+            
     """."""
+    if rhos is None:
+        rhos = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
     col = P.cm.jet(S.linspace(0, 1, len(rhos)))
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1, 0.08, 0.86, 0.87], xlabel=r'$\rho$', ylabel='N')
