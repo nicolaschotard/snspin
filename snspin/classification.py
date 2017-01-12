@@ -21,9 +21,6 @@ See also http://snovae.in2p3.fr/nchotard/SpectralAnalysis/index.html for details
 of the analysis and some results.
 """
 
-__author__ = "Nicolas Chotard <nchotard@ipnl.in2p3.fr>"
-__version__ = '$Id: classLib.py,v 1.1 2014/12/30 02:39:19 nchotard Exp $'
-
 import copy
 import numpy as N
 import pylab as P
@@ -164,8 +161,8 @@ def branch_classification(dspin, prange=2.5, plot=False,
     and SiII 6355 equivalent widths values:
      - Core-normal (CN):
      - Broad line (BL): EWSiII 6355 ~> 105 A
-     - Shallow silicon (SS): 
-     - Cool (CL): 
+     - Shallow silicon (SS):
+     - Cool (CL):
 
     :param dictionnary dspin: the snspin dictionnary containing the
                                spectral indicators
@@ -199,9 +196,7 @@ def branch_classification(dspin, prange=2.5, plot=False,
         print "\nThe following SNe removed because velocity nan values:"
         print sne[~filt]
 
-    afilt = lambda x: x[filt]
-    sne, EW5, EW5e, EW6, EW6e, phases = map(
-        afilt, [sne, EW5, EW5e, EW6, EW6e, phases])
+    sne, EW5, EW5e, EW6, EW6e, phases = [x[filt] for x in [sne, EW5, EW5e, EW6, EW6e, phases]]
     print "\n %i SNe in this sample." % (len(sne))
 
     # sub-sample filters
@@ -269,7 +264,7 @@ def benetti_classification(dspin, indic='vSiII_6355', pmin=-5, pmax=25,
     from ToolBox.Wrappers import SALT2model
 
     prange = [pmin, pmax]
-    
+
     # some functions
     getallp = lambda d: N.array([d[id]['salt2.phase'] for id in d])
     getallv = lambda d: N.array([d[id]['snspin.%s' % indic] for id in d])
@@ -514,7 +509,7 @@ def polyfit(x, y, dy=None, degree=1):
     :param 1D-array y: the y array axis (arror is dy, None by default)
     :param int degree: the polynomial degree. Could be 1 or 2.
     """
-    if not isinstance(degree, int ) \
+    if not isinstance(degree, int) \
        or not degree in [1, 2]:
         mess = "Error, degree must be 1 or 2."
         raise ValueError(mess)
@@ -568,8 +563,8 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     :param dictionnay d: dictionnary containing the following keys:
        - 'normal': {'sne', 'vSi', 'vSi.err', 'phases', 'EWSi', 'EWSi.err'}
        - 'HV': {'sne', 'vSi', 'vSi.err', 'phases', 'EWSi', 'EWSi.err'}
-       with: 
-         * sne: the SNe list (normal and HV) 
+       with:
+         * sne: the SNe list (normal and HV)
          * vSi: the SiII 6355 velocity list (n and HV) (and error, .err)
          * EWSi: the SiII 6355 EW list (n and HV) (and error, .err)
          * phases: phases list (n and HV)
@@ -590,7 +585,6 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
              ((dHV['EWSi'] / dHV['EWSi.err']) > StN)
     filtn = ((dn['vSi'] / dn['vSi.err']) > StN) & \
             ((dn['EWSi'] / dn['EWSi.err']) > StN)
-    ntot = len(dn['vSi'][filtn]) + len(dHV['vSi'][filtHV])
 
     # figure
     fig = P.figure(dpi=120)
@@ -673,12 +667,12 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     :param dictionnay d: dictionnary containing the following keys:
      - CN (Core-normal)
      - BL (Broad line)
-     - SS (Shallow silicon): 
+     - SS (Shallow silicon):
      - CL (Cool):
      which much be dictionnary with the following keys:
      {'sne', 'EWSiII5972', 'EWSiII5972.err',
      EWSiII6355', 'EWSiII6355.err', 'phases'}
-         * sne: the SNe list (normal and HV) 
+         * sne: the SNe list (normal and HV)
          * EWSi*: the SiII * EW list (n and HV) (and error, .err)
          * phases: phases list (n and HV)
     :param dictionnary idr: the idr dictionnary. If given, the 'bad' sample
@@ -699,12 +693,8 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     sne = N.concatenate([CN['sne'], BL['sne'], SS['sne'], CL['sne']])
     EWSi5 = N.concatenate([CN['EWSiII5972'], BL['EWSiII5972'],
                            SS['EWSiII5972'], CL['EWSiII5972']])
-    EWSi5e = N.concatenate([CN['EWSiII5972.err'], BL['EWSiII5972.err'],
-                            SS['EWSiII5972.err'], CL['EWSiII5972.err']])
     EWSi6 = N.concatenate([CN['EWSiII6355'], BL['EWSiII6355'],
                            SS['EWSiII6355'], CL['EWSiII6355']])
-    EWSi6e = N.concatenate([CN['EWSiII6355.err'], BL['EWSiII6355.err'],
-                            SS['EWSiII6355.err'], CL['EWSiII6355.err']])
 
     # figure
     fig = P.figure(dpi=120)
@@ -943,13 +933,10 @@ def vg_vs_v_plot(diw, dibe, idr=None):
     sne = N.array([sn for sn in dibe if sn != 'info'])
 
     # get the velocity data
-    dn = diw['normal']
-    dHV = diw['HV']
     snev = N.concatenate([diw['normal']['sne'], diw['HV']['sne']])
     vsi = N.concatenate([diw['normal']['vSi'], diw['HV']['vSi']])
     vsie = N.concatenate([diw['normal']['vSi.err'], diw['HV']['vSi.err']])
 
-    ft = [False] * len(snev)
     filt = N.array([True and sn in sne or False for sn in snev], dtype='bool')
     snev = snev[filt]
     vsi = vsi[filt]
@@ -987,20 +974,14 @@ def vg_v_vs_zplot(diw, dibe, idr=None):
     sne = N.array([sn for sn in dibe if sn != 'info'])
 
     # get the velocity data
-    dn = diw['normal']
-    dHV = diw['HV']
     snev = N.concatenate([diw['normal']['sne'], diw['HV']['sne']])
     vsi = N.concatenate([diw['normal']['vSi'], diw['HV']['vSi']])
     vsie = N.concatenate([diw['normal']['vSi.err'], diw['HV']['vSi.err']])
 
-    ft = [False] * len(snev)
     filt = N.array([True and sn in sne or False for sn in snev], dtype='bool')
     snev = snev[filt]
     vsi = vsi[filt]
     vsie = vsie[filt]
-
-    vgsi = N.array([dibe[sn]['Jparams'][0] for sn in snev])
-    vgsie = N.array([dibe[sn]['Jdparams'][0] for sn in snev])
 
     z = N.array([idr[sn]['salt2.Redshift'] for sn in snev])
     # figure
@@ -1024,13 +1005,13 @@ def vg_v_vs_zplot(diw, dibe, idr=None):
 
 
 def test(wang=True, branch=True, benetti=True, vgrad=True,
-         wname=None, brname=None, bename=None, prange=5,
+         wname=None, brname=None, prange=5,
          keepall=False, square=True):
 
     # import and data loading
     idrpath = '/Users/nicolaschotard/work/data/IDR/ACEv3'
-    idr = io.load_anyfile(idrpath + '/META.pkl')
-    dspin = io.load_anyfile(idrpath + '/snspin_ACEv3.pkl')
+    idr = io.loaddata(idrpath + '/META.pkl')
+    dspin = io.loaddata(idrpath + '/snspin_ACEv3.pkl')
     nd = merge_dspin_idr(idr, dspin)
 
     results = []
@@ -1074,10 +1055,10 @@ def table(output='html'):
     results = test()
     dw, dbr, dbe = results[0], results[1], results[2]
 
-    res_b = io.load_anyfile(snid_dir + 'bsnip/snid_results.pkl')
-    res_s = io.load_anyfile(snid_dir + 'snid-2.0/snid_results.pkl')
-    res_bp = io.load_anyfile(snid_dir + 'bsnip/snid_results_fixp.pkl')
-    res_sp = io.load_anyfile(snid_dir + 'snid-2.0/snid_results_fixp.pkl')
+    res_b = io.loaddata(snid_dir + 'bsnip/snid_results.pkl')
+    res_s = io.loaddata(snid_dir + 'snid-2.0/snid_results.pkl')
+    res_bp = io.loaddata(snid_dir + 'bsnip/snid_results_fixp.pkl')
+    res_sp = io.loaddata(snid_dir + 'snid-2.0/snid_results_fixp.pkl')
 
     if output == 'html':
         print "Object   SNID-2.0  SNID-2.0 (fp)  Silv  Silv (fp)  Wang   Branch  Benetti"
@@ -1127,27 +1108,4 @@ def table(output='html'):
         print r'\label{table:classification}'
         print r'\end{table}'
 
-"""
-<table  cellpadding="6" border="1" align="center">
-<caption> SNfactory SNe classifications. See above for detail on the
-columns.
-
-<tr>
-<th> Templates </th>
-<th> SNID-2.0 </th>
-<th> SNID-2.0 (fp) </th>
-<th> Silverman </th>
-<th> Silverman (fp) </th>
-<th> Wang 09 </th>
-<th> Branch 09 </th>
-</tr>
-<tr>
-<td> Object </td>
-<td align="center" colspan="6" > type / sub-type </td>
-</tr>
-
-<tr> <td> a</td> <td> a</td> <td> a</td> <td> a</td> <td> a</td> <td>
-    a</td> <td> a</td> </tr>
-</table> 
-"""
 # End of classLib.py

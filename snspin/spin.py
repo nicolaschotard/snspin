@@ -307,13 +307,11 @@ class Craniometer(object):
             if correl:
                 if verbose:
                     print >> sys.stderr, 'Simulations with correlated pixels'
-                simulated_spectra = self._correl_simulated_spectra(nsimu,
-                                                                   rho=rho,
-                                                                   verbose=verbose)
+                simulated_spectra = self._correl_simulated_spectra(nsimu, rho=rho)
             else:
                 normal_distribution = N.random.randn(nsimu, len(self.x))
                 simulated_spectra = normal_distribution * (N.sqrt((self.v))) \
-                    + self.s
+                                    + self.s
         # Smooth and save simulated spectra
         for simulated_spectrum, number in zip(simulated_spectra, range(nsimu)):
             self.simulations.append(Craniometer(self.x,
@@ -453,7 +451,7 @@ class Craniometer(object):
         maxima_x, maxima_y, maxima_s, maxima_v = [], [], [], []
 
         # parameter initialization
-        p = not (s[0] < s[1])
+        p = not s[0] < s[1]
 
         # Find extrema
         for i in range(len(x) - 1):
@@ -856,7 +854,7 @@ class Craniometer(object):
 
             return [float(rcas_value), float(rcas_sigma)]
 
-        if simu == False and syst == False:
+        if simu is False and syst is False:
 
             if N.isfinite(rcas_value):
                 self.rcasvalues = {'rcas': float(rcas_value),
@@ -974,7 +972,7 @@ class Craniometer(object):
 
             return [float(rcas2_value), float(rcas2_sigma)]
 
-        if simu == False and syst == False:
+        if simu is False and syst is False:
 
             if N.isfinite(rcas2_value):
                 self.rcas2values = {'rcas2': float(rcas2_value),
@@ -1338,7 +1336,7 @@ class Craniometer(object):
 
             return [float(rsi_value), float(rsi_sigma)]
 
-        if simu == False and syst == False:
+        if simu is False and syst is False:
             if N.isfinite(rsi_value):
                 self.rsivalues = {'rsi': float(rsi_value),
                                   'rsi_lbd': lbd,
@@ -1434,7 +1432,7 @@ class Craniometer(object):
 
             return [float(rsis_value), float(rsis_sigma)]
 
-        if simu == False and syst == False:
+        if simu is False and syst is False:
 
             if N.isfinite(rsis_value):
                 self.rsisvalues = {'rsis': float(rsis_value),
@@ -1446,7 +1444,8 @@ class Craniometer(object):
 
     def rsiss2(self, verbose=True, simu=True):
         """
-        Return the value and the error of rsiss
+        Return the value and the error of rsiss.
+
         [rsiss, rsiss_sigma]
         """
         # initialisation
@@ -1513,10 +1512,10 @@ class Craniometer(object):
 
     def rsiss(self, verbose=True, simu=True):
         """
-        Return the value and the error of rsiss
+        Return the value and the error of rsiss.
+
         [rsiss, rsiss_sigma]
         """
-
         min_1 = 5500
         max_1 = 5700
         min_2 = 6200
@@ -1552,7 +1551,8 @@ class Craniometer(object):
            right1=False, left1=False, right2=False, left2=False,
            sup=False, syst=True, check=True):
         """
-        Return the value and the error of an Equivalent Width
+        Return the value and the error of an Equivalent Width.
+
         [lambda_min_blue, lambda_max_blue] and [lambda_min_red, lambda_max_red]
         are the interval where the two peaks are searching.
         'sf' is the name (a string) of the spectral feature associated to the ew
@@ -1669,7 +1669,7 @@ class Craniometer(object):
 
             # Check if the straight line in under the smoothing function
             if check:
-                if sup == True and lbd2 is not None and lbd1 is not None:
+                if sup is True and lbd2 is not None and lbd1 is not None:
                     x = N.polyval(N.polyfit([lbd1, lbd2],
                                             [flux1, flux2],
                                             1),
@@ -1677,7 +1677,6 @@ class Craniometer(object):
                                          & (self.x < lbd2)]) \
                         - self.s[(self.x > lbd1)
                                  & (self.x < lbd2)]
-                    step = self.x[1] - self.x[0]
                     lbd1_tmp, flux1_tmp = lbd1, flux1
                     while len(x[x < 0]) > 5 and lbd1_tmp <= lambda_max_blue:
                         lbd1_tmp = self.x[
@@ -1718,7 +1717,7 @@ class Craniometer(object):
                 print >> sys.stderr, 'ERROR, no extrema found, '\
                     'try self.find_extrema()'
             ew_value = N.nan
-        #======================================================================
+        # ======================================================================
 
         if N.isfinite(ew_value):  # Additional informations
             interval = (self.x > lbd1) & (self.x < lbd2)
@@ -1758,14 +1757,14 @@ class Craniometer(object):
             if not N.isfinite(ew_value):
                 return [float(N.nan), float(N.nan)]
 
-            ew_simu, R_simu, d_simu, w_simu, f_simu, fm_simu = [], [], [], [], [], []
+            ew_simu, r_simu, d_simu, w_simu, f_simu, fm_simu = [], [], [], [], [], []
             dep_simu, sur_simu = [], []
             for simu in self.simulations:
                 try:
                     ew_simu.append(simu.ew(lambda_min_blue, lambda_max_blue,
                                            lambda_min_red, lambda_max_red,
                                            sf, simu=False, syst=False, verbose=False))
-                    R_simu.append(float(simu.ewvalues['R%s' % sf]))
+                    r_simu.append(float(simu.ewvalues['R%s' % sf]))
                     f_simu.append(float(simu.ewvalues['flux_sum_norm_ew%s' % sf]))
                     d_simu.append(float(simu.ewvalues['depth_norm_ew%s' % sf]))
                     w_simu.append(float(simu.ewvalues['width_ew%s' % sf]))
@@ -1776,7 +1775,7 @@ class Craniometer(object):
                     continue
             ew_sigma = self.std2(
                 N.array(ew_simu)[N.isfinite(ew_simu)], ew_value)
-            R_sigma = self.std2(N.array(R_simu)[N.isfinite(R_simu)],
+            r_sigma = self.std2(N.array(r_simu)[N.isfinite(r_simu)],
                                 float(flux2 / flux1))
             f_sigma = self.std2(N.array(f_simu)[N.isfinite(f_simu)], flux_norm)
             d_sigma = self.std2(N.array(d_simu)[N.isfinite(d_simu)], depth_n)
@@ -1790,7 +1789,7 @@ class Craniometer(object):
                                     fmean)
 
             ew_mean = N.mean(N.array(ew_simu)[N.isfinite(ew_simu)])
-            R_mean = N.mean(N.array(R_simu)[N.isfinite(R_simu)])
+            r_mean = N.mean(N.array(r_simu)[N.isfinite(r_simu)])
             f_mean = N.mean(N.array(f_simu)[N.isfinite(f_simu)])
             d_mean = N.mean(N.array(d_simu)[N.isfinite(d_simu)])
             w_mean = N.mean(N.array(w_simu)[N.isfinite(w_simu)])
@@ -1802,8 +1801,8 @@ class Craniometer(object):
 
             ewv['ew%s.err' % sf] = float(ew_sigma)
             ewv['ew%s.stat' % sf] = float(ew_sigma)
-            ewv['R%s.err' % sf] = float(R_sigma)
-            ewv['R%s.stat' % sf] = float(R_sigma)
+            ewv['R%s.err' % sf] = float(r_sigma)
+            ewv['R%s.stat' % sf] = float(r_sigma)
             ewv['flux_sum_norm_ew%s.err' % sf] = float(f_sigma)
             ewv['flux_sum_norm_ew%s.stat' % sf] = float(f_sigma)
             ewv['depth_norm_ew%s.err' % sf] = float(d_sigma)
@@ -1818,7 +1817,7 @@ class Craniometer(object):
             ewv['fmean_ew%s.stat' % sf] = float(fmean_sigma)
 
             ewv['ew%s.mean' % sf] = float(ew_mean)
-            ewv['R%s.mean' % sf] = float(R_mean)
+            ewv['R%s.mean' % sf] = float(r_mean)
             ewv['flux_sum_norm_ew%s.mean' % sf] = float(f_mean)
             ewv['depth_norm_ew%s.mean' % sf] = float(d_mean)
             ewv['width_ew%s.mean' % sf] = float(w_mean)
@@ -1833,7 +1832,7 @@ class Craniometer(object):
             if not N.isfinite(ew_value):
                 return [float(N.nan), float(N.nan)]
 
-            ew_syst, R_syst, d_syst, w_syst, f_syst, fm_syst = [
+            ew_syst, r_syst, d_syst, w_syst, f_syst, fm_syst = [
             ], [], [], [], [], []
             dep_syst, sur_syst = [], []
             for system in self.syst:
@@ -1846,7 +1845,7 @@ class Craniometer(object):
                                              simu=False,
                                              syst=False,
                                              verbose=False))
-                    R_syst.append(float(system.ewvalues['R%s' % sf]))
+                    r_syst.append(float(system.ewvalues['R%s' % sf]))
                     f_syst.append(float(system.ewvalues['flux_sum_norm_ew%s' %
                                                         sf]))
                     d_syst.append(
@@ -1860,7 +1859,7 @@ class Craniometer(object):
 
             ew_sigma_syst = self.std2(N.array(ew_syst)[N.isfinite(ew_syst)],
                                       ew_value)
-            R_sigma_syst = self.std2(N.array(R_syst)[N.isfinite(R_syst)],
+            r_sigma_syst = self.std2(N.array(r_syst)[N.isfinite(r_syst)],
                                      float(flux2 / flux1))
             f_sigma_syst = self.std2(N.array(f_syst)[N.isfinite(f_syst)],
                                      flux_norm)
@@ -1877,8 +1876,8 @@ class Craniometer(object):
 
             if not N.isfinite(ew_sigma_syst):
                 ew_sigma_syst = float(0.0)
-            if not N.isfinite(R_sigma_syst):
-                R_sigma_syst = float(0.0)
+            if not N.isfinite(r_sigma_syst):
+                r_sigma_syst = float(0.0)
             if not N.isfinite(f_sigma_syst):
                 f_sigma_syst = float(0.0)
             if not N.isfinite(d_sigma_syst):
@@ -1896,9 +1895,9 @@ class Craniometer(object):
             ewv['ew%s.syst' % sf] = float(ew_sigma_syst)
             ewv['ew%s.err' % sf] = float(N.sqrt(ewv['ew%s.err' % sf]**2 +
                                                 ew_sigma_syst**2))
-            ewv['R%s.syst' % sf] = float(R_sigma_syst)
+            ewv['R%s.syst' % sf] = float(r_sigma_syst)
             ewv['R%s.err' % sf] = float(N.sqrt(ewv['R%s.err' % sf]**2 +
-                                               R_sigma_syst**2))
+                                               r_sigma_syst**2))
             ewv['flux_sum_norm_ew%s.syst' % sf] = float(f_sigma_syst)
             ewv['flux_sum_norm_ew%s.err' % sf] = float(
                 N.sqrt(ewv['flux_sum_norm_ew%s.err' % sf]**2 + f_sigma_syst**2))
@@ -1920,12 +1919,13 @@ class Craniometer(object):
 
             return [float(ew_value), float(ew_sigma)]
 
-        if simu == False and syst == False:
+        if simu is False and syst is False:
             return ew_value
 
     def velocity(self, infodict, verbose=False, simu=True, syst=True,
                  left=False, right=False):
-        """Value and error of a velocity of an absorption feature.
+        """
+        Value and error of a velocity of an absorption feature.
 
         infodict should have the following structure :
         {'lmin' : minimum lambda for searching the dip,
@@ -1933,7 +1933,8 @@ class Craniometer(object):
         'lrest' : restframe wavelangth of absorption feature
         'name' : name of the feature}
         the error will be coded as ['name']+'.err'
-        and the lambda as ['name']+'_lbd'"""
+        and the lambda as ['name']+'_lbd'
+        """
         # shortcut
         velo = self.velocityvalues
 
@@ -1989,9 +1990,7 @@ class Craniometer(object):
 
         # check for the vSiII5972 velocity
         # if < 8000 km/s, check the curvature of the spectral area
-        if N.isfinite(velocity) \
-                and velocity <  8000 \
-                and infodict['name'] == 'vSiII_5972':
+        if N.isfinite(velocity) and velocity <  8000  and infodict['name'] == 'vSiII_5972':
             filt = (self.x > 5650) & (self.x < 5950)
             pol = N.polyfit(self.x[filt], self.s[filt], 2)
             if pol[0] * 1e6 <= 0.55:
@@ -2156,8 +2155,6 @@ class Craniometer(object):
 
         ok = self.minima['x'] > lbdm
         lbd = float(self.minima['x'][ok][0])
-        flux = float(self.minima['v'][ok][0])
-        var = float(self.minima['s'][ok][0])
         velocity = (infodict['lrest'] - lbd) / infodict['lrest'] * c
 
         if N.isfinite(velocity):
@@ -2249,38 +2246,38 @@ def integration(spec, lbd, v=2000.):
     return float(N.sum(spec.y[(spec.x >= imin) & (spec.x <= imax)]) * step)
 
 
-def stephen_ratio(specB, specR=None, lbd_6415=6415, lbd_4427=4427):
+def stephen_ratio(specb, specr=None, lbd_6415=6415, lbd_4427=4427):
     """Compute SJB ratio."""
-    if specR is None and (specB.x[0] < 4500 and specB.x[-1] > 6400):
-        return integration(specB, lbd_6415) / integration(specB, lbd_4427)
-    elif specR is not None:
-        return integration(specR, lbd_6415) / integration(specB, lbd_4427)
+    if specr is None and (specb.x[0] < 4500 and specb.x[-1] > 6400):
+        return integration(specb, lbd_6415) / integration(specb, lbd_4427)
+    elif specr is not None:
+        return integration(specr, lbd_6415) / integration(specb, lbd_4427)
     else:
         print "Warning: Rsjb not computed."
         return 0.
 
 
-def general_ratio(specB, specR=None, lbd1=6310, lbd2=4390, v=4000):
+def general_ratio(specb, specr=None, lbd1=6310, lbd2=4390, v=4000):
     """
     General flux ratio.
 
     new <good> R lbd1=6310, lbd2=4390 with v = 4000
     new <good> R lbd1=6310, lbd2=5130 with v = 2000 in silicon zone
     """
-    if specR is None:
-        specR = specB
-    return integration(specR, lbd1, v=v) / integration(specB, lbd2, v=v)
+    if specr is None:
+        specr = specb
+    return integration(specr, lbd1, v=v) / integration(specb, lbd2, v=v)
 
 
 def get_cranio(x, y, v, smoother='spline_free_knot', nsimu=1000, verbose=False):
     """Get the craniometers."""
     obj = covariance.SPCS(x, y, v)
     if smoother == 'spline_free_knot':
-        smoothing = 'sp'
+        smoothf = 'sp'
     else:
-        smoothing = 'sg'
+        smoothf = 'sg'
     # obj.comp_rho_f()
-    obj.smooth(smoothing=smoothing)
+    obj.smooth(smoothing=smoothf)
     obj.make_simu(nsimu=nsimu)
     simus = N.array([s.y for s in obj.simus])
     cr = Craniometer(x, y, v * obj.factor_used)

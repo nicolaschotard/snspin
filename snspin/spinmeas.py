@@ -190,7 +190,7 @@ class DrGall(object):
 
         if verbose:
             print >> sys.stderr, '\nINFO: Computing SI on calcium zone for this spectrum'
-            
+
         # Create zone and craniometers
         cazone = (self.xb > 3450) & (self.xb < 4070)
         sizone = (self.xb > 3850) & (self.xb < 4150)
@@ -247,15 +247,15 @@ class DrGall(object):
                 print 'Error in rcas2 computing, rcas2 =', rcas2
 
         try:
-            ewcaiiHK = self.cranio_bca.ew(3504, 3687, 3830, 3990, 'caiiHK', sup=True, right1=True,
+            ewcaiihk = self.cranio_bca.ew(3504, 3687, 3830, 3990, 'caiiHK', sup=True, right1=True,
                                           verbose=verbose)
             self.values.update(self.cranio_bca.ewvalues)
             if verbose:
-                print 'ewcaiiHK computing done, ewcaiiHK =', ewcaiiHK
+                print 'ewcaiiHK computing done, ewcaiiHK =', ewcaiihk
         except ValueError:
-            ewcaiiHK = [N.nan, N.nan]
+            ewcaiihk = [N.nan, N.nan]
             if verbose:
-                print 'Error in ewcaiiHK computing, ewcaiiHK =', ewcaiiHK
+                print 'Error in ewcaiiHK computing, ewcaiiHK =', ewcaiihk
 
         try:
             ewsiii4000 = self.cranio_bsi.ew(3830, 3990, 4030, 4150,
@@ -300,7 +300,7 @@ class DrGall(object):
 
         indicators = {'rca': rca,
                       'rcas2': rcas2,
-                      'ewcaiiHK': ewcaiiHK,
+                      'ewcaiiHK': ewcaiihk,
                       'ewsiii4000': ewsiii4000,
                       'ewmgii': ewmgii,
                       'vsiii4128': vsiii_4000}
@@ -315,10 +315,7 @@ class DrGall(object):
         return indicators
 
     def silicon_computing(self, smoother="sgfilter", verbose=False, nsimu=1000):
-        """
-        Function to compute and retunr all spectral indicators in the silicon
-        zone
-        """
+        """Function to compute and retunr all spectral indicators in the silicon zone."""
         # Test if computing is possible
         if self.xr is None:
             print >> sys.stderr, 'Error, impossible to compute spectral '\
@@ -404,42 +401,42 @@ class DrGall(object):
                 print 'Error in rsiss computing, rsiss =', rsiss
 
         try:
-            ewSiiW = self.cranio_r2.ew(5050, 5285, 5500, 5681,
+            ewsiiw = self.cranio_r2.ew(5050, 5285, 5500, 5681,
                                        'SiiW',
                                        sup=True,
                                        # right1=True,
                                        verbose=verbose)
             if verbose:
-                print 'ewSiiW computing done, ewSiiW =', ewSiiW
+                print 'ewSiiW computing done, ewSiiW =', ewsiiw
         except ValueError:
-            ewSiiW = [N.nan, N.nan]
+            ewsiiw = [N.nan, N.nan]
             if verbose:
-                print 'Error in ewSiiW computing, ewSiiW =', ewSiiW
+                print 'Error in ewSiiW computing, ewSiiW =', ewsiiw
 
         try:
-            ewSiiW_L = self.cranio_r2.ew(5085, 5250, 5250, 5450,
+            ewsiiw_L = self.cranio_r2.ew(5085, 5250, 5250, 5450,
                                          'SiiW_L',
                                          sup=True,
                                          right1=True,
                                          verbose=verbose)
             if verbose:
-                print 'ewSiiW_L computing done, ewSiiW_L =', ewSiiW_L
+                print 'ewSiiW_L computing done, ewSiiW_L =', ewsiiw_L
         except ValueError:
-            ewSiiW_L = [N.nan, N.nan]
+            ewsiiw_L = [N.nan, N.nan]
             if verbose:
-                print 'Error in ewSiiW_L computing, ewSiiW_L =', ewSiiW_L
+                print 'Error in ewSiiW_L computing, ewSiiW_L =', ewsiiw_L
 
         try:
-            ewSiiW_r = self.cranio_r2.ew(5250, 5450, 5500, 5681,
+            ewsiiw_r = self.cranio_r2.ew(5250, 5450, 5500, 5681,
                                          'SiiW_r',
                                          sup=True,
                                          verbose=verbose)
             if verbose:
-                print 'ewSiiW_r computing done, ewSiiW_r =', ewSiiW_r
+                print 'ewSiiW_r computing done, ewSiiW_r =', ewsiiw_r
         except ValueError:
-            ewSiiW_r = [N.nan, N.nan]
+            ewsiiw_r = [N.nan, N.nan]
             if verbose:
-                print 'Error in ewSiiW_r computing, ewSiiW_r =', ewSiiW_r
+                print 'Error in ewSiiW_r computing, ewSiiW_r =', ewsiiw_r
 
         try:
             self.values.update(self.cranio_r2.ewvalues)
@@ -534,7 +531,7 @@ class DrGall(object):
         indicators = {'rsi': rsi,
                       'rsis': rsis,
                       'rsiss': rsiss,
-                      'ewSiiW': ewSiiW,
+                      'ewSiiW': ewsiiw,
                       'ewsiii5972': ewsiii5972,
                       'ewsiii6355': ewsiii6355,
                       'vsiii_5972': vsiii_5972,
@@ -552,10 +549,7 @@ class DrGall(object):
         return indicators
 
     def oxygen_computing(self, smoother="sgfilter", verbose=True, nsimu=1000):
-        """
-        Function to compute and return spectral indicators in the end of
-        the spectrum
-        """
+        """Function to compute and return spectral indicators in the end of the spectrum."""
         # Test if the computation will be possible
         if self.xr is None:
             print >> sys.stderr, 'Error, impossible to compute spectral '\
@@ -566,7 +560,7 @@ class DrGall(object):
 
         if verbose:
             print >> sys.stderr, '\nINFO: Computing SI on oxygen zone for this spectrum'
-            
+
         # Create zone and craniometers
         zone = (self.xr > 6500) & (self.xr < 8800)
         self.cranio_O = get_cranio(self.xr[zone],
@@ -614,9 +608,7 @@ class DrGall(object):
         return indicators
 
     def iron_computing(self, smoother="sgfilter", verbose=True, nsimu=1000):
-        """
-        Function to compute and return spectral indicators on the middle of the spectrum (iron zone).
-        """
+        """Function to compute and return spectral indicators on the iron zone."""
         # Test if the computation will be possible
         if self.x_merged is None:
             print >> sys.stderr, 'Error, impossible to compute spectral '\
@@ -626,7 +618,7 @@ class DrGall(object):
 
         if verbose:
             print >> sys.stderr, '\nINFO: Computing SI on iron zone for this spectrum'
-            
+
         # Create zone and craniometers
         zone = (self.x_merged > 4350) & (self.x_merged < 5350)
         self.cranio_fe = get_cranio(self.x_merged[zone],
@@ -661,10 +653,8 @@ class DrGall(object):
 
         return indicators
 
-    def initialize_parameters(self, verbose=True):
-        """
-        Function to initialize parameters use to make the control_plot
-        """
+    def initialize_parameters(self):
+        """Function to initialize parameters use to make the control_plot."""
         try:
             rsi = self.cranio_r1.rsivalues['rsi']
         except ValueError:
@@ -701,9 +691,9 @@ class DrGall(object):
         edca = float(N.nan)
 
         try:
-            ewcaiiHK = self.cranio_bca.ewvalues['ewcaiiHK']
+            ewcaiihk = self.cranio_bca.ewvalues['ewcaiiHK']
         except ValueError:
-            ewcaiiHK = float(N.nan)
+            ewcaiihk = float(N.nan)
 
         try:
             ewsiii4000 = self.cranio_bsi.ewvalues['ewsiii4000']
@@ -716,19 +706,19 @@ class DrGall(object):
             ewmgii = float(N.nan)
 
         try:
-            ewSiiW = self.cranio_r2.ewvalues['ewSiiW']
+            ewsiiw = self.cranio_r2.ewvalues['ewSiiW']
         except ValueError:
-            ewSiiW = float(N.nan)
+            ewsiiw = float(N.nan)
 
         try:
-            ewSiiW_L = self.cranio_r2.ewvalues['ewSiiW_L']
+            ewsiiw_L = self.cranio_r2.ewvalues['ewSiiW_L']
         except ValueError:
-            ewSiiW_L = float(N.nan)
+            ewsiiw_L = float(N.nan)
 
         try:
-            ewSiiW_r = self.cranio_r2.ewvalues['ewSiiW_r']
+            ewsiiw_r = self.cranio_r2.ewvalues['ewSiiW_r']
         except ValueError:
-            ewSiiW_r = float(N.nan)
+            ewsiiw_r = float(N.nan)
 
         try:
             ewsiii5972 = self.cranio_r3.ewvalues['ewsiii5972']
@@ -750,19 +740,17 @@ class DrGall(object):
         except ValueError:
             vsiii_6355 = float(N.nan)
 
-        return rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, \
-            ewSiiW, ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, \
-            ewSiiW_r
+        return rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiihk, ewsiii4000, ewmgii, \
+            ewsiiw, ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewsiiw_L, \
+            ewsiiw_r
 
-    #=========================================================================
+    # =========================================================================
     # Functions to plot control_plot of spectral indicators computing
-    #=========================================================================
+    # =========================================================================
 
     def plot_craniobca(self, metrics, ax=None, filename=''):
-        """Plot zone where rca, rcas, rcas2, edca and ewcaiiHK are computed"""
-
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
+        """Plot zone where rca, rcas, rcas2, edca and ewcaiiHK are computed."""
+        rca, rcas, rcas2, ewcaiihk = metrics[3], metrics[4], metrics[5], metrics[7]
         cr = self.cranio_bca
 
         if ax is None:
@@ -820,7 +808,7 @@ class DrGall(object):
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
             ax.annotate('ewcaiiHK=%.2f' %
-                        (ewcaiiHK), xy=(0.01, 0.95), xycoords='axes fraction',
+                        (ewcaiihk), xy=(0.01, 0.95), xycoords='axes fraction',
                         xytext=(0.01, 0.95), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
@@ -833,10 +821,8 @@ class DrGall(object):
             fig.savefig('calcium_' + filename)
 
     def plot_craniobsi(self, metrics, ax=None, filename=''):
-        """Plot zone where ewsi4000 is computed"""
-
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
+        """Plot zone where ewsi4000 is computed."""
+        ewsiii4000 = metrics[8]
         cr = self.cranio_bsi
 
         if ax is None:
@@ -892,10 +878,8 @@ class DrGall(object):
             fig.savefig('ewsiii4000_' + filename)
 
     def plot_craniobmg(self, metrics, ax=None, filename=''):
-        """Plot zone where ewmgii is computed"""
-
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
+        """Plot zone where ewmgii is computed."""
+        ewmgii = metrics[9]
         cr = self.cranio_bmg
 
         if ax is None:
@@ -951,10 +935,8 @@ class DrGall(object):
             fig.savefig('ewmgii_' + filename)
 
     def plot_cranior1r5(self, metrics, ax=None, filename=''):
-        """Plot zone where rca, rcas, rcas2, edca and ewcaiiHK are computed"""
-
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
+        """Plot zone where rsi, rsis, rsiss are computed."""
+        rsi, rsis, rsiss = metrics[0], metrics[1], metrics[2]
         cr1 = self.cranio_r1
         cr5 = self.cranio_r5
 
@@ -1002,7 +984,7 @@ class DrGall(object):
             ax.plot(lbd_line1, N.polyval(p_line1, lbd_line1), color='g')
             ax.plot(lbd_line2, N.polyval(p_line2, lbd_line2), color='g')
 
-            for x, y in zip(cr1.rsivalues['rsi_lbd'], # Plot the rsi and rsis lines
+            for x, y in zip(cr1.rsivalues['rsi_lbd'],  # Plot the rsi and rsis lines
                             cr1.smoother(cr1.rsivalues['rsi_lbd'])):
                 ax.vlines(x, 0, y, color='g', linewidth=1, label='_nolegend_')
         else:
@@ -1026,10 +1008,8 @@ class DrGall(object):
             fig.savefig('silicon_' + filename)
 
     def plot_cranior2(self, metrics, ax=None, filename=''):
-        """Plot zone where ewSiiW is computed"""
-
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
+        """Plot zone where ewsiiw is computed."""
+        ewsiiw, ewsiiw_L, ewsiiw_r = metrics[10], metrics[15], metrics[16]
         cr = self.cranio_r2
 
         if ax is None:
@@ -1121,12 +1101,12 @@ class DrGall(object):
         # Annotate the ca zone with spectral indicators values
         try:
             ax.annotate('ewSiiW=%.2f' %
-                        (ewSiiW), xy=(0.01, 0.07), xycoords='axes fraction',
+                        (ewsiiw), xy=(0.01, 0.07), xycoords='axes fraction',
                         xytext=(0.01, 0.07), textcoords='axes fraction',
                         horizontalalignment='left',
                         verticalalignment='bottom', fontsize=10)
             ax.annotate('ewSiiW_L=%.2f, ewSiiW_r=%.2f' %
-                        (ewSiiW_L, ewSiiW_r), xy=(0.01, 0.01),
+                        (ewsiiw_L, ewsiiw_r), xy=(0.01, 0.01),
                         xycoords='axes fraction',
                         xytext=(0.01, 0.01), textcoords='axes fraction',
                         horizontalalignment='left',
@@ -1140,10 +1120,9 @@ class DrGall(object):
             fig.savefig('ewSiiW_' + filename)
 
     def plot_cranior3r4(self, metrics, ax=None, filename=''):
-        """Plot zone where ewSiiW is computed"""
+        """Plot zone where ewSiiW is computed."""
+        ewsiii5972, ewsiii6355 = metrics[11], metrics[12]
 
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
         cr3 = self.cranio_r3
         cr4 = self.cranio_r4
 
@@ -1237,10 +1216,7 @@ class DrGall(object):
             fig.savefig('ewsiii5972_' + filename)
 
     def plot_spectrum(self, metrics, ax=None, title=None):
-
-        rsi, rsis, rsiss, rca, rcas, rcas2, edca, ewcaiiHK, ewsiii4000, ewmgii, ewSiiW, \
-            ewsiii5972, ewsiii6355, vsiii_5972, vsiii_6355, ewSiiW_L, ewSiiW_r = metrics
-
+        """Plot the spectrum."""
         if ax is None:
             fig = P.figure()
             ax = fig.add_subplot(111)
@@ -1256,26 +1232,25 @@ class DrGall(object):
 
     def control_plot(self, filename='', title=None, oformat='png'):
         """
-        self.cranio.control_plot(filename=filename, title=title)
+        Make a general control plot.
 
         Options:
             filename: (string) filename of the png created. Should end in .png
             title: (string) optional title of the control plot. Passing SN
             name and exp_code through it is a good idea.
         """
-
         # Initialize parameters=====================================
 
         metrics = self.initialize_parameters()
         if self.xb is not None and self.xr is not None:
-            MetricsFig = P.figure(figsize=(14, 12))
-            ax1 = MetricsFig.add_subplot(3, 3, 1)
-            ax2 = MetricsFig.add_subplot(3, 3, 2)
-            ax3 = MetricsFig.add_subplot(3, 3, 3)
-            ax4 = MetricsFig.add_subplot(3, 3, 4)
-            ax5 = MetricsFig.add_subplot(3, 3, 5)
-            ax6 = MetricsFig.add_subplot(3, 3, 6)
-            ax7 = MetricsFig.add_subplot(3, 1, 3)
+            fig = P.figure(figsize=(14, 12))
+            ax1 = fig.add_subplot(3, 3, 1)
+            ax2 = fig.add_subplot(3, 3, 2)
+            ax3 = fig.add_subplot(3, 3, 3)
+            ax4 = fig.add_subplot(3, 3, 4)
+            ax5 = fig.add_subplot(3, 3, 5)
+            ax6 = fig.add_subplot(3, 3, 6)
+            ax7 = fig.add_subplot(3, 1, 3)
             self.plot_craniobca(metrics, ax=ax1, filename=filename)
             self.plot_craniobsi(metrics, ax=ax2, filename=filename)
             self.plot_craniobmg(metrics, ax=ax3, filename=filename)
@@ -1287,16 +1262,16 @@ class DrGall(object):
             ax7.set_xlim(xmin=3000, xmax=7000)
             if filename is None:
                 filename = "control_plot"
-            MetricsFig.savefig(filename + '.' + oformat)
+            fig.savefig(filename + '.' + oformat)
             print >> sys.stderr, "Control plot saved in %s" % filename + '.' + oformat
 
         elif self.xb is not None:
             print >> sys.stderr, 'Worked on the b channel only'
-            MetricsFig = P.figure(figsize=(12, 8))
-            ax1 = MetricsFig.add_subplot(2, 3, 1)
-            ax2 = MetricsFig.add_subplot(2, 3, 2)
-            ax3 = MetricsFig.add_subplot(2, 3, 3)
-            ax7 = MetricsFig.add_subplot(2, 1, 2)
+            fig = P.figure(figsize=(12, 8))
+            ax1 = fig.add_subplot(2, 3, 1)
+            ax2 = fig.add_subplot(2, 3, 2)
+            ax3 = fig.add_subplot(2, 3, 3)
+            ax7 = fig.add_subplot(2, 1, 2)
             self.plot_craniobca(metrics, ax=ax1, filename=filename)
             self.plot_craniobsi(metrics, ax=ax2, filename=filename)
             self.plot_craniobmg(metrics, ax=ax3, filename=filename)
@@ -1309,16 +1284,16 @@ class DrGall(object):
                 ax7.set_title('%s, calcium zone' % title)
             else:
                 ax7.set_title('calcium zone')
-            MetricsFig.savefig(filename + '.' + oformat)
+            fig.savefig(filename + '.' + oformat)
             print >> sys.stderr, "Control plot saved in %s" % filename + '.' + oformat
 
         elif self.xr is not None:
             print >> sys.stderr, 'Worked on the r channel only'
-            MetricsFig = P.figure(figsize=(12, 8))
-            ax4 = MetricsFig.add_subplot(2, 3, 1)
-            ax5 = MetricsFig.add_subplot(2, 3, 2)
-            ax6 = MetricsFig.add_subplot(2, 3, 3)
-            ax7 = MetricsFig.add_subplot(2, 1, 2)
+            fig = P.figure(figsize=(12, 8))
+            ax4 = fig.add_subplot(2, 3, 1)
+            ax5 = fig.add_subplot(2, 3, 2)
+            ax6 = fig.add_subplot(2, 3, 3)
+            ax7 = fig.add_subplot(2, 1, 2)
             self.plot_cranior1r5(metrics, ax=ax4, filename=filename)
             self.plot_cranior2(metrics, ax=ax5, filename=filename)
             self.plot_cranior3r4(metrics, ax=ax6, filename=filename)
@@ -1331,12 +1306,12 @@ class DrGall(object):
                 ax7.set_title('%s, silicon zone' % title)
             else:
                 ax7.set_title('silicon zone')
-            MetricsFig.savefig(filename + '.' + oformat)
+            fig.savefig(filename + '.' + oformat)
             print >> sys.stderr, "Control plot saved in %s" % filename + '.' + oformat
         P.close()
 
     def plot_oxygen(self, filename='', title=None, oformat='png'):
-
+        """Plot oxygen zone."""
         cr = self.cranio_O
 
         fig = P.figure()
@@ -1411,7 +1386,7 @@ class DrGall(object):
         P.close()
 
     def plot_iron(self, filename='', title=None, oformat='png'):
-
+        """Plot iron zone."""
         cr = self.cranio_fe
 
         fig = P.figure()
@@ -1460,35 +1435,3 @@ class DrGall(object):
         print >> sys.stderr, "Control plot for iron zone saved in %s" %\
             filename + '.' + oformat
         P.close()
-
-
-def test_code(idr):
-    """
-    Test the code using an SNf IDR.
-
-    Input is the path to an IDR.
-    """
-    import cPickle
-    from snspin.extern import pySnurp
-    if not idr.endswith('/'):
-        idr += '/'
-    d = cPickle.load(open(idr + 'META.pkl'))
-    sn = 'SNF20070818-001'
-    spec = '07_235_065_003'
-    z = d[sn]['host.zhelio']
-    phase = d[sn]['spectra'][spec]['salt2.phase']
-    specB = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_B'])
-    specR = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_R'])
-    specM = pySnurp.Spectrum(idr + d[sn]['spectra'][spec]['idr.spec_merged'])
-    specB.x /= (1. + z)
-    specR.x /= (1. + z)
-    specM.x /= (1. + z)
-    dg = DrGall(spec=specM, specb=specB, specr=specR)
-    calcium = dg.calcium_computing()
-    silicon = dg.silicon_computing()
-    oxygen = dg.oxygen_computing()
-    iron = dg.iron_computing()
-    title = sn + ', Rest-Frame Phase=%.1f' % phase
-    dg.control_plot(filename="control_plot_name", title=title)
-    dg.plot_oxygen(filename="control_plot_name_ox", title=title)
-    dg.plot_iron(filename="control_plot_name_fe", title=title)

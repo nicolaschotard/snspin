@@ -4,7 +4,7 @@
 
 import warnings
 import numpy as N
-
+import scipy.stats as stats
 
 # Histogram utilities ==============================
 
@@ -80,8 +80,7 @@ def hist_binwidth(x, choice='FD', arange=None, percentiles=False):
 
         def likelihood(nbin):
             hist, bins = N.histogram(xx, bins=nbin)
-            return (hist *
-                    N.log(nbin * N.maximum(hist, 1) / float(len(xx)))).sum()
+            return (hist * N.log(nbin * N.maximum(hist, 1) / float(len(xx)))).sum()
         nbins = N.arange(2, round(len(xx) / N.log(len(xx))) + 1, dtype='i')
         nbin = nbins[N.argmax([likelihood(n) - penalty(n) for n in nbins])]
         h = (xmax - xmin) / nbin
@@ -127,7 +126,7 @@ def hist_bins(x, choice='FD', arange=None, percentiles=False, log=False):
 
 # Robust statistics ==============================
 
-    
+
 def hist_nbin(x, choice='FD', arange=None, percentiles=False):
     """Optimal number of bins. See :func:`hist_binwidth` for details."""
 
@@ -255,7 +254,7 @@ def correlation_CI(rho, n, cl=0.95):
 
     z = N.arctanh(rho)                  # Fisher's transformation
     # z is normally distributed with std error = 1/sqrt(N-3)
-    zsig = SS.distributions.norm.ppf(0.5 * (cl + 1)) / N.sqrt(n - 3)
+    zsig = stats.distributions.norm.ppf(0.5 * (cl + 1)) / N.sqrt(n - 3)
     # Confidence interval on z is [z-zsig, z+zsig]
 
     return N.tanh([z - zsig, z + zsig])      # Confidence interval on rho
@@ -287,7 +286,7 @@ def correlation_significance(rho, n, directional=True, sigma=False):
 
     # t is distributed as Student's T distribution with DoF=n-2
     t = rho * N.sqrt((n - 2.) / (1 - rho**2))
-    p = SS.distributions.t.sf(t, n - 2)   # directional (one-sided) p-value
+    p = stats.distributions.t.sf(t, n - 2)   # directional (one-sided) p-value
     if sigma:
         p = pvalue2sigma(p)
     elif not directional:               # non-directional (two-sided) p-value
@@ -310,9 +309,9 @@ def correlation(x, y, method='pearson',
     assert len(x) == len(y), "Incompatible input arrays x and y"
 
     if method.lower() == 'pearson':
-        rho, p = SS.pearsonr(x, y)
+        rho, p = stats.pearsonr(x, y)
     elif method.lower() == 'spearman':
-        rho, p = SS.spearmanr(x, y)
+        rho, p = stats.spearmanr(x, y)
     else:
         raise ValueError("Unknown correlation method '%s'" % method)
 
@@ -336,7 +335,7 @@ def correlation(x, y, method='pearson',
 
 def correlation_weighted(x, y, w=None, axis=None,
                          error=False, confidence=0.6827, symmetric=False):
-    """
+    r"""
     Compute (weighted) Pearson correlation coefficient between *x* and *y* along
     *axis*.
 
@@ -354,7 +353,6 @@ def correlation_weighted(x, y, w=None, axis=None,
     Source: `Weighted correlation
     <https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient#Calculating_a_weighted_correlation>`_
     """
-
     from ToolBox.Arrays import unsqueeze
 
     x = N.asarray(x)
@@ -400,3 +398,30 @@ def correlation_weighted(x, y, w=None, axis=None,
         return rho, N.hypot(drm, drp) / 1.4142135623730951  # Symmetrized error
     else:
         return rho, drm, drp                                # Assymmetric errors
+
+
+# Statistical tests ==============================
+
+
+def pvalue2sigma(p):
+    """
+    Express the input one-sided *p*-value as a sigma equivalent significance
+    from a normal distribution (the so-called *z*-value).
+
+    =====  =======  =================
+    sigma  p-value  terminology
+    =====  =======  =================
+    1      0.1587
+    1.64   0.05     significant
+    2      0.0228
+    2.33   0.01     highly significant
+    3      0.0013   evidence
+    3.09   0.001
+    5      2.9e-7   discovery
+    =====  =======  =================
+
+    >>> pvalue2sigma(1e-3) # p=0.1% corresponds to a ~3-sigma significance
+    3.0902323061678132
+    """
+
+    return stats.distributions.norm.isf(p)  # isf = ppf(1 - p)
