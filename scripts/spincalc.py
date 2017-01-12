@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Code to apply Phrenology measurements on data that can come from:
+Code to apply SNe Ia spectral indicator measurements on data that can come from:
    + An IDR : default behavior
    + A local fits file : If spectra are fed in via the argument line.
      If so, they overwrite all options (they are stored in option.specs)
@@ -152,24 +152,24 @@ def read_option():
     return option
 
 
-def read_ascii(filename):
+def read_ascii(fname):
     """
     Read ascii files and returns a list of lines.
     Empty lines and lines beginning with # are not returned.
     All comments starting with # in a line are dropped.
     All lines are stripped.
     """
-    fh = open(filename, "r")
+    fh = open(fname, "r")
     line_list = []
     for line in fh.readlines():
-        line = (re.sub("#.+$", "", line)).strip()        
+        line = (re.sub("#.+$", "", line)).strip()
         if not len(line):
             continue
         line_list.append(line)
     return line_list
 
 
-def read_from_idr(option):
+def read_from_idr(opts):
     """
     Creates an SnfMetaData dictionnary out of the idr pointed at by option.idr
 
@@ -178,28 +178,28 @@ def read_from_idr(option):
     """
     # define the subsets to load
     all_subsets = ["training", "validation", "auxiliary", "bad","good"]
-    if option.target is not None:
-        option.subset = None
-    elif option.subset is "all":
-        option.subset = all_subsets
-    elif option.subset is not None:
-        if not option.subset in all_subsets:
+    if opts.target is not None:
+        opts.subset = None
+    elif opts.subset is "all":
+        opts.subset = all_subsets
+    elif opts.subset is not None:
+        if not opts.subset in all_subsets:
             raise ValueError("option.subset must be in ", all_subsets)
     else:
         # default
-        option.subset = ["training", "validation"]
+        opts.subset = ["training", "validation"]
 
     # load the data
-    option.data_dir = option.idr
-    return SnfMetaData.load_idr(option.idr, subset=option.subset, targets=option.target)
+    opts.data_dir = opts.idr
+    return SnfMetaData.load_idr(opts.idr, subset=opts.subset, targets=opts.target)
 
 
-def read_from_fits(option):
+def read_from_fits(opts):
     """
     Creates an SnfMetaData compatible dictionnary out of the spectrum
     fits header.
 
-    Sets option.data_dir to ./ since it is expected that option.spec gives
+    Sets opts.data_dir to ./ since it is expected that opts.spec gives
     the path to the file from the local directory.
 
     FIXME: it would be better not to use pySnurp in order to remove the
@@ -210,14 +210,14 @@ def read_from_fits(option):
     default_chan = {'idr.spec_B': None,
                     'idr.spec_R': None,
                     'idr.spec_merged': None}
-    for inspec in option.specs:
+    for inspec in opts.specs:
         print "read", inspec
         spec = pySnurp.Spectrum(inspec, keepFits=False)
         obj = spec.readKey('OBJECT')
-        assert option.redshift is not None, 'you need to set --redshift'
-        d.setdefault(obj, {}).setdefault('host.zhelio', option.redshift)
-        assert option.ebmv is not None, 'you need to set --ebmv'
-        d.setdefault(obj, {}).setdefault('target.mwebv', option.ebmv)
+        assert opts.redshift is not None, 'you need to set --redshift'
+        d.setdefault(obj, {}).setdefault('host.zhelio', opts.redshift)
+        assert opts.ebmv is not None, 'you need to set --ebmv'
+        d.setdefault(obj, {}).setdefault('target.mwebv', opts.ebmv)
 
         d[obj].setdefault('spectra', {}).setdefault(spec.readKey('OBSID'),
                                                     copy(default_chan))
@@ -237,9 +237,9 @@ def read_from_fits(option):
 
     # only check last spectrum for absolute path
     if os.path.isabs(inspec):
-        option.data_dir = ''
+        opts.data_dir = ''
     else:
-        option.data_dir = "./"
+        opts.data_dir = "./"
     return SnfMetaData.SnfMetaData(d)
 
 def read_spectrum(filename, z_helio=None, mwebv=None, Rv=3.1):
