@@ -22,7 +22,7 @@ class Craniometer(object):
         work internaly
         How to use it:
         Create the craniometer:
-        cranio = SNfPhrenology.Craniometer(wavelength, flux, variance)
+        cranio = spin.Craniometer(wavelength, flux, variance)
         Smooth the craniometer:
         cranio.smooth()
         Generate simulated spectra:
@@ -92,23 +92,23 @@ class Craniometer(object):
         self.lim = lim  # Limit for savitzky parameter
         if smoother == "spline_free_knot":
             if verbose:
-                mess = "<SNfPhrenology.Craniometer> using spline with free"
+                mess = "<spin.Craniometer> using spline with free"
                 mess += "knots to smooth ", smoother
                 print >> sys.stderr, mess
             self.spline_spec(mode=1, s=s, rho=rho, verbose=verbose)
         elif smoother == "spline_fix_knot":
             if verbose:
-                mess = "<SNfPhrenology.Craniometer> using spline with fixed"
+                mess = "<spin.Craniometer> using spline with fixed"
                 mess += " knots to smooth ", smoother
                 print >> sys.stderr, mess
             self.spline_spec(mode=0, s=s, rho=rho, verbose=verbose)
         elif smoother == 'sgfilter':
             if verbose:
-                mess = "<SNfPhrenology.Craniometer> using savitzky_golay filter"
+                mess = "<spin.Craniometer> using savitzky_golay filter"
                 print >> sys.stderr, mess
             self.sg_filter(hsize=hsize, order=order, rho=rho, verbose=verbose)
         else:
-            warn = "<SNfPhrenology.Craniometer> WARNING: smoother not"
+            warn = "<spin.Craniometer> WARNING: smoother not"
             warn += "implemented yet. Smoother asked for:", smoother
             print >> sys.stderr, warn
 

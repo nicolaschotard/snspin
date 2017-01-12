@@ -40,7 +40,7 @@ from snspin.tools import statistics
 # classifications
 
 
-def wang_classification(phreno, vcut=12200.0, prange=2.5,
+def wang_classification(dspin, vcut=12200.0, prange=2.5,
                         plot=False, keepall=False):
     """
     Wang et al. 2009 classification scheme.
@@ -50,7 +50,7 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
      - if v < vcut: classified as normal SN Ia (normal)
      - if v >= vcut: classified as hight velocity SN Ia (HV)
 
-    :param dictionnary phreno: the phrenology dictionnary containing the
+    :param dictionnary dspin: the snspin dictionnary containing the
                                spectral indicators
     :param vcut float: the volocity cut defined the two sub-classes. You can
                        also set this value to None. In this case, it will be
@@ -65,15 +65,15 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
 
     # get the velocity values
     if not keepall:
-        sne, vSi, vSie, phases = get_si_at_phase(phreno, 'vSiII_6355',
+        sne, vSi, vSie, phases = get_si_at_phase(dspin, 'vSiII_6355',
                                                  0, prange)
-        sne, EWSi, EWSie, phases = get_si_at_phase(phreno, 'EWSiII6355',
+        sne, EWSi, EWSie, phases = get_si_at_phase(dspin, 'EWSiII6355',
                                                    0, prange, sne=sne)
     else:
-        sne, vSi, vSie, phases = get_si_in_range(phreno, 'vSiII_6355',
+        sne, vSi, vSie, phases = get_si_in_range(dspin, 'vSiII_6355',
                                                  [-prange, prange])
         sne = [sn for sn in set(sne)]
-        sne, EWSi, EWSie, phases = get_si_in_range(phreno, 'EWSiII6355',
+        sne, EWSi, EWSie, phases = get_si_in_range(dspin, 'EWSiII6355',
                                                    [-prange, prange], sne=sne)
 
     # check for None or nan values
@@ -150,12 +150,12 @@ def wang_classification(phreno, vcut=12200.0, prange=2.5,
     print "\nVelocity cutoff: %.2f km/s" % vcut
 
     if plot:
-        wang_classification_plot(d, phreno, StN=2, square=False)
+        wang_classification_plot(d, dspin, StN=2, square=False)
 
     return d
 
 
-def branch_classification(phreno, prange=2.5, plot=False,
+def branch_classification(dspin, prange=2.5, plot=False,
                           keepall=False, sne=None):
     """
     Branch et al 2006 et 2009 classification scheme.
@@ -167,7 +167,7 @@ def branch_classification(phreno, prange=2.5, plot=False,
      - Shallow silicon (SS): 
      - Cool (CL): 
 
-    :param dictionnary phreno: the phrenology dictionnary containing the
+    :param dictionnary dspin: the snspin dictionnary containing the
                                spectral indicators
     :param vcut float: the volocity cut defined the two sub-classes
     :param 1D-array prange: the phase range where the closest spectra to the
@@ -179,15 +179,15 @@ def branch_classification(phreno, prange=2.5, plot=False,
 
     # get the velocity values
     if not keepall:
-        sne, EW5, EW5e, phases = get_si_at_phase(phreno, 'EWSiII5972',
+        sne, EW5, EW5e, phases = get_si_at_phase(dspin, 'EWSiII5972',
                                                  0, prange, sne=sne)
-        sne, EW6, EW6e, phases = get_si_at_phase(phreno, 'EWSiII6355',
+        sne, EW6, EW6e, phases = get_si_at_phase(dspin, 'EWSiII6355',
                                                  0, prange, sne=sne)
     else:
-        sne, EW5, EW5e, phases = get_si_in_range(phreno, 'EWSiII5972',
+        sne, EW5, EW5e, phases = get_si_in_range(dspin, 'EWSiII5972',
                                                  [-prange, prange])
         sne = [sn for sn in set(sne)]
-        sne, EW6, EW6e, phases = get_si_in_range(phreno, 'EWSiII6355',
+        sne, EW6, EW6e, phases = get_si_in_range(dspin, 'EWSiII6355',
                                                  [-prange, prange], sne=sne)
 
     # check for None or nan values
@@ -243,12 +243,12 @@ def branch_classification(phreno, prange=2.5, plot=False,
               (N.mean(d[st]['phases']), N.mean(d[st]['phases']))
 
     if plot:
-        branch_classification_plot(copy.deepcopy(d), phreno, StN=2)
+        branch_classification_plot(copy.deepcopy(d), dspin, StN=2)
 
     return d
 
 
-def benetti_classification(phreno, indic='vSiII_6355', pmin=-5, pmax=25,
+def benetti_classification(dspin, indic='vSiII_6355', pmin=-5, pmax=25,
                            degree=1, StN=4, jack=True, plot=False):
     """
     Benetti et al. 2005 classification sheme.
@@ -259,7 +259,7 @@ def benetti_classification(phreno, indic='vSiII_6355', pmin=-5, pmax=25,
      - Low velocity gradient (LVG)
      - High velocity gradient (HVG)
 
-    :param dictionnary phreno: the phrenology dictionnary containing the
+    :param dictionnary dspin: the snspin dictionnary containing the
                                spectral indicators
     :param 1D-array prange: the phase range where the closest spectra to the
                             maximum light will be taken.
@@ -272,21 +272,21 @@ def benetti_classification(phreno, indic='vSiII_6355', pmin=-5, pmax=25,
     
     # some functions
     getallp = lambda d: N.array([d[id]['salt2.phase'] for id in d])
-    getallv = lambda d: N.array([d[id]['phrenology.%s' % indic] for id in d])
+    getallv = lambda d: N.array([d[id]['snspin.%s' % indic] for id in d])
     getallve = lambda d: N.array(
-        [d[id]['phrenology.%s.err' % indic] for id in d])
+        [d[id]['snspin.%s.err' % indic] for id in d])
 
     # get all the indicator values for all the SNe
-    sne = sorted([sn for sn in phreno])
-    z = [phreno[sn]['salt2.Redshift'] for sn in sne]
-    x1 = [phreno[sn]['salt2.X1'] for sn in sne]
-    color = [phreno[sn]['salt2.Color'] for sn in sne]
-    x1e = [phreno[sn]['salt2.X1.err'] for sn in sne]
-    colore = [phreno[sn]['salt2.Color.err'] for sn in sne]
-    ph = [getallp(phreno[sn]['spectra']) / (1. + phreno[sn]['salt2.Redshift'])
+    sne = sorted([sn for sn in dspin])
+    z = [dspin[sn]['salt2.Redshift'] for sn in sne]
+    x1 = [dspin[sn]['salt2.X1'] for sn in sne]
+    color = [dspin[sn]['salt2.Color'] for sn in sne]
+    x1e = [dspin[sn]['salt2.X1.err'] for sn in sne]
+    colore = [dspin[sn]['salt2.Color.err'] for sn in sne]
+    ph = [getallp(dspin[sn]['spectra']) / (1. + dspin[sn]['salt2.Redshift'])
           for sn in sne]
-    Ind = [getallv(phreno[sn]['spectra']) for sn in sne]
-    Inde = [getallve(phreno[sn]['spectra']) for sn in sne]
+    Ind = [getallv(dspin[sn]['spectra']) for sn in sne]
+    Inde = [getallve(dspin[sn]['spectra']) for sn in sne]
 
     results = {}
     for i, sn in enumerate(sne):
@@ -400,18 +400,18 @@ def benetti_classification(phreno, indic='vSiII_6355', pmin=-5, pmax=25,
         results[sn]['type'] = t
 
     if plot:
-        benetti_classification_plot(results, idr=phreno)
+        benetti_classification_plot(results, idr=dspin)
 
     return results
 
 
 # utilities
 
-def get_si_at_phase(phreno, si, pvalue, prange, sne=None, saltp='salt2'):
+def get_si_at_phase(dspin, si, pvalue, prange, sne=None, saltp='salt2'):
     """
     Get the spectral indicators (si) values for the given list of SNe in a phase
     range around a phase value.
-    :param dictionnary phreno: the phrenology dictionnary containing the
+    :param dictionnary dspin: the snspin dictionnary containing the
                                spectral indicators
     :param string si: the spectral indocator name, eg, EWSiII4000 or vSiII_6355.
     :param float pvalue: the central phase, eg, 0 for maximum light.
@@ -421,16 +421,16 @@ def get_si_at_phase(phreno, si, pvalue, prange, sne=None, saltp='salt2'):
     """
     # get the data
     if sne is None:
-        sne = sorted([sn for sn in phreno if sn != 'DATASET'])
+        sne = sorted([sn for sn in dspin if sn != 'DATASET'])
     else:
         sne = sorted(sne)
-    specs = [get_id_at_phase(phreno[sn], pvalue) for sn in sne]
-    phases = N.array([phreno[sn]['spectra'][sp][saltp + '.phase']
-                      / (1. + phreno[sn]['salt2.Redshift'])
+    specs = [get_id_at_phase(dspin[sn], pvalue) for sn in sne]
+    phases = N.array([dspin[sn]['spectra'][sp][saltp + '.phase']
+                      / (1. + dspin[sn]['salt2.Redshift'])
                       for sn, sp in zip(sne, specs)])
-    values = [phreno[sn]['spectra'][sp]['phrenology.' + si]
+    values = [dspin[sn]['spectra'][sp]['snspin.' + si]
               for sn, sp in zip(sne, specs)]
-    valuese = [phreno[sn]['spectra'][sp]['phrenology.' + si + '.err']
+    valuese = [dspin[sn]['spectra'][sp]['snspin.' + si + '.err']
                for sn, sp in zip(sne, specs)]
 
     # apply the phase filter
@@ -454,12 +454,12 @@ def get_id_at_phase(d, p, saltp='salt2'):
     return ids[N.argmin(N.abs(phases - p))]
 
 
-def get_si_in_range(phreno, si, prange, sne=None):
+def get_si_in_range(dspin, si, prange, sne=None):
     """
     Get all the spectral indicators (si) values for the given list of SNe in
     a phase range around a phase value.
 
-    :param dictionnary phreno: the phrenology dictionnary containing the
+    :param dictionnary dspin: the snspin dictionnary containing the
                                spectral indicators
     :param string si: the spectral indocator name, eg, EWSiII4000 or vSiII_6355.
     :param 1D-array prange: the phase range where the closest spectra to the
@@ -468,17 +468,17 @@ def get_si_in_range(phreno, si, prange, sne=None):
     """
     # get the data
     if sne is None:
-        sne = sorted([sn for sn in phreno if sn != 'DATASET'])
+        sne = sorted([sn for sn in dspin if sn != 'DATASET'])
     else:
         sne = sorted(sne)
 
-    phases = N.concatenate([[phreno[sn]['spectra'][sp]['salt2.phase']
-                             for sp in phreno[sn]['spectra']] for sn in sne])
-    values = N.concatenate([[phreno[sn]['spectra'][sp]['phrenology.' + si]
-                             for sp in phreno[sn]['spectra']] for sn in sne])
-    valuese = N.concatenate([[phreno[sn]['spectra'][sp]['phrenology.' + si + '.err']
-                              for sp in phreno[sn]['spectra']] for sn in sne])
-    sne = N.concatenate([[sn for sp in phreno[sn]['spectra']] for sn in sne])
+    phases = N.concatenate([[dspin[sn]['spectra'][sp]['salt2.phase']
+                             for sp in dspin[sn]['spectra']] for sn in sne])
+    values = N.concatenate([[dspin[sn]['spectra'][sp]['snspin.' + si]
+                             for sp in dspin[sn]['spectra']] for sn in sne])
+    valuese = N.concatenate([[dspin[sn]['spectra'][sp]['snspin.' + si + '.err']
+                              for sp in dspin[sn]['spectra']] for sn in sne])
+    sne = N.concatenate([[sn for sp in dspin[sn]['spectra']] for sn in sne])
 
     # apply the phase filter
     pfilter = (phases > prange[0]) & (phases < prange[1])
@@ -490,17 +490,17 @@ def get_si_in_range(phreno, si, prange, sne=None):
     return fsne, fvalues, fvaluese, fphases
 
 
-def merge_phreno_idr(idr, phreno):
+def merge_dspin_idr(idr, dspin):
     """
-    merge the idr dictionnary and the phrenology output.
+    merge the idr dictionnary and the snspin output.
     """
     ndic = copy.deepcopy(idr)
-    for sn in phreno:
+    for sn in dspin:
         if sn in idr:
-            for spid in phreno[sn]['spectra']:
-                ndic[sn]['spectra'][spid].update(phreno[sn]['spectra'][spid])
+            for spid in dspin[sn]['spectra']:
+                ndic[sn]['spectra'][spid].update(dspin[sn]['spectra'][spid])
         else:
-            print "%s in 'phreno' but not in 'idr'."
+            print "%s in 'dspin' but not in 'idr'."
     if 'DATASET' in ndic:
         del ndic['DATASET']
     return ndic
@@ -1030,8 +1030,8 @@ def test(wang=True, branch=True, benetti=True, vgrad=True,
     # import and data loading
     idrpath = '/Users/nicolaschotard/work/data/IDR/ACEv3'
     idr = io.load_anyfile(idrpath + '/META.pkl')
-    phreno = io.load_anyfile(idrpath + '/phrenology_ACEv3.pkl')
-    nd = merge_phreno_idr(idr, phreno)
+    dspin = io.load_anyfile(idrpath + '/snspin_ACEv3.pkl')
+    nd = merge_dspin_idr(idr, dspin)
 
     results = []
 
