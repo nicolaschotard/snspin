@@ -141,7 +141,7 @@ class SPCS(object):
                 print 'w = ', self.w
             if self.smoothing == 'sp':
                 print 's = ', self.s
-            print "Factor used: ", factor
+            print "Factor used: ", self.factor_used
             print "Correlation coefficient:", self.rho
             print nsimu, "simulated spectra have been created"
             print "             Real spectrum   Simulations"

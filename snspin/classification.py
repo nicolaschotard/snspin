@@ -30,8 +30,8 @@ import pylab as P
 import scipy.stats as stats
 
 from ToolBox import MPL, Optimizer
-from tools import io
-from tools import statistics
+from snspin.tools import io
+from snspin.tools import statistics
 
 
 # Definitions ============================================================
@@ -163,7 +163,7 @@ def branch_classification(phreno, prange=2.5, plot=False,
     Classify the SNe sanple into four sub-classes based on their SiII 5972
     and SiII 6355 equivalent widths values:
      - Core-normal (CN):
-     - Broad line (BL): EWSiII 6355 ~> 105 \A
+     - Broad line (BL): EWSiII 6355 ~> 105 A
      - Shallow silicon (SS): 
      - Cool (CL): 
 
@@ -248,7 +248,7 @@ def branch_classification(phreno, prange=2.5, plot=False,
     return d
 
 
-def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
+def benetti_classification(phreno, indic='vSiII_6355', pmin=-5, pmax=25,
                            degree=1, StN=4, jack=True, plot=False):
     """
     Benetti et al. 2005 classification sheme.
@@ -265,11 +265,11 @@ def benetti_classification(phreno, indic='vSiII_6355', prange=[-5, 25],
                             maximum light will be taken.
     :return: a dictionnary containing the results
     """
-
     print "\nSub-sampling the SNe list with the 'Benetti05' classification."
-
     from ToolBox.Wrappers import SALT2model
 
+    prange = [pmin, pmax]
+    
     # some functions
     getallp = lambda d: N.array([d[id]['salt2.phase'] for id in d])
     getallv = lambda d: N.array([d[id]['phrenology.%s' % indic] for id in d])
@@ -621,7 +621,7 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
     ax.axhline(N.mean(dn['EWSi'][filtn]), color='k', ls='--')
 
     vsi = N.concatenate([dn['vSi'][filtn], dHV['vSi'][filtHV]])
-    bins = Statistics.hist_bins(vsi)
+    bins = statistics.hist_bins(vsi)
     ax2.hist(vsi, lw=1, color='k', bins=bins, normed=True, alpha=0.7)
     loc, scale = stats.norm.fit(vsi)
     xx = N.linspace(8000, 15000, 1000)
@@ -755,7 +755,7 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     ax2 = fig.add_axes([0.09, 0.79, 0.69, 0.19], sharex=ax)
     EW6 = N.concatenate([CN['EWSiII6355'], BL['EWSiII6355'],
                          SS['EWSiII6355'], CL['EWSiII6355']])
-    bins = Statistics.hist_bins(EW6)
+    bins = statistics.hist_bins(EW6)
     ax2.hist([CN['EWSiII6355'], BL['EWSiII6355'],
               SS['EWSiII6355'], CL['EWSiII6355']],
              lw=0, color=['k', 'b', 'g', 'r'], bins=bins, normed=True,
@@ -768,7 +768,7 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
     ax3 = fig.add_axes([0.79, 0.09, 0.19, 0.69], sharey=ax)
     EW5 = N.concatenate([CN['EWSiII5972'], BL['EWSiII5972'],
                          SS['EWSiII5972'], CL['EWSiII5972']])
-    bins = Statistics.hist_bins(EW5)
+    bins = statistics.hist_bins(EW5)
     ax3.hist([CN['EWSiII5972'], BL['EWSiII5972'],
               SS['EWSiII5972'], CL['EWSiII5972']],
              lw=0, color=['k', 'b', 'g', 'r'], bins=bins, normed=True,
