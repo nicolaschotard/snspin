@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Statistics tools
-"""
+"""Statistics tools/"""
 
 import warnings
 import numpy as N
@@ -11,29 +9,29 @@ import numpy as N
 # Histogram utilities ==============================
 
 
-def get_range(x, range=None, log=False, percentiles=False):
+def get_range(x, arange=None, log=False, percentiles=False):
     """
-    Get range from *x* and *range*=(*min*, *max*) or `None`. If *min*
+    Get arange from *x* and *arange*=(*min*, *max*) or `None`. If *min*
     (resp. *max*) is `None`, *xmin* is set to min of *x*, or of strictly
     positive *x* if *log* (resp. *xmax* is set to the max of *x*). If
-    *percentiles*, *range* is actually expressed in percentiles (in percents).
+    *percentiles*, *arange* is actually expressed in percentiles (in percents).
 
     >>> import numpy as N
-    >>> get_range(N.linspace(0, 10, 101), range=(5, 95), percentiles=True)
+    >>> get_range(N.linspace(0, 10, 101), arange=(5, 95), percentiles=True)
     (0.5, 9.5)
     """
 
-    if range is not None:               # Specified range
-        if percentiles:                 # Range in percentiles
-            vmin, vmax = range
+    if arange is not None:              # Specified arange
+        if percentiles:                 # Arange in percentiles
+            vmin, vmax = arange
             if vmin is None:            # Take the min
                 vmin = 0
             if vmax is None:            # Take the max
                 vmax = 100
-            xmin, xmax = N.percentile(x, (vmin, vmax))  # Range in values
+            xmin, xmax = N.percentile(x, (vmin, vmax))  # Arange in values
         else:
-            xmin, xmax = range
-    else:                               # Full range
+            xmin, xmax = arange
+    else:                               # Full arange
         xmin, xmax = None, None
 
     xx = N.ravel(x)
@@ -48,7 +46,7 @@ def get_range(x, range=None, log=False, percentiles=False):
     return xmin, xmax
 
 
-def hist_binwidth(x, choice='FD', range=None, percentiles=False):
+def hist_binwidth(x, choice='FD', arange=None, percentiles=False):
     """
     Optimal histogram binwidth. Choices are:
 
@@ -57,8 +55,8 @@ def hist_binwidth(x, choice='FD', range=None, percentiles=False):
     - 'SS': Shimazaki and Shinomoto (2007), slow, best choice if double-peaked
     - 'BR': Birge and Rozenholc (2006), slow
 
-    Analysis is restricted to *range*=(*min*, *max*) if not `None`
-    (full range by default).
+    Analysis is restricted to *arange*=(*min*, *max*) if not `None`
+    (full arange by default).
 
     References:
 
@@ -68,14 +66,14 @@ def hist_binwidth(x, choice='FD', range=None, percentiles=False):
     """
 
     xx = N.ravel(x)
-    xmin, xmax = get_range(xx, range, percentiles=percentiles)
+    xmin, xmax = get_range(xx, arange, percentiles=percentiles)
     xx = xx[(xx >= xmin) & (xx <= xmax)]
 
     if choice == 'FD':                     # Freedman and Diaconis (1981)
         l, h = N.percentile(xx, [25., 75.])
-        h = 2 * (h - l) / len(xx)**(1./3.)
+        h = 2 * (h - l) / len(xx)**(1. / 3.)
     elif choice == 'S':                    # Scott's choice
-        h = 3.49 * N.std(xx, ddof=1) / len(xx)**(1./3.)
+        h = 3.49 * N.std(xx, ddof=1) / len(xx)**(1. / 3.)
     elif choice == 'BR':                   # Birge and Rozenholc (2006)
         def penalty(nbin):
             return nbin - 1 + N.log(nbin)**2.5
@@ -109,10 +107,10 @@ def hist_binwidth(x, choice='FD', range=None, percentiles=False):
     return h
 
 
-def hist_bins(x, choice='FD', range=None, percentiles=False, log=False):
+def hist_bins(x, choice='FD', arange=None, percentiles=False, log=False):
     """Optimal binning. See :func:`hist_binwidth` for details."""
 
-    xmin, xmax = get_range(x, range=range, percentiles=percentiles, log=log)
+    xmin, xmax = get_range(x, arange=arange, percentiles=percentiles, log=log)
     if log:
         from math import log10
         lxmin, lxmax = log10(xmin), log10(xmax)
@@ -120,24 +118,24 @@ def hist_bins(x, choice='FD', range=None, percentiles=False, log=False):
         xx = xx[xx >= xmin]
         return N.logspace(lxmin, lxmax,
                           hist_nbin(N.log10(xx), choice=choice,
-                                    range=(lxmin, lxmax)))
+                                    arange=(lxmin, lxmax)))
     else:
         return N.linspace(xmin, xmax,
                           hist_nbin(x, choice=choice,
-                                    range=range, percentiles=percentiles))
+                                    arange=arange, percentiles=percentiles))
 
 
 # Robust statistics ==============================
 
     
-def hist_nbin(x, choice='FD', range=None, percentiles=False):
+def hist_nbin(x, choice='FD', arange=None, percentiles=False):
     """Optimal number of bins. See :func:`hist_binwidth` for details."""
 
-    xmin, xmax = get_range(x, range=range, percentiles=percentiles)
+    xmin, xmax = get_range(x, arange=arange, percentiles=percentiles)
 
     return int(N.ceil((xmax - xmin) /
                       hist_binwidth(x, choice=choice,
-                                    range=range, percentiles=percentiles)))
+                                    arange=arange, percentiles=percentiles)))
 
 
 def wpercentile(a, q, weights=None):
@@ -231,3 +229,174 @@ def nMAD(a, weights=None, axis=None, scale=1.4826, corrected=True):
     med, nmad = median_stats(a, axis=axis, weights=weights,
                              scale=scale, corrected=corrected)
     return nmad
+
+
+# Correlation coefficients ==============================
+
+
+def correlation_CI(rho, n, cl=0.95):
+    """
+    Compute Pearson's correlation coefficient confidence interval, at
+    (fractional) confidence level *cl*, for an observed correlation coefficient
+    *rho* obtained on a sample of *n* (effective) points.
+
+    cl=0.6827 corresponds to a 1-sigma error, 0.9973 for a 3-sigma
+    error (`2*scipy.stats.norm.cdf(n)-1` or `1-2*sigma2pvalue(n)` for
+    a n-sigma error).
+
+    Sources: `Confidence Interval of rho
+    <http://vassarstats.net/rho.html>`_, `Correlation CI
+    <http://onlinestatbook.com/chapter8/correlation_ci.html>`_
+    """
+
+    assert -1 < rho < 1, "Correlation coefficient should be in ]-1,1["
+    assert n >= 6, "Insufficient sample size"
+    assert 0 < cl < 1, "Confidence level should be in ]0,1["
+
+    z = N.arctanh(rho)                  # Fisher's transformation
+    # z is normally distributed with std error = 1/sqrt(N-3)
+    zsig = SS.distributions.norm.ppf(0.5 * (cl + 1)) / N.sqrt(n - 3)
+    # Confidence interval on z is [z-zsig, z+zsig]
+
+    return N.tanh([z - zsig, z + zsig])      # Confidence interval on rho
+
+
+def correlation_significance(rho, n, directional=True, sigma=False):
+    """
+    Significance of (Pearson's or Spearman's) correlation coefficient *rho*,
+    given the (effective) size *n* of the sample.
+
+    If non-*directional*, this is the (two-sided) probability `p =
+    Prob_N(|r| >= |rho|)` to find such an extreme correlation
+    coefficient (no matter the sign of the correlation) from a purely
+    uncorrelated population. If *directional*, this is the (one-sided)
+    probability `p = Prob_N(r > rho)` for rho>0 (resp. `Prob_N(r <
+    rho)` for rho<0). The directional (one-sided) probability is just
+    half the non-directional (two-sided) one.
+
+    If *sigma*, express the result as a sigma equivalent significance
+    from a normal distribution (:func:`pvalue2sigma`).
+
+    Sources: *Introduction to Error Analysis* (Taylor, 1997),
+    `Significance of a Correlation Coefficient
+    <http://vassarstats.net/rsig.html>`_
+    """
+
+    assert -1 < rho < 1, "Correlation coefficient should be in ]-1, 1["
+    assert n >= 6, "Insufficient sample size"
+
+    # t is distributed as Student's T distribution with DoF=n-2
+    t = rho * N.sqrt((n - 2.) / (1 - rho**2))
+    p = SS.distributions.t.sf(t, n - 2)   # directional (one-sided) p-value
+    if sigma:
+        p = pvalue2sigma(p)
+    elif not directional:               # non-directional (two-sided) p-value
+        p *= 2
+
+    return p
+
+
+def correlation(x, y, method='pearson',
+                error=False, confidence=0.6827, symmetric=False):
+    """
+    Compute Pearson/Spearman (unweighted) coefficient correlation rho between
+    *x* and *y*.
+
+    If `error=True`, returns asymmetric/symmetrized errors on *rho*,
+    for a given confidence, see :func:`correlation_CI` (only
+    implemented for Pearson).
+    """
+
+    assert len(x) == len(y), "Incompatible input arrays x and y"
+
+    if method.lower() == 'pearson':
+        rho, p = SS.pearsonr(x, y)
+    elif method.lower() == 'spearman':
+        rho, p = SS.spearmanr(x, y)
+    else:
+        raise ValueError("Unknown correlation method '%s'" % method)
+
+    if not error:
+        return rho
+
+    # Compute error on correlation coefficient
+    if method.lower() != 'pearson':
+        raise NotImplementedError("Error on correlation coefficient is "
+                                  "implemented for Pearson's correlation only.")
+
+    rho_dn, rho_up = correlation_CI(rho, n=len(x), cl=confidence)
+    drm = rho - rho_dn
+    drp = rho_up - rho
+
+    if symmetric:
+        return rho, N.hypot(drm, drp) / 1.4142  # Symmetrized error
+    else:
+        return rho, drm, drp              # Assymmetric errors
+
+
+def correlation_weighted(x, y, w=None, axis=None,
+                         error=False, confidence=0.6827, symmetric=False):
+    """
+    Compute (weighted) Pearson correlation coefficient between *x* and *y* along
+    *axis*.
+
+    **Weighting choice:** if *x* and *y* have (potentially correlated)
+    errors, a logical choice is the inverse of the error ellipse
+    area. For uncorrelated errors, this would correspond to :math:`w =
+    1/(\sigma_x\sigma_y)`.
+
+    **Error on weighted correlation:** once you have computed the
+    (weighted) correlation, use :func:`correlation_CI` (resp.
+    :func:`correlation_significance`) to compute associated confidence
+    interval (resp. significance). You should then use an *effective*
+    number of weighted points (see :func:`neff_weighted`).
+
+    Source: `Weighted correlation
+    <https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient#Calculating_a_weighted_correlation>`_
+    """
+
+    from ToolBox.Arrays import unsqueeze
+
+    x = N.asarray(x)
+    y = N.asarray(y)
+    assert x.shape == y.shape, "Incompatible data arrays x and y"
+
+    # Weights
+    if w is None:
+        w = N.ones_like(x)
+    else:
+        w = N.where(N.isfinite(w), w, 0)  # Discard NaN's and Inf's
+        assert w.shape == x.shape, \
+            "Weight array w incompatible with data arrays"
+
+    # Weighted means
+    mx = N.average(x, weights=w, axis=axis)
+    my = N.average(y, weights=w, axis=axis)
+    # Residuals around weighted means
+    xm = x - unsqueeze(mx, axis)
+    ym = y - unsqueeze(my, axis)
+    # Weighted covariance
+    cov, sumw = N.average(xm * ym, weights=w, axis=axis, returned=True)
+    # Weighted variances
+    vx = N.average(xm**2, weights=w, axis=axis)
+    vy = N.average(ym**2, weights=w, axis=axis)
+
+    # Weighted correlation
+    rho = cov / N.sqrt(vx * vy)
+
+    if not error:
+        return rho
+
+    if axis is not None:
+        raise NotImplementedError("Weighted correlation confidence interval "
+                                  "not implemented for nD-arrays.")
+
+    # Compute error on correlation coefficient using effective number of points
+    rho_dn, rho_up = correlation_CI(rho, n=neff_weighted(w), cl=confidence)
+    drm = rho - rho_dn
+    drp = rho_up - rho
+
+    if symmetric:
+        return rho, N.hypot(drm, drp) / 1.4142135623730951  # Symmetrized error
+    else:
+        return rho, drm, drp                                # Assymmetric errors

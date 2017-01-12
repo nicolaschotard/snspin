@@ -1,36 +1,27 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-##########################################################################
-# Filename:          FluxRatio.py
-# Version:           $Revision: 1.19 $
-# Description:
-# Author:            Nicolas Chotard <nchotard@ipnl.in2p3.fr>
-# Author:            $Author: nchotard $
-# Created at:        $Date: 2012/11/13 09:30:39 $
-# Modified at:       13-11-2012 17:29:22
-# $Id: FluxRatio.py,v 1.19 2012/11/13 09:30:39 nchotard Exp $
-##########################################################################
 
 """
-Compute the flux ratio for a given spectrum, a collection of spectra,
-on the IDR. Some plot function comes with it.
+Compute flux ratios.
+
+Work for a given spectrum, a collection of spectra, or the IDR. Some plot function comes with it.
 """
 
-__author__ = "Nicolas Chotard <nchotard@ipnl.in2p3.fr>"
-__version__ = '$Id: FluxRatio.py,v 1.19 2012/11/13 09:30:39 nchotard Exp $'
-
-import glob
 import numpy as N
 import pylab as P
 
-from ToolBox import Statistics, Hubblefit, MPL
+from snspin.tools import statistics
+from ToolBox import Hubblefit, MPL
+
 
 LIGHT_VELOCITY = 299792.458  # km/s
+
 
 # Class ==================================================================
 
 
-class OneSpecFLuxRatio:
+class OneSpecFLuxRatio(object):
+
+    """Compute flux ratios for an input spectrum."""
 
     def __init__(self, x, y, v, velocity=2000, wmin=3350, wmax=8800, num=None):
         """
@@ -54,12 +45,11 @@ class OneSpecFLuxRatio:
         self.v = N.array(v)
         self.step = self.x[1] - self.x[0]
 
-        # self._resampling()
-        self._resampling()
-        self._map_ratios()
-        self._clean_map()
+        self.resampling()
+        self.map_ratios()
+        self.clean_map()
 
-    def _resampling(self):
+    def resampling(self):
 
         # number of bin
         if self.num_bins is None:
@@ -88,7 +78,7 @@ class OneSpecFLuxRatio:
                               in range(len(self.binedges) - 1)])
         self.new_e = N.sqrt(self.new_v)
 
-    def _map_ratios(self):
+    def map_ratios(self):
         """
         Create a non symetric matrix of resampled spectral flux ratios.
         """
@@ -98,7 +88,7 @@ class OneSpecFLuxRatio:
                                                 + (self.new_e / self.new_y)**2)
                                 for i, ratios in enumerate(self.ratios)])
 
-    def _clean_map(self):
+    def clean_map(self):
         """
         Clean the maps (ratio and ratiose) for the negative values.
         Make them all equal to nan values
@@ -109,8 +99,10 @@ class OneSpecFLuxRatio:
                                 for r, re in zip(self.ratios, self.ratiose)])
 
 
-class CorrMap:
+class CorrMap(object):
 
+    """Plot correlation maps."""
+    
     def __init__(self, maps, param, mapse=None, names=None,
                  x=None, method='pearson', criteria=0.5):
         """
@@ -168,7 +160,7 @@ class CorrMap:
             corr = 0
         else:
             filt = N.isfinite(x) & N.isfinite(y)
-            corr = Statistics.correlation(N.array(x)[filt], N.array(y)[filt],
+            corr = statistics.correlation(N.array(x)[filt], N.array(y)[filt],
                                           method=self.method)
         return corr
 
@@ -373,99 +365,6 @@ def mag_ratio_corr_map(idr, phase=0, window=1, w_mag=4000):
     return corr
 
 
-def hubble_fit_fratio(idr, phase=0, window=2.5, k=10,
-                      rhol=0.3, enorm=None, ii=None):
-    """
-    Run the Hubble fit for all the computed flux ratio, with a K-folding CV.
-    This procedure could be very (very) long. Better to run it on the CC,
-    using the CC option.
-
-    :input: a LoadIDr object containing the flux ratios
-    :param float phase: spectra choosen as close as possible to this phase...
-    :param float window: ... in this windows range.
-    :param int k: the K-folding 'degree'
-    :param float rhol: don't do the fit if rho < rhol
-    :param float enorm: a normalization parameter to nomralize errors
-    :param int ii: a line on which the process is ran
-    """
-
-    X, R, V, phases, sne = idr.get_data_at_phase(phase=phase,
-                                                 window=window,
-                                                 data='fratio')
-
-    # Get the uncorrected Hubble residual from the IDR and the SALT2
-    # measurement
-    print "Getting the usefull parameters to make the first Hubblefit"
-    z, dz, m, dm, sne = Hubblefit.get_idr_parameters(idr.idr, sne=sne)
-
-    print "Runing the first Hubble fit"
-    Hdata = Hubblefit.HubbleData(
-        z, dz, m, dm, sne=sne, run=True, verbose=False)
-    Hfiti = Hdata.Hubblefit
-    corr_map = CorrMap(R, Hfiti.Data_out['residuals'], x=X[0])
-
-    print "Runing the fit for each flux ratio."
-    rms_map = N.zeros((len(X[0]), len(X[0])))
-    wrms_map = N.zeros((len(X[0]), len(X[0])))
-
-    for i in range(len(X[0])):
-        if ii is not None and i != ii:
-            continue
-        for j in range(len(X[0])):
-            if i == j:
-                continue
-            f = get_column_vals(R, i, j)
-            vf = get_column_vals(V, i, j)
-            filt = N.prod(map(lambda x: x == x, [f, vf, z, dz, m, dm]),
-                          axis=0, dtype=bool)
-            f, vf, zp, dzp, mp, dmp = map(
-                lambda x: x[filt], [f, vf, z, dz, m, dm])
-
-            # normalize the error
-            if enorm is not None:
-                vf *= enorm**2
-
-            # normalization
-            fmean = f.mean()
-            fstd = f.std()
-            f = (f - fmean) / fstd
-            vf = vf / (fstd**2)
-
-            # compute the correlation coefficient
-            c = N.abs(N.corrcoef(f, Hfiti.Data_out['residuals'][filt])[0][1])
-
-            # if |c| < rhol, don't even try to fit the hubble diagram
-            if c < rhol:
-                rms_map[i][j] = Hfiti.Stats['rms']
-                wrms_map[i][j] = Hfiti.Stats['wrms']
-                print "%i / %i | RMS %.3f | rho %.3f --> No fit" %\
-                      (i, j, rms_map[i][j], c)
-            else:
-                params = {'p1': f, 'dp1': N.sqrt(vf)}
-                Hdata = Hubblefit.HubbleData(zp, dzp, mp, dmp, params=params,
-                                             verbose=False)
-                try:
-                    Hfit = Hubblefit.HubbleFit(zp, mp, Hdata.CovMatrix,
-                                               p=Hdata.corrections)
-                    Hfit.K_folding(k=k, verbose=False)
-
-                    if Hfit.K_folded_results['rms'] <= Hfiti.Stats['rms']:
-                        rms_map[i][j] = Hfit.K_folded_results['rms']
-                    else:
-                        rms_map[i][j] = Hfiti.Stats['rms']
-                    if Hfit.K_folded_results['wrms'] <= Hfiti.Stats['wrms']:
-                        wrms_map[i][j] = Hfit.K_folded_results['wrms']
-                    else:
-                        wrms_map[i][j] = Hfiti.Stats['wrms']
-                    print "%i / %i | RMS %.3f | rho %.3f" %\
-                          (i, j, Hfit.K_folded_results['rms'], c)
-                except:
-                    rms_map[i][j] = Hfiti.Stats['rms']
-                    wrms_map[i][j] = Hfiti.Stats['wrms']
-
-    return corr_map, rms_map, wrms_map
-
-
 def get_column_vals(maps, i, j):
     return N.array([mapi[i][j] for mapi in maps])
 
@@ -491,26 +390,5 @@ def plot_matrix(map, wlength, title='', blabel='', cmap=P.cm.jet):
     ax.set_xlabel(label, size='large')
     ax.set_ylabel(label, size='large')
 
-
-def add_GP_data(idr, hfk_dir=None):
-    """
-    Add the HFK gaussian process data to an idr object.
-    hfk directory contains only the at mat spectra for now. Must change soon.
-    """
-    if hfk_dir is None:
-        raise ValueError("Error, I need a hfk direcory.")
-
-    files = glob.glob(
-        hfk_dir + (hfk_dir.endswith('/') and '' or '/') + '*.dat')
-    sne = [f.split('/')[-1].replace('.dat', '') for f in files]
-    for i, sn in enumerate(sne):
-        if sn in idr.data:
-            try:
-                x, y, v = N.loadtxt(files[i], unpack=True)
-            except:
-                print 'Error for', files[i]
-            idr.data[sn]['gp.X'] = N.array([x])
-            idr.data[sn]['gp.Y'] = N.array([y])
-            idr.data[sn]['gp.V'] = N.array([v])
 
 # End of FluxRatio.py

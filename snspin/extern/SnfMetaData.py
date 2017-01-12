@@ -62,31 +62,29 @@ WARNING:
 
 """
 
-__author__ = "Stephen Bailey <stephen.bailey@in2p3.fr>"
-__version__ = "$Id: SnfMetaData.py,v 1.49 2016/03/03 16:00:50 nchotard Exp $"
-
 import sys
 import os.path
-import yaml
 import pickle
-import numpy
-import re        # regular expressions
+import re
 import copy
 import warnings
-import pyfits
+from math import isnan
+import numpy
+import yaml
+
 
 NaN = float('nan')
-from math import isnan
 
 
-def _makeIterable(obj):
-
+def _makeiterable(obj):
+    """Transform a single object into an list."""
     return (obj,) if not hasattr(obj, '__iter__') else obj
 
 
 def load(*files):
     """
     Load metadata from files and return SnfMetaData object.
+    
     This is a typing shortcut for SnfMetaData(files).
     """
     metadata = SnfMetaData(*files)
@@ -94,6 +92,7 @@ def load(*files):
 
 
 class SnfMetaData(dict):
+
     """
     Class to organize, merge, and manipulate target and spec metadata.
 
@@ -123,7 +122,7 @@ class SnfMetaData(dict):
         print name, exp, phase
     """
 
-    #----------------------------------------------------------------
+    # ----------------------------------------------------------------
     # Methods for creating and loading data into SnfMetaData object
 
     def __init__(self, *files, **kwargs):
@@ -135,7 +134,6 @@ class SnfMetaData(dict):
         - phase_name : keyword to be used for phase selection (see
           'set_phase_selector')
         """
-
         # Selection filters
         self._filters = dict()      # { key:(filter,label) }
         # Keep track of # of input sources
@@ -152,9 +150,11 @@ class SnfMetaData(dict):
             self.merge(data)
 
     def __getitem__(self, item):
-        """Ensure backward compatibility, when 'DATASET' was stored in
-        main dictionnary along other targets."""
+        """
+        Ensure backward compatibility.
 
+        For when 'DATASET' was stored in  main dictionnary along other targets.
+        """
         if item == 'DATASET':
             warnings.warn("'DATASET' key is deprecated", DeprecationWarning)
             return self._dataset
@@ -162,9 +162,10 @@ class SnfMetaData(dict):
             return dict.__getitem__(self, item)
 
     def __setitem__(self, item, value):
-        """Ensure backward compatibility, when 'DATASET' was stored in
-        main dictionnary along other targets."""
+        """Ensure backward compatibility.
 
+        For  when 'DATASET' was stored in main dictionnary along other targets.
+        """
         if item == 'DATASET':
             warnings.warn("'DATASET' key is deprecated", DeprecationWarning)
             self._dataset = value
@@ -172,9 +173,10 @@ class SnfMetaData(dict):
             return dict.__setitem__(self, item, value)
 
     def __delitem__(self, item):
-        """Ensure backward compatibility, when 'DATASET' was stored in
-        main dictionnary along other targets."""
+        """Ensure backward compatibility.
 
+        For when 'DATASET' was stored in main dictionnary along other targets.
+        """
         if item == 'DATASET':
             warnings.warn("'DATASET' key is deprecated", DeprecationWarning)
             self._dataset = {}
@@ -203,14 +205,13 @@ class SnfMetaData(dict):
         d_copy = d.copy("my_prefix.my_indicator") will copy over
         my_prefix.my_indicator and my_prefix.my_indicator.err
         """
-
         if key_list is None:
             d_copy = copy.deepcopy(self)
         else:
             # To make sure that if the user only enters one key word,
             # the search will not be made over all the characters of
             # the keyword
-            key_list = _makeIterable(key_list)
+            key_list = _makeiterable(key_list)
 
             d_copy = SnfMetaData()
             # This would be faster but we want to allow for regexp searches
@@ -272,7 +273,6 @@ class SnfMetaData(dict):
             'last'  : last (i.e. new) entry wins [default]
             'panic' or other : raise exception
         """
-
         # If data is a string, interpret as a filename
         if isinstance(data, basestring):
             f = open(data)
@@ -368,16 +368,15 @@ class SnfMetaData(dict):
         as (value, error) pairs resulting in param and param.err entries.
         Set autoerr=False to override this auto-error interpretation.
         """
-
-        target = _makeIterable(target)
+        target = _makeiterable(target)
 
         for name in target:
             if name not in self:
                 self[str(name)] = {'spectra': dict(), 'target.name': str(name)}
 
             # Convert single elements into lists first
-            param = _makeIterable(param)
-            value = _makeIterable(value)
+            param = _makeiterable(param)
+            value = _makeiterable(value)
 
             # Loop over parameter, value pairs
             if param is not None and value is not None:
@@ -408,9 +407,8 @@ class SnfMetaData(dict):
         as (value, error) pairs resulting in param and param.err entries
         Set autoerr=False to override this auto-error interpretation.
         """
-
-        target = _makeIterable(target)
-        exp = _makeIterable(exp)
+        target = _makeiterable(target)
+        exp = _makeiterable(exp)
 
         for name, ex in zip(target, exp):
             if name not in self:
@@ -426,8 +424,8 @@ class SnfMetaData(dict):
             # Loop over parameter, value pairs
             if param is not None and value is not None:
                 # Convert single elements into lists first
-                param = _makeIterable(param)
-                value = _makeIterable(value)
+                param = _makeiterable(param)
+                value = _makeiterable(value)
                 for p, v in zip(param, value):
                     self._add_value_err(info, p, v, autoerr)
 
@@ -436,7 +434,7 @@ class SnfMetaData(dict):
                 for p, v in items.iteritems():
                     self._add_value_err(info, p, v, autoerr)
 
-    #----------------------------------------------------------------
+    # ----------------------------------------------------------------
     # Methods for accessing the metadata
 
     def targets(self, *args, **kwargs):
@@ -457,7 +455,6 @@ class SnfMetaData(dict):
           - structured=True : return a structured array rather than
                               a list of arrays
         """
-
         sort_by = kwargs.pop("sort_by", None)
         squeeze = kwargs.pop("squeeze", True)
 
@@ -502,7 +499,6 @@ class SnfMetaData(dict):
           - structured=True : return a structured array rather than
                               a list of arrays
         """
-
         sort_by = kwargs.pop("sort_by", None)
         squeeze = kwargs.pop("squeeze", True)  # Backward compatibility
 
@@ -537,13 +533,12 @@ class SnfMetaData(dict):
         If no args, return list of dataset-level keywords. With args return
         the corresponding dataset-level value.
         """
-
         if not args:
             return sorted(self._dataset.keys())
         else:
             return [self._dataset[arg] for arg in args]
 
-    #----------------------------------------------------------------
+    # ----------------------------------------------------------------
     # Output methods
 
     def dump(self):
@@ -571,7 +566,6 @@ class SnfMetaData(dict):
 
         Output: string with a table of columns.
         """
-
         colwidth = kwargs.pop('colwidth', 16)
         only_target = kwargs.pop('only_target', False)
 
@@ -607,7 +601,6 @@ class SnfMetaData(dict):
 
         Output: table-formatted string
         """
-
         from ToolBox.ReST import arr2rst
 
         only_target = kwargs.pop('only_target', False)
@@ -662,7 +655,7 @@ class SnfMetaData(dict):
 
         return sorted(keys)
 
-    #----------------------------------------------------------------
+    # ----------------------------------------------------------------
     # Filter and phase/spectrum selection methods
 
     def set_spectrum_selector(self, function, **kwargs):
@@ -706,7 +699,6 @@ class SnfMetaData(dict):
 
         See add_filter(...) for full syntax options
         """
-
         self._filters = dict()
         self.add_filter(**kwargs)
 
@@ -782,7 +774,6 @@ class SnfMetaData(dict):
         * x__exclude = list: x not in list
         * x__re = regexp: search(regexp, x)
         """
-
         # Implementation note:
         # We can only add one filter at a time, because the function
         # caching syntax like
@@ -897,7 +888,6 @@ class SnfMetaData(dict):
         cut_zero_spec : remove any targets which don't have any spectra
                         which pass the cuts
         """
-
         # Loop over targets making list of bad ones.
         # Wait until end to remove them to not mess up the iteration
         bad_targets = set()                # Set of targets to be discarded
@@ -933,7 +923,7 @@ class SnfMetaData(dict):
                 print "Removing target", name
             del self[name]
 
-    #----------------------------------------------------------------
+    # ----------------------------------------------------------------
     # Internal SnfMetaData utility functions
 
     def _add_value_err(self, data, param, value, autoerr):
@@ -1131,7 +1121,7 @@ class SnfMetaData(dict):
 
 # end of SnfMetaData class
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 # Spectrum selectors take a dictionary of spectra and a set of keyword args
 # and returns a new dictionary with the selected spectra.
@@ -1168,7 +1158,7 @@ def phase_selector(spectra, phase_nearest=0.0, phase_name='salt2.phase'):
         best_expid = min(phases)[1]
         return {best_expid: spectra[best_expid]}
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Internal Data Release function(s)
 
 
@@ -1239,14 +1229,14 @@ def load_idr(metafile, salt=False, subset=('training', 'validation'),
             if os.path.exists(targets):   # Read list of targets from file
                 targets = numpy.loadtxt(targets, dtype='string')
         except (TypeError, IOError,):     # 'targets' is a (list of) target(s)
-            targets = _makeIterable(targets)
+            targets = _makeiterable(targets)
         remove_targets = set(meta.keys()) - \
             set(targets)  # Discard other targets
     else:
         remove_targets = set()
 
     if subset:                         # Filter by subset if requested
-        subset = _makeIterable(subset)
+        subset = _makeiterable(subset)
         for name, tgtinfo in meta.iteritems():
             if tgtinfo['idr.subset'] not in subset:
                 # print '%s subset %s not in %s' % \
