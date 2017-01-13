@@ -12,11 +12,12 @@ from scipy import interpolate as I
 from scipy import optimize
 
 from snspin.extern import pySnurp
-from snspin.tools import statistics
-from snspin.tools.smoothing import savitzky_golay as sg
-from snspin.tools.smoothing import spline_find_s
-from snspin.tools.smoothing import sg_find_num_points
 from snspin.tools import io
+from snspin.tools import statistics
+from snspin.spectrum.smoothing import savitzky_golay as sg
+from snspin.spectrum.smoothing import spline_find_s
+from snspin.spectrum.smoothing import sg_find_num_points
+
 
 
 class SPCS(object):

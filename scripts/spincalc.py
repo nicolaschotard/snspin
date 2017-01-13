@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 """
-Code to apply SNe Ia spectral indicator measurements on data that can come from:
+Code to apply SNe Ia spectral indicator measurements.
+
+Data can come from:
    + An IDR : default behavior
    + A local fits file : If spectra are fed in via the argument line.
      If so, they overwrite all options (they are stored in option.specs)
 
    Creates a directory with the name of the supernova in which the results
    and plot directory will be placed.
-
 """
 
 import cPickle
@@ -30,76 +31,54 @@ from snspin.extern import SnfMetaData
 code_name = os.path.basename(__file__) + ' '
 
 def read_option():
+    """Read all options."""
     usage = "usage: %prog [options] specnames"
     parser = optparse.OptionParser(usage=usage)
 
-    #- Input options for idr mode
-    idr = optparse.OptionGroup(parser, "idr")
-    idr.add_option("--idr", dest="idr",
-                   default="/afs/in2p3.fr/group/snovae/snprod1/IDR/current/",
-                   help="Sets the idr run to use")
-    idr.add_option("--subset", dest="subset", action="append",
-                   default=None,
-                   help="Limits the IDR to the subsets selected")
-    parser.add_option_group(idr)
-
-    #- General input options
+    # Input options
     inp = optparse.OptionGroup(parser, "Input")
-    inp.add_option('-t', '--target',
-                   dest="target",
-                   action="append",
+    inp.add_option("--idr", default=None, help="Path to an SNfactory IDR")
+    inp.add_option("--subset", default=None,
+                   help="Limits the IDR to the subsets selected (coma separated)")
+    inp.add_option('--target', action="append",
                    help="Target name, or filename containing a target list. \
-                   Can be used multiple times",
-                   default=None)
-    inp.add_option("-x", "--exclude",
-                   dest="exclude",
-                   action="append",
+                   Can be used multiple times", default=None)
+    inp.add_option("--exclude",
                    help='Excluded target, or filename containing a list of \
-                   targets. Can be used multiple times',
-                   default=None)
-    inp.add_option('--expid',
-                   dest="expid",
-                   action="append",
-                   help="Exposure ID. Can be used multiple times",
+                   targets (coma separeted)', default=None)
+    inp.add_option('--expid', help="Exposure ID (coma separated)",
                    default=None)
     parser.add_option_group(inp)
 
     #- Output specific options
     out = optparse.OptionGroup(parser, "Output")
-    out.add_option("-o", "--out_file",
-                   help="snspin output file name (extension can be .yaml,\
-                   .yml or .pkl) [%default]", default=None)
-    out.add_option("--pkl", dest="out_pickle",
-                   help="Name of the pickle file if you want to save the \
-                   results in yaml *and* pickle at the same time",
-                   action="store_true", default=False)
+    out.add_option("--output", default=None,
+                   help="snspin output file name (will be save as .pkl) [%default]",)
     out.add_option("--more_output", dest="save_pickles",
                    action="store_true",
                    help="Save pickle file with DrGall for each SN.",
                    default=False)
-    out.add_option("-d", "--output_dir",
+    out.add_option("--odir", default="./",
                    help="Path to the output directory where the snspin \
-                   data, and the control_plot directory will be saved",
-                   default="./")
+                   data, and the control_plot directory will be saved")
     parser.add_option_group(out)
 
     #- Redshift and reddening tweaking options
-    red = optparse.OptionGroup(parser, "Dereddening")
+    red = optparse.OptionGroup(parser, "Corrections")
     red.add_option("--ebmv", type="float",
-                   help="Value of ebmv used to deredden *all* the spectra \
+                   help="Ebmv value used to deredden *all* the input spectra \
                    [%default]", default=None)
-    red.add_option("--Rv", type="float",
-                   help="Value of Rv used to deredden spectra [%default]",
+    red.add_option("--rv", type="float",
+                   help="Rv value used to deredden spectra [%default]",
                    default=3.1)
-    red.add_option('-z', '--redshift', type='float',
-                   help="Force a redshift",
+    red.add_option('--redshift', type='float', help="Force a redshift",
                    default=None)
     parser.add_option_group(red)
 
     #- Technical Snspin options
     adv = optparse.OptionGroup(parser, "Advanced")
-    adv.add_option("--smoother", "-s", dest="smoother",
-                   help='smoother used to smooth the spectrum \
+    adv.add_option("--smooth",
+                   help='Smoother used to smooth the spectrum \
                    (default=%default, other can be "spline")',
                    default='sgfilter')
     adv.add_option("--nsimu", dest="nsimu", type='int',
@@ -109,57 +88,56 @@ def read_option():
 
     #- Where and what to plot. Or not plot.
     plt = optparse.OptionGroup(parser, "Plot")
-    plt.add_option("--dir",
-                   help="Name of the directory where control plots are saved\
-                   [%default]", default="control_plots" )
-    plt.add_option("-f", '--oformat', help="Format of the control plot (png, eps, ps, pdf) \
+    plt.add_option("--pformat",
+                   help="Format of the control plot (png, eps, ps, pdf) \
                    [%default]", default="png")
     plt.add_option("--noplot", dest="plot", action="store_false",
-                   help="Don't produce control plots", default=True)
+                   help="Do not produce the control plots", default=True)
     parser.add_option_group(plt)
 
-    option, args = parser.parse_args()
+    opts, args = parser.parse_args()
 
     # spectra fits as args
-    option.specs = args
+    opts.specs = args
 
-    if option.smoother == 'spline':
-        option.smoother += '_free_knot'
+    if opts.smooth == 'spline':
+        opts.smooth += '_free_knot'
 
-    option.command_line = " ".join(sys.argv)
-    option.prefix = sys.argv[0]
+    opts.command_line = " ".join(sys.argv)
+    opts.prefix = sys.argv[0]
 
-    if option.target is not None:
-        targets = set()
-        for target_name in option.target:
-            if os.path.exists(target_name) and not os.path.isdir(target_name):
-                print "Reading targets from %s" % target_name
-                targets = targets.union(set(read_ascii(target_name)))
+    if opts.target is not None:
+        tgs = set()
+        for tgn in opts.target:
+            if os.path.exists(tgn) and not os.path.isdir(tgn):
+                print "Reading targets from %s" % tgn
+                tgs = tgs.union(set(read_ascii(tgn)))
             else:
-                targets.add(target_name)
-        option.target = targets
+                tgs.add(tgn)
+        opts.target = tgs
 
-    if option.exclude is not None:
-        targets = set()
-        for target_name in option.exclude:
-            if os.path.exists(target_name):
-                print "Reading targets from %s" % target_name
-                targets = targets.union(set(read_ascii(target_name)))
+    if opts.exclude is not None:
+        tgs = set()
+        for tgn in opts.exclude:
+            if os.path.exists(tgn):
+                print "Reading targets from %s" % tgn
+                tgs = tgs.union(set(read_ascii(tgn)))
             else:
-                targets.add(target_name)
-        option.exclude = targets
+                tgs.add(tgn)
+        opts.exclude = tgs
 
-    return option
+    return opts
 
 
-def read_ascii(fname):
+def read_ascii(aname):
     """
     Read ascii files and returns a list of lines.
+
     Empty lines and lines beginning with # are not returned.
     All comments starting with # in a line are dropped.
     All lines are stripped.
     """
-    fh = open(fname, "r")
+    fh = open(aname, "r")
     line_list = []
     for line in fh.readlines():
         line = (re.sub("#.+$", "", line)).strip()
@@ -171,7 +149,7 @@ def read_ascii(fname):
 
 def read_from_idr(opts):
     """
-    Creates an SnfMetaData dictionnary out of the idr pointed at by option.idr
+    Create an SnfMetaData dictionnary out of the idr pointed at by option.idr.
 
     For compatibility with the other options, option.data_dir is set to
     option.idr
@@ -196,58 +174,57 @@ def read_from_idr(opts):
 
 def read_from_fits(opts):
     """
-    Creates an SnfMetaData compatible dictionnary out of the spectrum
-    fits header.
+    Create an SnfMetaData compatible dictionnary out of the spectrum fits header.
 
     Sets opts.data_dir to ./ since it is expected that opts.spec gives
     the path to the file from the local directory.
-
-    FIXME: it would be better not to use pySnurp in order to remove the
-    dependency completely
     """
     from copy import copy
-    d = {}
+    data = {}
     default_chan = {'idr.spec_B': None,
                     'idr.spec_R': None,
                     'idr.spec_merged': None}
     for inspec in opts.specs:
-        print "read", inspec
-        spec = pySnurp.Spectrum(inspec, keepFits=False)
+        print "INFO: Reading input spectrum", inspec
+        spec = pySnurp.Spectrum(inspec, keepfits=False)
         obj = spec.readKey('OBJECT')
-        assert opts.redshift is not None, 'you need to set --redshift'
-        d.setdefault(obj, {}).setdefault('host.zhelio', opts.redshift)
-        assert opts.ebmv is not None, 'you need to set --ebmv'
-        d.setdefault(obj, {}).setdefault('target.mwebv', opts.ebmv)
-
-        d[obj].setdefault('spectra', {}).setdefault(spec.readKey('OBSID'),
-                                                    copy(default_chan))
-
+        data.setdefault(obj, {}).setdefault('host.zhelio', opts.redshift \
+                                            if opts.redshift is not None \
+                                            else 0)
+        data.setdefault(obj, {}).setdefault('target.mwebv', opts.ebmv \
+                                            if opts.ebmv is not None \
+                                            else 0)
+        data[obj].setdefault('spectra', {}).setdefault(spec.readKey('OBSID'),
+                                                       copy(default_chan))
         channel = spec.readKey('CHANNEL')
         if channel == 'Blue channel' or channel == 'B':
             channel = 'B'
         elif channel == 'R':
             pass
         elif channel == 'B+R':
-            channel = 'BR'
+            if opts.redshift is None:
+                channel = 'restframe'
+            else:
+                channel = 'merged'
         else:
             raise ValueError('Error in the channel of the given spectrum:%s'\
                              % channel)
 
-        d[obj]['spectra'][spec.readKey('OBSID')]['idr.spec_'+channel] = inspec
-
+        data[obj]['spectra'][spec.readKey('OBSID')]['idr.spec_'+channel] = inspec
     # only check last spectrum for absolute path
     if os.path.isabs(inspec):
         opts.data_dir = ''
     else:
         opts.data_dir = "./"
-    return SnfMetaData.SnfMetaData(d)
+    return SnfMetaData.SnfMetaData(data)
 
-def read_spectrum(filename, z_helio=None, mwebv=None, Rv=3.1):
+def read_spectrum(aname, z_helio=None, mwebv=None, Rv=3.1):
     """
-    Reads spectra and returns a simple object with x,y,v as attribute,
-    as needed by DrGall
+    Read a spectrum.
+
+    Returns a simple object with x,y,v as attribute, as needed by DrGall
     """
-    spec = pySnurp.Spectrum(filename)
+    spec = pySnurp.Spectrum(aname)
     if mwebv is not None:
         spec.deredden(mwebv, Rv=Rv)
     if z_helio is not None:
@@ -270,6 +247,8 @@ if __name__ == '__main__':
                   option.ebmv
             print 'for *all* targets'
         d = read_from_idr(option)
+    else:
+        raise IOError("No valid input given")    
 
     print "INFO: %i target(s) loaded.\n"%len(d.keys())
 
@@ -288,13 +267,13 @@ if __name__ == '__main__':
     # Create spin data structure
     dspin = SnfMetaData.SnfMetaData()
 
-    if not os.path.exists(option.output_dir):
-        print >> sys.stderr, code_name + "creating %s" % option.output_dir
-        os.mkdir(option.output_dir)
+    if not os.path.exists(option.odir):
+        print >> sys.stderr, code_name + "creating %s" % option.odir
+        os.mkdir(option.odir)
 
     #-  Loop over targets
     for target_name, z_helio, mwebv, color,\
-        b_filename, r_filename, merge_filename,\
+        b_filename, r_filename, merge_filename, restframe_filename,\
         expId, phase in zip(*d.spectra("target.name",
                                        "host.zhelio",
                                        "target.mwebv",
@@ -302,6 +281,7 @@ if __name__ == '__main__':
                                        "idr.spec_B",
                                        "idr.spec_R",
                                        "idr.spec_merged",
+                                       "idr.spec_restframe",
                                        "obs.exp",
                                        "salt2.phase")):
         if option.expid is not None and expId not in option.expid:
@@ -309,13 +289,13 @@ if __name__ == '__main__':
         #+ z_helio -> option.z
         #+ mwebv -> option.mwebv
         #+ color -> option.salt2color removed!
-        tmpdir = os.path.join(option.output_dir, target_name)
+        tmpdir = os.path.join(option.odir, target_name)
         if not os.path.exists(tmpdir):
             print >> sys.stderr, code_name + "creating %s" % tmpdir
             os.mkdir(tmpdir)
 
         #- If needed, create the directory to save control plots
-        plotdir = os.path.join(option.output_dir, target_name, option.dir)
+        plotdir = os.path.join(option.odir, target_name)
         if not os.path.exists(plotdir) and option.plot:
             print >> sys.stderr, code_name + "creating %s" % plotdir
             os.mkdir(plotdir)
@@ -328,47 +308,48 @@ if __name__ == '__main__':
         print "INFO: Reading %s, from %s" % (expId, target_name)
         print "INFO: Correcting from MW extinction (E(B-V)=%.2f)" %mwebv
         print "INFO: Going to rest-frame using z=%.3f" % z_helio
-        # merged
-        try:
-            spec_merge = read_spectrum(os.path.join(option.data_dir,
-                                                    merge_filename),
-                                       z_helio=z_helio,
-                                       mwebv=mwebv,
-                                       Rv=option.Rv)
-        except AttributeError:
+        spec_merge = merge_filename
+        if merge_filename is None:
             spec_merge = None
-        # B channel
-        try:
-            spec_b = read_spectrum(os.path.join(option.data_dir, b_filename),
-                                   z_helio=z_helio, mwebv=mwebv, Rv=option.Rv)
-        except AttributeError:
+        else:  # merged spectrum
+            spec_merge = read_spectrum(os.path.join(option.data_dir, merge_filename),
+                                       z_helio=z_helio, mwebv=mwebv, Rv=option.rv)
+        if b_filename is None:
             spec_b = None
-        # R channel
-        try:
-            spec_r = read_spectrum(os.path.join(option.data_dir, r_filename),
-                                   z_helio=z_helio, mwebv=mwebv, Rv=option.Rv)
-        except AttributeError:
+        else:  # B channel
+            spec_b = read_spectrum(os.path.join(option.data_dir, b_filename),
+                                   z_helio=z_helio, mwebv=mwebv, Rv=option.rv)
+        if r_filename is None:
             spec_r = None
-
+        else:  # R channel
+            spec_r = read_spectrum(os.path.join(option.data_dir, r_filename),
+                                   z_helio=z_helio, mwebv=mwebv, Rv=option.rv)
+        if restframe_filename is None:
+            spec_rf = None
+        else:  # R channel
+            spec_rf = read_spectrum(os.path.join(option.data_dir, restframe_filename))
         if spec_merge is None and spec_b is None and spec_r is None:
-            print "WARNING: No spectrum for this %s, pass."%expId
-            continue
+            if spec_rf is None:
+                print "WARNING: No spectrum for %s, pass."%expId
+                continue
+            else:
+                spec_merge = spec_rf
 
         DrGall = spinmeas.DrGall(spec=spec_merge, specb=spec_b, specr=spec_r)
 
         if spec_merge is not None or spec_b is not None:
             calcium = DrGall.calcium_computing(nsimu=option.nsimu,
-                                               smoother=option.smoother,
+                                               smoother=option.smooth,
                                                verbose=True)
         else:
             print "There is no B channel"
 
         if spec_merge is not None or spec_r is not None:
             silicon = DrGall.silicon_computing(nsimu=option.nsimu,
-                                               smoother=option.smoother,
+                                               smoother=option.smooth,
                                                verbose=True)
             oxygen = DrGall.oxygen_computing(nsimu=option.nsimu,
-                                             smoother=option.smoother,
+                                             smoother=option.smooth,
                                              verbose=True)
         else:
             print "There is no R channel"
@@ -381,7 +362,7 @@ if __name__ == '__main__':
             else:
                 rsjb = [spin.stephen_ratio(spec_b, spec_r), 0.0]
             iron = DrGall.iron_computing(nsimu=option.nsimu,
-                                         smoother=option.smoother,
+                                         smoother=option.smooth,
                                          verbose=False)
         else:
             rsjb = [np.nan] * 2
@@ -409,19 +390,19 @@ if __name__ == '__main__':
             print "\nINFO: Making control plots"
             title = target_name+', Rest-Frame Phase=%.1f' % phase
             try:
-                DrGall.control_plot(filename=control_plot_name, title=title, oformat=option.oformat)
+                DrGall.control_plot(filename=control_plot_name, title=title, oformat=option.pformat)
             except Exception, err:
                 print "<%s> WARNING: control_plot had a problem:"%\
                       code_name, err
             try:
-                DrGall.plot_oxygen(filename=control_plot_name_ox, title=title, oformat=option.oformat)
+                DrGall.plot_oxygen(filename=control_plot_name_ox, title=title, oformat=option.pformat)
             except Exception, err:
                 print "<%s> WARNING: control_plot for oxygen had a problem:"%\
                       code_name, err
             try:
                 DrGall.plot_iron(filename=control_plot_name_fe,
                                  title=title,
-                                 oformat=option.oformat)
+                                 oformat=option.pformat)
             except Exception, err:
                 print "<%s> WARNING: control_plot for iron had a problem:"%\
                       code_name, err
@@ -432,20 +413,5 @@ if __name__ == '__main__':
             filename = os.path.join(plotdir, fname)
             cPickle.dump(DrGall, open(filename, 'w'))
 
-    filename = "snspin_output.yaml" if option.out_file is None else option.out_file
-    pkl_filename = filename.replace("yaml", "pkl")
-
-    f = os.path.join(option.output_dir, filename)
-    if filename.endswith('pkl'):
-        pass
-    elif  filename.endswith('yml'):
-        pkl_filename = filename.replace("yml", "pkl")
-    elif filename.endswith('yaml'):
-        pkl_filename = filename.replace("yaml", "pkl")
-    else:
-        print "option out_file didn't end in .pkl, .yaml or .yml (%s)"%\
-              option.out_file
-        print "adding the pkl extension!"
-        f += ".pkl"
-
-    cPickle.dump(dspin, open(pkl_filename, 'w'))
+    output = "snspin_output.pkl" if option.output is None else option.output + ".pkl"
+    cPickle.dump(dspin, open(output, 'w'))

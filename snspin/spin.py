@@ -6,7 +6,7 @@ import sys
 import numpy as N
 from scipy.interpolate import LSQUnivariateSpline, UnivariateSpline
 
-from snspin.tools import smoothing
+from snspin.spectrum import smoothing
 from snspin.spectrum import covariance
 
 
@@ -132,12 +132,10 @@ class Craniometer(object):
                                             self.y,
                                             self.v * rc,
                                             corr=(rho**2) / rc)
-            except TypeError:
+            except Exception, err:
+                print "Error in spline_find_s:", err
                 s = 0.492 * len(self.x)
-        try:
-            s = s[0]
-        except TypeError:
-            s = s
+        s = s[0] if isinstance(s, list) else s
         if verbose:
             print >> sys.stderr, 'best_s=%i' % s
         if s <= 1:
@@ -194,9 +192,9 @@ class Craniometer(object):
                                                          self.y,
                                                          self.v * rc,
                                                          corr=(rho**2) / rc))
-            except TypeError:
+            except Exception, err:
                 if verbose:
-                    print >> sys.stderr, 'ERROR in computing of best hsize'
+                    print >> sys.stderr, 'ERROR in computing of best hsize', err
                 hsize = 15
         if (hsize * 2) + 1 < (order + 2):
             hsize = 10  # order/2.+1
@@ -297,7 +295,6 @@ class Craniometer(object):
         """
         self.v *= factor
         self.rho = rho
-        # try:
         self.simulations = []
         if simus is not None:
             simulated_spectra = simus
@@ -334,9 +331,9 @@ class Craniometer(object):
 
         try:
             self.systematic_error()
-        except TypeError:
+        except Exception, err:
             self.syst = None
-            print >> sys.stderr, "ERROR in systematic_error (cranio_generator)!"
+            print >> sys.stderr, "ERROR in systematic_error (cranio_generator)", err
 
     def _correl_simulated_spectra(self, nsimu, rho=0.482):
         """Correlate the noise of simulated sptectra."""
@@ -539,7 +536,8 @@ class Craniometer(object):
         if lbd1 >= lbd2 or lbd2 >= lbd3 or lbd1 >= lbd3:
             if verbose:
                 print >> sys.stderr, 'ERROR in the definition of wavelenght '\
-                    'to compute equivalent depth'
+                    'to compute equivalent depth (lbds: %.2f, %.2f, %.2f)' % \
+                    (lbd1, lbd2, lbd3)
             return N.nan
         else:
             p = N.polyfit([lbd1, lbd3], [flux1, flux3], 1)  # y=p[0]*x+p[1]
@@ -704,8 +702,7 @@ class Craniometer(object):
                                                             self.maxima['v'],
                                                             self.maxima['s'],
                                                             extrema='maxima',
-                                                            right=True,
-                                                            verbose=verbose)
+                                                            right=True)
         if simu and lbd1 is None:
             lbd1, flux1, var1 = self.max_of_interval(self.p3590[0], self.p3590[1])
 
@@ -714,13 +711,12 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if simu and lbd2 is None:
             lbd2, flux2, var2 = self.max_of_interval(self.p3930[0], self.p3930[1])
-        try:
+        if flux1 != 0 and isinstance(flux1, float) and isinstance(flux2, float):
             rca_value = flux2 / flux1
-        except TypeError:
+        else:
             if verbose:
                 print >> sys.stderr, "ERROR in computing rca"
             rca_value = N.nan
@@ -881,14 +877,10 @@ class Craniometer(object):
         try:
             lbd1, flux1, var1 = self._extrema_value_in_interval(self.p3590[0],
                                                                 self.p3590[1],
-                                                                self.maxima[
-                                                                    'x'],
-                                                                self.maxima[
-                                                                    'v'],
-                                                                self.maxima[
-                                                                    's'],
-                                                                extrema='maxima',
-                                                                verbose=verbose)
+                                                                self.maxima['x'],
+                                                                self.maxima['v'],
+                                                                self.maxima['s'],
+                                                                extrema='maxima')
             if simu and lbd1 is None:
                 lbd1, flux1, var1 = self.max_of_interval(self.p3590[0],
                                                          self.p3590[1])
@@ -901,8 +893,7 @@ class Craniometer(object):
                                                                     'v'],
                                                                 self.maxima[
                                                                     's'],
-                                                                extrema='maxima',
-                                                                verbose=verbose)
+                                                                extrema='maxima')
             if simu and lbd2 is None:
                 lbd2, flux2, var2 = self.max_of_interval(self.p3930[0],
                                                          self.p3930[1])
@@ -1034,8 +1025,7 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if simu and lbd1 is None:
             lbd1, flux1, var1 = self.max_of_interval(self.p3590[0], self.p3590[1])
 
@@ -1044,8 +1034,7 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if simu and lbd2 is None:
             lbd2, flux2, var2 = self.max_of_interval(self.p3930[0], self.p3930[1])
 
@@ -1094,27 +1083,19 @@ class Craniometer(object):
         try:
             lbd1, flux1, var1 = self._extrema_value_in_interval(self.p3590[0],
                                                                 self.p3590[1],
-                                                                self.maxima[
-                                                                    'x'],
-                                                                self.maxima[
-                                                                    'v'],
-                                                                self.maxima[
-                                                                    's'],
-                                                                extrema='maxima',
-                                                                verbose=verbose)
+                                                                self.maxima['x'],
+                                                                self.maxima['v'],
+                                                                self.maxima['s'],
+                                                                extrema='maxima')
             if simu and lbd1 is None:
                 lbd1, flux1, var1 = self.max_of_interval(self.p3590[0], self.p3590[1])
 
             lbd2, flux2, var2 = self._extrema_value_in_interval(self.p3930[0],
                                                                 self.p3930[1],
-                                                                self.maxima[
-                                                                    'x'],
-                                                                self.maxima[
-                                                                    'v'],
-                                                                self.maxima[
-                                                                    's'],
-                                                                extrema='maxima',
-                                                                verbose=verbose)
+                                                                self.maxima['x'],
+                                                                self.maxima['v'],
+                                                                self.maxima['s'],
+                                                                extrema='maxima')
             if simu and lbd2 is None:
                 lbd2, flux2, var2 = self.max_of_interval(self.p3930[0], self.p3930[1])
 
@@ -1195,8 +1176,7 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if lbd1 is None:
             lbd1, flux1, var1 = self.max_of_interval(self.p5603[0], self.p5603[1])
 
@@ -1204,8 +1184,7 @@ class Craniometer(object):
                                                             self.minima['x'],
                                                             self.minima['v'],
                                                             self.minima['s'],
-                                                            extrema='minima',
-                                                            verbose=verbose)
+                                                            extrema='minima')
         if lbd2 is None:
             try:
                 lbd2, flux2, var2 = self._find_special_peak(5700, 5849,
@@ -1220,8 +1199,8 @@ class Craniometer(object):
                                                             self.maxima['v'],
                                                             self.maxima['s'],
                                                             extrema='maxima',
-                                                            verbose=verbose,
                                                             right=True)
+
         if lbd3 is None:
             try:
                 lbd3, flux3, var3 = self._find_special_peak(self.p5930[0],
@@ -1237,8 +1216,7 @@ class Craniometer(object):
                                                             self.minima['x'],
                                                             self.minima['v'],
                                                             self.minima['s'],
-                                                            extrema='minima',
-                                                            verbose=verbose)
+                                                            extrema='minima')
         if simu and lbd4 is None:
             lbd4, flux4, var4 = self.max_of_interval(6000, 6210)
         lbd5, flux5, var5 = self._extrema_value_in_interval(self.p6312[0],
@@ -1246,8 +1224,7 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if simu and lbd5 is None:
             lbd5, flux5, var5 = self.max_of_interval(self.p6312[0], self.p6312[1])
         # Check if the straight line in under the smoothing function
@@ -1363,8 +1340,7 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if simu and lbd1 is None:
             lbd1, flux1, var1 = self.max_of_interval(self.p5603[0], self.p5603[1])
 
@@ -1373,8 +1349,7 @@ class Craniometer(object):
                                                             self.maxima['x'],
                                                             self.maxima['v'],
                                                             self.maxima['s'],
-                                                            extrema='maxima',
-                                                            verbose=verbose)
+                                                            extrema='maxima')
         if simu and lbd2 is None:
             lbd2, flux2, var2 = self.max_of_interval(self.p6312[0], self.p6312[1])
 
@@ -1612,14 +1587,10 @@ class Craniometer(object):
         try:
             lbd1, flux1, var1 = self._extrema_value_in_interval(lambda_min_blue,
                                                                 lambda_max_blue,
-                                                                self.maxima[
-                                                                    'x'],
-                                                                self.maxima[
-                                                                    'v'],
-                                                                self.maxima[
-                                                                    's'],
+                                                                self.maxima['x'],
+                                                                self.maxima['v'],
+                                                                self.maxima['s'],
                                                                 extrema='maxima',
-                                                                verbose=verbose,
                                                                 right=right1,
                                                                 left=left1)
             if lbd1 is None:
@@ -1639,14 +1610,10 @@ class Craniometer(object):
 
             lbd2, flux2, var2 = self._extrema_value_in_interval(lambda_min_red,
                                                                 lambda_max_red,
-                                                                self.maxima[
-                                                                    'x'],
-                                                                self.maxima[
-                                                                    'v'],
-                                                                self.maxima[
-                                                                    's'],
+                                                                self.maxima['x'],
+                                                                self.maxima['v'],
+                                                                self.maxima['s'],
                                                                 extrema='maxima',
-                                                                verbose=verbose,
                                                                 right=right2,
                                                                 left=left2)
 
@@ -1966,12 +1933,9 @@ class Craniometer(object):
                                                              self.minima['v'],
                                                              self.minima['s'],
                                                              extrema='minima',
-                                                             verbose=verbose,
                                                              right=right,
                                                              left=left)
             if lbd is None:
-                if verbose:
-                    print 'find special peak'
                 lbd, flux, var = self._find_special_peak(infodict['lmin'],
                                                          infodict['lmax'],
                                                          minima=True,
@@ -2135,7 +2099,6 @@ class Craniometer(object):
                                                             self.maxima['v'],
                                                             self.maxima['s'],
                                                             extrema='maxima',
-                                                            verbose=verbose,
                                                             right=right,
                                                             left=left)
         if lbdm is None:
