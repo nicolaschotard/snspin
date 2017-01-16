@@ -1,14 +1,12 @@
 #/bin/env python
 
-"""
-Spectral covariance matrix (variance and correlation) study
-"""
+"""Spectral covariance matrix (variance and correlation) study."""
 
 from glob import glob
 import pylab as P
 import numpy as N
 import scipy as S
-from scipy import interpolate as I
+from scipy import interpolate
 from scipy import optimize
 
 from snspin.tools import io
@@ -21,12 +19,10 @@ from snspin.spectrum.smoothing import sg_find_num_points
 
 class SPCS(object):
 
-    """
-    SpecVarCorrStudy.
-    """
+    """SpecVarCorrStudy."""
 
     def __init__(self, x, y, v, specid='', obj='',
-                 verbose=False, rhoB=0.32, rhoR=0.40, factor=0.69):
+                 verbose=False, rhob=0.32, rhoR=0.40, factor=0.69):
         """."""
         # Set the data
         self.x = x
@@ -34,8 +30,8 @@ class SPCS(object):
         self.v = v * factor
         self.factor_used = factor
         if S.mean(x) < 5150:
-            self.rho = rhoB
-            self.rho_used = 'rhoB'
+            self.rho = rhob
+            self.rho_used = 'rhob'
         else:
             self.rho = rhoR
             self.rho_used = 'rhoR'
@@ -84,7 +80,7 @@ class SPCS(object):
         self.pull = comp_pull(self.y, self.ysmooth, self.v)
         self.pull_mean = S.mean(self.pull)
         self.pull_std = S.std(self.pull)
-        #self.rho = autocorr(self.pull, k=1, full=False)
+        # self.rho = autocorr(self.pull, k=1, full=False)
         self.residuals = self.y - self.ysmooth
 
         if self.verbose:
@@ -106,7 +102,7 @@ class SPCS(object):
         """
         Build a simulated set of data.
 
-        Make some simulation for which everything will be computing as well nsimu is the number 
+        Make some simulation for which everything will be computing as well nsimu is the number
         of simulations
         if factor is set (1 by default), then self.v*=factor
         if factor is set to None, then self.v*=self.factor
@@ -154,14 +150,14 @@ class SPCS(object):
             print "Mean rho         %.3f         %.3f" \
                   % (self.rho, S.mean([s.rho for s in self.simus]))
 
-    def do_plots(self, all=False, lim=2):
+    def do_plots(self, allp=False, lim=2):
         """."""
         plot_spec(self.x, self.y, self.v, self.ysmooth,
                   title=self.object + ', ' + self.specid)
         plot_pull(self.x, self.pull, title=self.object + ', ' + self.specid)
         if hasattr(self, 'simus'):
             self.plot_simu_distri()
-            if all:
+            if allp:
                 for i, s in enumerate(self.simus):
                     if i < lim:
                         s.do_plots()
@@ -171,7 +167,6 @@ class SPCS(object):
     def plot_simu_distri(self):
         """."""
         # set the data
-        ch, co, pm, ps = [], [], [], []
         chi2 = S.concatenate([[s.chi2 for s in self.simus], [self.chi2]])
         corr = S.concatenate([[s.rho for s in self.simus], [self.rho]])
         pmean = S.concatenate([[s.pull_mean for s in self.simus],
@@ -192,9 +187,7 @@ class SPCS(object):
 
 class SPCS_test(object):
 
-    """
-    SpecVarCorrStudy
-    """
+    """SpecVarCorrStudy test."""
 
     def __init__(self, x, y, v, specid='', obj='', verbose=False):
         """."""
@@ -242,7 +235,7 @@ class SPCS_test(object):
         self.pull_mean = S.mean(self.pull)
         self.pull_std = S.std(self.pull)
         self.residuals = self.y - self.ysmooth
-        #self.rho = autocorr(self.pull,k=1,full=False)
+        # self.rho = autocorr(self.pull,k=1,full=False)
         self.rho = autocorr(self.residuals, k=1, full=False)
 
         if self.verbose:
@@ -258,7 +251,8 @@ class SPCS_test(object):
 
     def make_simu(self, nsimu=0, factor=1., rho=0,  ndist=None):
         """
-        Make some simulation for which everything will be computing as well
+        Make some simulation for which everything will be computing.
+
         nsimu is the number af simulations
         if factor is set (1 by default), then self.v*=factor
         if factor is set to None, then self.v*=self.factor
@@ -267,11 +261,11 @@ class SPCS_test(object):
         the correlation parameter found after the smoothing
         corr can also be set to a float value
         """
-        if factor == None:
+        if factor is None:
             factor = self.factor
 
         # Compute the ramdom noise
-        if ndist != None:
+        if ndist is not None:
             pass
         elif rho == 0:
             ndist = S.random.randn(nsimu, len(self.x))
@@ -292,7 +286,7 @@ class SPCS_test(object):
         for sim in simus:
             si = SPCS_test(self.x, sim, self.v, verbose=False)
             si.smooth(smoothing=self.smoothing, s=self.s, w=self.w)
-            #,rho=rho) #,factor=factor)
+            # ,rho=rho) #,factor=factor)
             self.simus.append(si)
 
         if self.verbose:
@@ -351,7 +345,7 @@ class SPCS_test(object):
         def func_rho(rho):
             self.smooth(smoothing=self.smoothing,
                         rho=self.rho, factor=1. / (1. + 2 * rho))
-            #ratio = S.absolute(self.pull_std-1.)
+            # ratio = S.absolute(self.pull_std-1.)
             ratio = S.absolute(rho - self.rho)
             return ratio
 
@@ -361,7 +355,7 @@ class SPCS_test(object):
         # self.smooth(smoothing=self.smoothing,rho=self.rho,
         # factor=self.factor,findp=True)
 
-        #self.rho = optimize.fmin(func_rho,self.rho,disp=False)[0]
+        # self.rho = optimize.fmin(func_rho,self.rho,disp=False)[0]
         # self.factor=1.+2*self.rho**2
 
         # self.smooth(smoothing=self.smoothing,rho=self.rho,
@@ -373,14 +367,14 @@ class SPCS_test(object):
             print "Factor used: ", self.factor
             print "Correlation coefficient:", self.rho
 
-    def do_plots(self, all=False, lim=5):
+    def do_plots(self, allp=False, lim=5):
         """."""
         plot_spec(self.x, self.y, self.v, self.ysmooth,
                   title=self.object + ',' + self.specid)
         plot_pull(self.x, self.pull, title=self.object + ',' + self.specid)
         if hasattr(self, 'simus'):
             self.plot_simu_distri()
-            if all:
+            if allp:
                 for i, s in enumerate(self.simus):
                     print i, lim
                     if i < lim:
@@ -413,20 +407,18 @@ class SPCS_test(object):
 
 
 def open_spec(spec_file, xmin=0, xmax=10000, z=None):
-    """
-    Load a spetrum and rReturn: x,y,v,obejct,specid.
-    """
+    """Load a spetrum and rReturn: x,y,v,obejct,specid."""
     spec = io.Spectrum(spec_file, keepFits=False)
-    if z != None:
+    if z is not None:
         spec.deredshift(z)
     mask = (spec.x >= xmin) & (spec.x <= xmax)
     return spec.x[mask], spec.y[mask], spec.v[mask], \
         spec.readKey('OBJECT'), spec.name.split('/')[-1]
 
 
-def load_SPCS(file, xmin=0, xmax=10000, z=None, verbose=False):
-    """."""
-    x, y, v, obejct, specid = open_spec(file, xmin=xmin, xmax=xmax, z=z)
+def load_SPCS(lfile, xmin=0, xmax=10000, z=None, verbose=False):
+    """Load a SPCS local file."""
+    x, y, v, obejct, specid = open_spec(lfile, xmin=xmin, xmax=xmax, z=z)
     return SPCS(x, y, v, obejct, specid, verbose=verbose)
 
 
@@ -440,8 +432,7 @@ def smooth_spec(x, y, v, s=None, w=15, sfunc='sp', order=2, verbose=False):
     """."""
     if sfunc == 'sp':
         if s == None:
-            sp = I.LSQUnivariateSpline(x, y, t=(x[::12])[1:],
-                                       w=1 / (S.sqrt(v)))
+            sp = interpolate.LSQUnivariateSpline(x, y, t=(x[::12])[1:], w=1 / (S.sqrt(v)))
         else:
             try:
                 s = s[0]
@@ -449,7 +440,7 @@ def smooth_spec(x, y, v, s=None, w=15, sfunc='sp', order=2, verbose=False):
                 pass
             if s <= 1:
                 s *= len(x)
-            sp = I.UnivariateSpline(x, y, w=1 / (S.sqrt(v)), s=s)
+            sp = interpolate.UnivariateSpline(x, y, w=1 / (S.sqrt(v)), s=s)
         ysmooth = sp(x)
     elif sfunc == 'sg':
         kernel = (int(w) * 2) + 1
@@ -464,12 +455,12 @@ def smooth_spec(x, y, v, s=None, w=15, sfunc='sp', order=2, verbose=False):
 
 
 def comp_pull(y, ysmooth, v):
-    """Compute the pull"""
+    """Compute the pull."""
     return (y - ysmooth) / S.sqrt(v)
 
 
 def corr_noise(rho, nbin=10, nsimu=10):
-    """Create a correlated gaussian noise array"""
+    """Create a correlated gaussian noise array."""
 
     # Check if rho is between 0 and 0.5
     if rho < 0:
@@ -496,6 +487,7 @@ def corr_noise(rho, nbin=10, nsimu=10):
 
 
 def plot_spec(x, y, v, ysmooth, title=''):
+    """Plot a spectrum."""
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1, 0.08, 0.86, 0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Flux')
@@ -506,7 +498,7 @@ def plot_spec(x, y, v, ysmooth, title=''):
 
 
 def plot_pull(x, pull, title=''):
-    """."""
+    """Plot the pull distribution."""
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1, 0.08, 0.86, 0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Pull')
@@ -527,12 +519,10 @@ def plot_corr(corr, title=''):
 
 
 def autocorr(x, k=1, full=False):
-    """
-    R(k)= E[ (X(i)-mu)(X(i+k)-mu) ] / (sigma**2)
-    """
+    """Autocorrelation function: R(k)= E[ (X(i)-mu)(X(i+k)-mu) ] / (sigma**2)."""
     n, mu, sg = len(x), S.mean(x), S.std(x)
-    ack = lambda k: S.sum([(x[i] - mu) * (x[i + k] - mu)
-                           for i in range(n - k)]) / ((n - k) * sg**2)
+    def ack(k):
+        return S.sum([(x[i] - mu) * (x[i + k] - mu) for i in range(n - k)]) / ((n - k) * sg**2)
     if not full:
         return ack(k)
     else:
@@ -540,7 +530,7 @@ def autocorr(x, k=1, full=False):
 
 
 def plot_smoothed_spec(f, num=5):
-    """."""
+    """Plot the smoothed spectrum."""
     d = io.loaddata(f)
     for i in d:
         ob = d[i]
@@ -548,7 +538,7 @@ def plot_smoothed_spec(f, num=5):
 
 
 def plot_obj(ob, num=5):
-    """."""
+    """Plot spectrum and smoothed spectrum from a SPCS object."""
     fig = P.figure(figsize=(8, 18), dpi=150)
     ax = fig.add_axes([0.08, 0.08, 0.86, 0.87],
                       xlabel=r'Wavelength [$\AA$]', ylabel='Flux')
@@ -583,9 +573,9 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
     corr can also be set to a float value
     """
     # Creation of a variance array (uncorrelated random noise)
-    x = N.arange(nbin)
-    v = S.random.randn(nbin)**2
-    zeros = N.zeros(nbin)
+    # x = N.arange(nbin)
+    # v = S.random.randn(nbin)**2
+    # zeros = N.zeros(nbin)
 
     # Creation of (correlated) random noise
     if rho == 0:
@@ -595,13 +585,13 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
     sims *= factor
 
     # Check if rho is the given one
-    Rho = N.array([autocorr(N.array(sim), k=1, full=False) for sim in sims])
+    rho = N.array([autocorr(N.array(sim), k=1, full=False) for sim in sims])
     if plot:
-        P.hist(Rho, histtype='step', color='b',
-               alpha=0.5, bins=statistics.hist_nbin(Rho))
-        P.title('Mean=%.2f, Std=%.2f' % (N.mean(Rho), N.std(Rho)))
+        P.hist(rho, histtype='step', color='b',
+               alpha=0.5, bins=statistics.hist_nbin(rho))
+        P.title('Mean=%.2f, Std=%.2f' % (N.mean(rho), N.std(rho)))
     else:
-        return Rho
+        return rho
 
 
 def control_case_rho_var(rhos=None, factor=1):
@@ -614,29 +604,29 @@ def control_case_rho_var(rhos=None, factor=1):
     ax = fig.add_axes([0.1, 0.08, 0.86, 0.87], xlabel=r'$\rho$', ylabel='N')
     ax.set_title(r'Variation of $\rho$ for a controled case')
     for i, rho in enumerate(rhos):
-        Rho = control_case(rho=rho, factor=factor)
-        p = ax.hist(Rho, histtype='step', color=col[i],
-                    bins=statistics.hist_nbin(Rho), lw=1.5,
+        rho = control_case(rho=rho, factor=factor)
+        p = ax.hist(rho, histtype='step', color=col[i],
+                    bins=statistics.hist_nbin(rho), lw=1.5,
                     label=r'$\rho=%.2f$' % rho)
         if i == 0:
             m = p[0].max() + 15
         ax.axvline(rho, color=col[i], ls=':', lw=2)
-        ax.annotate('%.2f' % N.mean(Rho), (rho, m),
+        ax.annotate('%.2f' % N.mean(rho), (rho, m),
                     xycoords='data', horizontalalignment='right')
-        ax.annotate('%.2f' % N.std(Rho), (rho, m - 5),
+        ax.annotate('%.2f' % N.std(rho), (rho, m - 5),
                     xycoords='data', horizontalalignment='right')
     ax.annotate('Mean', (-0.15, m), xycoords='data',
                 horizontalalignment='left')
     ax.annotate('Std', (-0.15, m - 5), xycoords='data',
                 horizontalalignment='left')
     ax.set_ylim(ymax=m + 5)
-    #ax.legend(loc='upper right').draw_frame(False)
+    # ax.legend(loc='upper right').draw_frame(False)
     ax.legend(loc='best').draw_frame(False)
 
 
-def spec_autocorr(dir='./'):
+def spec_autocorr(ldir='./'):
     """."""
-    dirs = glob(dir + 'data_*/')
+    dirs = glob(ldir + 'data_*/')
     rho, factor, lbd, sn, params = [], [], [], [], []
     for d in dirs:
         print d
@@ -655,19 +645,16 @@ def spec_autocorr(dir='./'):
     P.figure()
     P.plot(rho, factor, 'og')
     P.plot(rho, N.array(rho) + 0.3, 'k')
-    rho, factor, lbd, sn, params = map(N.array, [rho, factor, lbd, sn, params])
+    rho, factor, lbd, sn, params = [N.array(x) for x in [rho, factor, lbd, sn, params]]
     sort = N.argsort(lbd)
     lbd0 = lbd[sort][0]
     r, f, s = [], [], []
     fig = P.figure(dpi=150)
     ax = fig.add_axes([0.1, 0.08, 0.86, 0.87], xlabel=r'$\rho$', ylabel='N')
-    #ax.set_title(r'Variation of $\rho$ for a controled case')
     fig2 = P.figure(dpi=150)
     ax2 = fig2.add_axes([0.1, 0.08, 0.86, 0.87], xlabel=r'factor', ylabel='N')
-    #ax2.set_title(r'Variation of $\rho$ for a controled case')
     fig3 = P.figure(dpi=150)
     ax3 = fig3.add_axes([0.1, 0.08, 0.86, 0.87], xlabel=r'$s$', ylabel='N')
-    #ax3.set_title(r'Variation of $\rho$ for a controled case')
     col = P.cm.jet(S.linspace(0, 1, 9))
     j = 0
     for i, lb in enumerate(lbd[sort]):

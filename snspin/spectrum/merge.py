@@ -1,7 +1,9 @@
 #/bin/env python
 
-"""
-the spec object used as a spectrum should contain :
+
+"""Merge two spectrum of the same object.
+
+The spec object used as a spectrum should contain :
 spec.x as the wavelength (an array of size N) as the cernter of bin
 spec.y as the flux (an array of size N)
 spec.v as the variance of the flux (an array of size N)
@@ -9,25 +11,27 @@ spec.step : either an array (of size N) containing the individual bin width or a
             integer in case fo constant binning.
 """
 
+
 import numpy as N
 
+
 def bin(spec, x):
-    """returns the bin in which x is in the spectrum
-    in case x is not in the spectrum, the return value is an empty array"""
+    """
+    Return the bin in which x is in the spectrum.
+
+    In case x is not in the spectrum, the return value is an empty array
+    """
     # comput the true / false array
     ubound = spec.x + spec.step / 2
     lbound = N.concatenate(([(spec.x - spec.step / 2)[0]], ubound[: - 1]))
     cond = (x < ubound) & (x >= lbound)
-    # check abiguities : this case should never (any more) happen
-    # if len(cond[cond])==2:
-    #    print "Warning : 2 solutions found"
-    #    cond[cond]=N.array((True,False))
-
-    # return as an integer array
     return N.nonzero(cond)
 
+
 def mean(spec, x1, x2):
-    """returns the integral of the flux over the wavelength range defined as [x1,x2]
+    """Compute a mean value bewteen x1 and x1.
+
+    Compute the integral of the flux over the wavelength range defined as [x1,x2]
     divided by the wavelength range in order to get a flux / wavelength.
     the variance of this quantity is returned as a 2nd parameter
     Raises ValueError if the spec range soesn't cover the intended bin width"""
@@ -52,7 +56,7 @@ def mean(spec, x1, x2):
     return retflux, retvar
 
 def rebin(spec, xarray):
-    """xarray is the array of bin edges (1 more than number of bins)"""
+    """xarray is the array of bin edges (1 more than number of bins)."""
     # this implementation was chosen instead of providing 2 arrays of length n
     outx = (xarray[1:] + xarray[: - 1]) / 2
     outflux = N.zeros(len(outx))
@@ -61,48 +65,50 @@ def rebin(spec, xarray):
         outflux[i], outvar[i] = mean(spec, xarray[i], xarray[i + 1])
     return outx, outflux, outvar
 
-class MergedSpectrum:
-    def __init__(self, specB, specR):
+class MergedSpectrum(object):
+
+    """Merge two spectra."""
+
+    def __init__(self, specb, specr):
         """
-        takes 2 SNIFS spectra and returns a merged output.
+        Takes 2 SNIFS spectra and returns a merged output.
 
-        The binning in the interregion is aligned to R binning
-        to avaoid oversampling."""
-
-        if specB.x[0] > specR.x[0]:
-            raise ValueError("specB has to be bluer than specR")
+        The binning in the interregion is aligned to R binning to avoid oversampling.
+        """
+        if specb.x[0] > specr.x[0]:
+            raise ValueError("specb has to be bluer than specr")
 
         # compute the range of pure original spectra and of overlap
-        condB = specB.x - specB.step / 2 < specR.x[0] - specR.step / 2
-        condRbin = specR.x - specR.step / 2 < specB.x[-1] + specB.step / 2
-        condR = specR.x + specR.step / 2 < specB.x[-1] + specB.step / 2
+        condb = specb.x - specb.step / 2 < specr.x[0] - specr.step / 2
+        condrbin = specr.x - specr.step / 2 < specb.x[-1] + specb.step / 2
+        condr = specr.x + specr.step / 2 < specb.x[-1] + specb.step / 2
         # compute the rebinning wavelength array and adjuste the first bin
-        # to match the end of pure B spectrum
-        rebinR = specR.x[condRbin] - specR.step / 2
-        rebinR[0] = specB.x[condB][-1] + specB.step / 2
+        # to match the end of pure b spectrum
+        rebinr = specr.x[condrbin] - specr.step / 2
+        rebinr[0] = specb.x[condb][-1] + specb.step / 2
 
-        # rebin B to R in the overlap region and prepare new R spectrum (sR)
+        # rebin b to r in the overlap region and prepare new r spectrum (sr)
         # the ' + 0' is here to force a copy.
-        rBx, rBflux, rBvar = rebin(specB, rebinR)
-        sRx = specR.x + 0
-        sRflux = specR.y + 0
-        sRvar = specR.v + 0
+        rbx, rbflux, rbvar = rebin(specb, rebinr)
+        srx = specr.x + 0
+        srflux = specr.y + 0
+        srvar = specr.v + 0
 
-        # replace new R spectrum in the overlap range width :
-        # the weighted (optimal) average of B rebinned and original R is taken.
-        sRx[condR] = rBx
-        sRflux[condR] = (rBflux  /  rBvar  +  specR.y[condR]  /  specR.v[condR])  /  \
-                        (1. / rBvar  +  1. / specR.v[condR])
-        sRvar[condR] = 1. / (1. / rBvar + 1. / specR.v[condR])
-        sRstep = N.ones(len(sRx)) * specR.step
-        sRstep[0] = rebinR[1] - rebinR[0]
+        # replace new r spectrum in the overlap range width :
+        # the weighted (optimal) average of b rebinned and original r is taken.
+        srx[condr] = rbx
+        srflux[condr] = (rbflux  /  rbvar  +  specr.y[condr]  /  specr.v[condr])  /  \
+                        (1. / rbvar  +  1. / specr.v[condr])
+        srvar[condr] = 1. / (1. / rbvar + 1. / specr.v[condr])
+        srstep = N.ones(len(srx)) * specr.step
+        srstep[0] = rebinr[1] - rebinr[0]
 
-        # put together untouched B spectrum and the new R spectrum
-        self.x = N.concatenate((specB.x[condB], sRx))
-        self.y = N.concatenate((specB.y[condB], sRflux))
-        self.v = N.concatenate((specB.v[condB], sRvar))
-        self.step = N.concatenate((specB.step * N.ones(len(specB.x[condB])), sRstep))
-        self.name = specB.name
+        # put together untouched b spectrum and the new r spectrum
+        self.x = N.concatenate((specb.x[condb], srx))
+        self.y = N.concatenate((specb.y[condb], srflux))
+        self.v = N.concatenate((specb.v[condb], srvar))
+        self.step = N.concatenate((specb.step * N.ones(len(specb.x[condb])), srstep))
+        self.name = specb.name
 
 
 

@@ -1,29 +1,36 @@
 #/bin/env python
 
+"""Smooting tools."""
+
 import scipy as S
 import numpy as N
 import pylab as P
-try:
-    from scipy import factorial
-except:
-    from scipy.misc import factorial  # To handle different version of scipy
 
 
 # generic functions for the prediction
 
+
 def B_matrix_from_A(A, W):
-    """ B matrix is the smoothing matrix, I.E Y(reconstructed)=B Y(predicted)
+    """
+    Compute the smooting matrix.
+
+    B matrix is the smoothing matrix, I.E Y(reconstructed)=B Y(predicted)
     A matrix is such that AX=Y
-    W is the weight matrix """
-    covX = N.linalg.inv(N.dot(N.dot(N.transpose(A), W), A))
-    return N.dot(N.dot(A, covX), N.dot(N.transpose(A), W))
+    W is the weight matrix
+    """
+    covx = N.linalg.inv(N.dot(N.dot(N.transpose(A), W), A))
+    return N.dot(N.dot(A, covx), N.dot(N.transpose(A), W))
 
 
 def prediction_error(r, B, var, W=None, verbose=False):
-    """ r is the vector of residuals
+    """
+    Compute the prediction error.
+
+    r is the vector of residuals
     B is the B matrix (see above)
     furthemore, we assume the error is pure variance (var)
-    r is the residual vector """
+    r is the residual vector
+    """
     # simplification because we have no covariance included
     if W == None:
         pe = N.sum(r**2 / var) + 2 * N.sum(N.diag(B)) - len(var)
@@ -35,11 +42,16 @@ def prediction_error(r, B, var, W=None, verbose=False):
             print "WARNING <prediction_error>: pe < 0, variance probably under estimated"
     return pe
 
+
 # application to splines
 
 
 def spline_A_matrix(x, tck, der=0):
-    """ A is defined by Ax=y where x are the parameters and y the observable """
+    """
+    Compute the A matrix for a spline.
+
+    A is defined by Ax=y where x are the parameters and y the observable
+    """
     t = tck[0]
     k = tck[2]
     A = N.zeros([len(x), len(tck[1]) - 4])
@@ -64,6 +76,7 @@ def spline_tck_prediction_error(x, y, var, tck, dbg=False, Wcorr=None):
 
 
 def spline_prediction_error(x, y, var, s, dbg=False, W=None):
+    """Error prediction for a spline."""
     tck = S.interpolate.splrep(x, y, 1 / N.sqrt(var), s=s)
     out = spline_tck_prediction_error(x, y, var, tck, Wcorr=W)
     if dbg:
@@ -72,7 +85,7 @@ def spline_prediction_error(x, y, var, s, dbg=False, W=None):
 
 
 def weight_matrix_corr(var, corr):
-    # computation of the weight matrix :
+    """Computation of the weight matrix."""
     V = N.diag([1.] * len(var))
     V += N.diag([corr] * (len(var) - 1), 1)
     V += N.diag([corr] * (len(var) - 1), -1)
@@ -81,6 +94,7 @@ def weight_matrix_corr(var, corr):
 
 
 def spline_find_s(x, data, var, s0=None, corr=0.0, dbg=False):
+    """Compute the optimal smoothing parameter for a spline."""
     if s0 == None:
         s = len(x) * 1.
     else:
@@ -103,11 +117,12 @@ def spline_find_s(x, data, var, s0=None, corr=0.0, dbg=False):
     s = gauss_newton(func, s, (x, data, var), xtol=s / 100.)
     return (s + N.sqrt(s**2 + s_tweak)) / 2.
 
+
 # Other tools for splines
 
 
 def spline_covariance(x, var, tck, A=None):
-    """ returns the covariance matrix of spline parameters """
+    """Returns the covariance matrix of spline parameters."""
     if A == None:
         A = spline_A_matrix(x, tck)
     W = N.diag(1. / var)
@@ -115,7 +130,7 @@ def spline_covariance(x, var, tck, A=None):
 
 
 def spline_after_fit(x, y, var, tck, covX=None, A=None):
-    """ returns the spline parameters as a linear fit for a given tck """
+    """Return the spline parameters as a linear fit for a given tck."""
     if A == None:
         A = spline_A_matrix(x, tck)
     W = N.diag(1. / var)
@@ -266,7 +281,7 @@ def gauss_find_sigma(spec):
 
 
 def gauss_newton(func, x, args=(), xtol=0.0001, ftol=0.0001, maxiter=None, dinit=0.25):
-
+    
     xgrid = x * N.arange(0, dinit * 7, dinit)
     fgrid = N.array([func(x, *args) for x in xgrid])
 
@@ -278,8 +293,8 @@ def gauss_newton(func, x, args=(), xtol=0.0001, ftol=0.0001, maxiter=None, dinit
     x2=x*(1-dinit)
     xs=array([x2, x, x1])
     fs=array([func(x2, *args), func(x, *args), func(x1, *args)])
-"""
-    iter = 3
+    """
+    iteri = 3
     ierr = 0
     lbound = -N.inf
     ubound = +N.inf
@@ -290,7 +305,7 @@ def gauss_newton(func, x, args=(), xtol=0.0001, ftol=0.0001, maxiter=None, dinit
                 lbound = xs[0]
             if xs[2] < ubound:
                 ubound = xs[2]
-        iter += 1
+        iteri += 1
         m = N.array(
             [[xs[0]**2, xs[0], 1], [xs[1]**2, xs[1], 1], [xs[2]**2, xs[2], 1]])
         y = N.array([fs[0], fs[1], fs[2]])
@@ -349,7 +364,7 @@ def gauss_newton(func, x, args=(), xtol=0.0001, ftol=0.0001, maxiter=None, dinit
             # flat universe
             ierr = 1
 
-        if maxiter != None and iter > maxiter:
+        if maxiter != None and iteri > maxiter:
             ierr = 2
 
         if ierr == 0:
@@ -362,16 +377,16 @@ def gauss_newton(func, x, args=(), xtol=0.0001, ftol=0.0001, maxiter=None, dinit
             index = N.argsort(xs)
             fs = fs[index]
             xs = xs[index]
-    print "Number of iterations " + str(iter)
+    print "Number of iterations " + str(iteri)
     return xs[fs == N.min(fs)]
 
+
 ################## Savitzky-Golay ###########
-# from pySNURP
 
 
 def sg_coeff(num_points, pol_degree, diff_order=0):
     """
-    calculates filter coefficients for symmetric savitzky-golay filter.
+    Calculate filter coefficients for symmetric savitzky-golay filter.
 
     see: http://www.nrbook.com/a/bookcpdf/c14-8.pdf
 
@@ -382,7 +397,6 @@ def sg_coeff(num_points, pol_degree, diff_order=0):
                  1 means that filter results in smoothing the first derivative of function.
                  and so on ...
     """
-
     # uses a slow but sure algorithm
     # setup normal matrix
     r = N.arange(-num_points, num_points + 1, dtype=float)
@@ -393,12 +407,13 @@ def sg_coeff(num_points, pol_degree, diff_order=0):
     Am = N.linalg.inv(ATA)
 
     # calculate filter-coefficients
-    coeff = N.dot(Am, N.transpose(A))[diff_order] * factorial(diff_order)
+    coeff = N.dot(Am, N.transpose(A))[diff_order] * S.misc.factorial(diff_order)
 
     return coeff
 
 
 def B_matrix_sg(num_points, pol_degree, dim):
+    """Computethe B matrix for the SG filter case."""
     coeffs = sg_coeff(num_points, pol_degree)
     B = N.diag([coeffs[num_points]] * dim)
     for i in xrange(num_points):
@@ -410,12 +425,7 @@ def B_matrix_sg(num_points, pol_degree, dim):
 
 
 def sg_find_num_points(x, data, var, pol_degree=2, corr=0.0, verbose=False):
-    """
-    Returns the size of the halfwindow for the best savitzky-Golay approximation.
-    """
-    #+ FIXME: wouldn't it be better to explore by dichotomy between 1 and len(data)
-    #+ instead ?  (SZF 2011-11-17)
-
+    """Returns the size of the halfwindow for the best savitzky-Golay approximation."""
     def n(i_iteration):
         return (i_iteration - 1) + pol_degree / 2
 
@@ -435,7 +445,7 @@ def sg_find_num_points(x, data, var, pol_degree=2, corr=0.0, verbose=False):
         if verbose:
             print '%d, %f' % (num_points, pe)
         e[num_points] = pe
-        if (n(i_iteration * 2) > len(x)):
+        if n(i_iteration * 2) > len(x):
             # Test to prevent the coarse exploration to end up testing
             # number of points larger than the total number of data points.
             # The i_iteration *=2 takes into account that the next finer exporation expects
@@ -447,7 +457,7 @@ def sg_find_num_points(x, data, var, pol_degree=2, corr=0.0, verbose=False):
             pe = prediction_error(yy - data, B, var, W)
             e[len(x)] = pe
             finished = True
-        elif ((pe > N.min(e.values()) and N.min(e.values()) < len(x) * 0.9999)):
+        elif pe > N.min(e.values()) and N.min(e.values()) < len(x) * 0.9999:
             # Test to stop when the prediction error stops decreasing and starts increasing again.
             # Under the assumption that the prediction error is convex and starts by decreasing,
             # this means that the inflection point happened just before this
@@ -490,7 +500,8 @@ def sg_find_num_points(x, data, var, pol_degree=2, corr=0.0, verbose=False):
 #####################################################
 
 
-def comp_epsilon_terms(x, y, v, p, corr=0, mode='sp', all=False):
+def comp_epsilon_terms(x, y, v, p, corr=0, mode='sp', allp=False):
+    """Compute the epsilon terms."""
     if mode == 'sg':
         B = B_matrix_sg(2 * p + 1, 2, len(x))
         yy = N.dot(B, y)
@@ -500,22 +511,20 @@ def comp_epsilon_terms(x, y, v, p, corr=0, mode='sp', all=False):
         B = B_matrix_from_A(A, N.diag(1. / v))
         yy = S.interpolate.splev(x, tck)
     else:
-        raise ValueError(
-            'Error: mode should be either "sp" for spline or "sg" for savitzky-golay')
+        raise ValueError('Error: mode should be either "sp" for spline or "sg" for savitzky-golay')
     W = weight_matrix_corr(v, corr)
     rchi2 = N.dot(N.dot(yy - y, W), yy - y)
     TB = N.trace(B)
     lv = len(v)
-    if all:
+    if allp:
         return rchi2, TB, lv, p, yy
     else:
         return rchi2, TB, lv, p
 
 
 def plot_params_evol(rchi2, TB, lv, p):
-
-    rchi2, TB, lv, p = map(N.array, [rchi2, TB, lv, p])
-
+    """Plot reduced chi2 as a function of a given parameter p."""
+    rchi2, TB, lv, p = [N.array(x) for x in  [rchi2, TB, lv, p]]
     fig = P.figure()
     ax = fig.add_subplot(111)
     ax.plot(p, rchi2, 'k', label='Regular chi2')
