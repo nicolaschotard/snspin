@@ -24,7 +24,6 @@ matplotlib.use('Agg')
 
 from snspin import spinmeas
 from snspin.tools import io
-from snspin.extern import pySnurp
 
 code_name = os.path.basename(__file__) + ' '
 
@@ -160,7 +159,7 @@ def read_from_fits(opts):
         if not hasattr(opts, "data_dir"):
             opts.data_dir = '' if os.path.isabs(inspec) else "./"
         print "INFO: Reading input spectrum", inspec
-        spec = pySnurp.Spectrum(inspec, keepfits=False)
+        spec = io.Spectrum(inspec, keepfits=False)
         obj = spec.readKey('OBJECT')
         data.setdefault(obj, {}).setdefault('host.zhelio', opts.redshift \
                                             if opts.redshift is not None \
@@ -255,7 +254,7 @@ def read_spectrum(aname, z=None, mwebv=None, Rv=3.1):
 
     Returns a simple object with x,y,v as attribute, as needed by DrGall
     """
-    spec = pySnurp.Spectrum(aname)
+    spec = io.Spectrum(aname)
     if mwebv is not None:
         spec.deredden(mwebv, Rv=Rv)
     if z is not None:
@@ -280,7 +279,7 @@ if __name__ == '__main__':
     # Target selection
     targets = option.target if option.target is not None else set(idata.keys())
     targets = targets.difference(option.exclude) if option.exclude is not None else targets
-    print "INFO: %i target(s) loaded.\n"%len(idata.keys())
+    print "INFO: %i target(s) loaded.\n" % len(targets)
 
     # Reduce initial dictionanry to the selected target list
     idata = {tg: idata[tg] for tg in targets}

@@ -64,7 +64,7 @@ def rebin(spec, xarray):
 class MergedSpectrum:
     def __init__(self, specB, specR):
         """
-        takes 2 pySnurp SNIFS spectra and returns a merged output.
+        takes 2 SNIFS spectra and returns a merged output.
 
         The binning in the interregion is aligned to R binning
         to avaoid oversampling."""

@@ -11,7 +11,6 @@ import scipy as S
 from scipy import interpolate as I
 from scipy import optimize
 
-from snspin.extern import pySnurp
 from snspin.tools import io
 from snspin.tools import statistics
 from snspin.spectrum.smoothing import savitzky_golay as sg
@@ -415,10 +414,9 @@ class SPCS_test(object):
 
 def open_spec(spec_file, xmin=0, xmax=10000, z=None):
     """
-    Load a spetrum using pySnurp
-    Return: x,y,v,obejct,specid
+    Load a spetrum and rReturn: x,y,v,obejct,specid.
     """
-    spec = pySnurp.Spectrum(spec_file, keepFits=False)
+    spec = io.Spectrum(spec_file, keepFits=False)
     if z != None:
         spec.deredshift(z)
     mask = (spec.x >= xmin) & (spec.x <= xmax)
