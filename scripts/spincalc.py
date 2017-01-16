@@ -21,9 +21,7 @@ import re
 # use Agg by default (do not try to show plot windows - extremely slow over ssh)
 import matplotlib
 matplotlib.use('Agg')
-import numpy as np
 
-from snspin import spin
 from snspin import spinmeas
 from snspin.tools import io
 from snspin.extern import pySnurp
@@ -38,8 +36,6 @@ def read_option():
     # Input options
     inp = optparse.OptionGroup(parser, "Input")
     inp.add_option("--idr", default=None, help="Path to an SNfactory IDR")
-    #inp.add_option("--subset", default=None,
-    #               help="Limits the IDR to the subsets selected (coma separated)")
     inp.add_option('--target', action="append",
                    help="Target name, or filename containing a target list. \
                    Can be used multiple times", default=None)
@@ -50,7 +46,7 @@ def read_option():
                    default=None)
     parser.add_option_group(inp)
 
-    #- Output specific options
+    # Output specific options
     out = optparse.OptionGroup(parser, "Output")
     out.add_option("--output", default=None,
                    help="snspin output file name (will be save as .pkl) [%default]",)
@@ -63,7 +59,7 @@ def read_option():
                    data, and the control_plot directory will be saved")
     parser.add_option_group(out)
 
-    #- Redshift and reddening tweaking options
+    # Redshift and reddening tweaking options
     red = optparse.OptionGroup(parser, "Corrections")
     red.add_option("--ebmv", type="float",
                    help="Ebmv value used to deredden *all* the input spectra \
@@ -75,7 +71,7 @@ def read_option():
                    default=None)
     parser.add_option_group(red)
 
-    #- Technical Snspin options
+    # Technical Snspin options
     adv = optparse.OptionGroup(parser, "Advanced")
     adv.add_option("--smooth",
                    help='Smoother used to smooth the spectrum \
@@ -86,7 +82,7 @@ def read_option():
                    error [%default]', default=1000)
     parser.add_option_group(adv)
 
-    #- Where and what to plot. Or not plot.
+    # Where and what to plot. Or not plot.
     plt = optparse.OptionGroup(parser, "Plot")
     plt.add_option("--pformat",
                    help="Format of the control plot (png, eps, ps, pdf) \
@@ -160,6 +156,9 @@ def read_from_fits(opts):
                     'idr.spec_R': None,
                     'idr.spec_merged': None}
     for inspec in opts.specs:
+        # only check last spectrum for absolute path
+        if not hasattr(opts, "data_dir"):
+            opts.data_dir = '' if os.path.isabs(inspec) else "./"
         print "INFO: Reading input spectrum", inspec
         spec = pySnurp.Spectrum(inspec, keepfits=False)
         obj = spec.readKey('OBJECT')
@@ -186,11 +185,9 @@ def read_from_fits(opts):
                              % channel)
 
         data[obj]['spectra'][spec.readKey('OBSID')]['idr.spec_'+channel] = inspec
-        phase = inspec.split('/')[-1].split('_')[1]
-        phase = - int(phase[1:]) / 1000. if phase[0] == 'M' else int(phase[1:]) / 1000.
-        data[obj]['spectra'][spec.readKey('OBSID')]['salt2.phase'] = phase
-    # only check last spectrum for absolute path
-    opts.data_dir = '' if os.path.isabs(inspec) else "./"
+        phs = inspec.split('/')[-1].split('_')[1]
+        phs = - int(phs[1:]) / 1000. if phs[0] == 'M' else int(phs[1:]) / 1000.
+        data[obj]['spectra'][spec.readKey('OBSID')]['salt2.phase'] = phs
     return data
 
 
@@ -199,22 +196,21 @@ def _makeiterable(obj):
     return (obj,) if not hasattr(obj, '__iter__') else obj
 
 
-def _add_value_err(dic, data, param, value, autoerr):
-    """Parse if value is (value, err) pair and add to dictionary data"""
+def _add_value_err(data, param, value, autoerr):
+    """Parse if value is (value, err) pair and add to dictionary data."""
     if autoerr and hasattr(value, '__iter__') and len(value) == 2:
         data[param] = value[0]
         data[param + '.err'] = value[1]
     else:
         data[param] = value
 
-            
-def add_to_spec(dic, target, exp, param=None, value=None, items=None, autoerr=True):
-    """
-    Add spectrum-level value(s) to the MetaData, creating target and
-    spectrum entries if needed.
 
-    target : target name or list of target names
-    exp    : exposure code YY_DAY_RUN_EXP or list of exp codes
+def add_to_spec(dic, tgt, exp, param=None, value=None, items=None, autoerr=True):
+    """
+    Add spectrum-level value(s) to a dictionnary, creating target and spectrum entries if needed.
+
+    tgt : target name or list of target names
+    exp : exposure code YY_DAY_RUN_EXP or list of exp codes
 
     either:
         param : parameter name or list of parameter names
@@ -226,10 +222,10 @@ def add_to_spec(dic, target, exp, param=None, value=None, items=None, autoerr=Tr
     as (value, error) pairs resulting in param and param.err entries
     Set autoerr=False to override this auto-error interpretation.
     """
-    target = _makeiterable(target)
+    tgt = _makeiterable(tgt)
     exp = _makeiterable(exp)
 
-    for name, ex in zip(target, exp):
+    for name, ex in zip(tgt, exp):
         if name not in dic:
             dic[name] = {'spectra': dict(), 'target.name': name}
         if 'spectra' not in dic[name]:
@@ -246,14 +242,14 @@ def add_to_spec(dic, target, exp, param=None, value=None, items=None, autoerr=Tr
             param = _makeiterable(param)
             value = _makeiterable(value)
             for p, v in zip(param, value):
-                _add_value_err(dic, info, p, v, autoerr)
+                _add_value_err(info, p, v, autoerr)
 
         # Add any pre-built dictionary items
         if items is not None:
             for p, v in items.iteritems():
-                _add_value_err(dic, info, p, v, autoerr)
+                _add_value_err(info, p, v, autoerr)
 
-def read_spectrum(aname, z_helio=None, mwebv=None, Rv=3.1):
+def read_spectrum(aname, z=None, mwebv=None, Rv=3.1):
     """
     Read a spectrum.
 
@@ -262,46 +258,41 @@ def read_spectrum(aname, z_helio=None, mwebv=None, Rv=3.1):
     spec = pySnurp.Spectrum(aname)
     if mwebv is not None:
         spec.deredden(mwebv, Rv=Rv)
-    if z_helio is not None:
-        spec.deredshift(z_helio)
+    if z is not None:
+        spec.deredshift(z)
     return spec
 
 
 if __name__ == '__main__':
 
     option = read_option()
-
-    #- Read the meta-data depending on the method used
-    if option.specs:
+    if option.specs:  # Read the meta-data depending on the method used
         idata = read_from_fits(option)
-    # search IDR by default
-    elif os.path.isdir(option.idr):
+    elif os.path.isdir(option.idr):  # search IDR by default
         if option.ebmv is not None:
-            print 'Warning: you are reading from an IDR but set ebmv = %f'%\
-                  option.ebmv
-            print 'for *all* targets'
+            print 'Warning: you are reading from an IDR but set ebmv = %f for *all* targets' % \
+                option.ebmv
         option.data_dir = option.idr
         idata = io.loaddata(option.idr + "/META.pkl")
     else:
         raise IOError("No valid input given")
 
-    print "INFO: %i target(s) loaded.\n"%len(idata.keys())
-
     # Target selection
     targets = option.target if option.target is not None else set(idata.keys())
     targets = targets.difference(option.exclude) if option.exclude is not None else targets
+    print "INFO: %i target(s) loaded.\n"%len(idata.keys())
 
     # Reduce initial dictionanry to the selected target list
     idata = {tg: idata[tg] for tg in targets}
-    
-    # Create spin data structure
+
+    # Create the spin data structure
     dspin = {}
 
     if not os.path.exists(option.odir):
         print >> sys.stderr, code_name + "creating %s" % option.odir
         os.mkdir(option.odir)
 
-    #-  Loop over targets
+    #  Loop over targets
     for target in idata:
         z_helio, mwebv = idata[target]["host.zhelio"], idata[target]["target.mwebv"]
         for expId in idata[target]["spectra"]:
@@ -312,23 +303,21 @@ if __name__ == '__main__':
             phase = idata[target]["spectra"][expId]["salt2.phase"]
             if option.expid is not None and expId not in option.expid:
                 continue
-            #+ z_helio -> option.z
-            #+ mwebv -> option.mwebv
             tmpdir = os.path.join(option.odir, target)
             if not os.path.exists(tmpdir):
                 print >> sys.stderr, code_name + "creating %s" % tmpdir
                 os.mkdir(tmpdir)
-            
-            #- If needed, create the directory to save control plots
+
+            # If needed, create the directory to save control plots
             plotdir = os.path.join(option.odir, target)
             if not os.path.exists(plotdir) and option.plot:
                 print >> sys.stderr, code_name + "creating %s" % plotdir
                 os.mkdir(plotdir)
-            
+
             # did we set an ebmv for de-reddening for *all* targets?
             if option.ebmv is not None and option.ebmv != mwebv:
                 mwebv = option.ebmv
-            
+
             print "=" * 80
             print "INFO: Reading %s, from %s" % (expId, target)
             print "INFO: Correcting from MW extinction (E(B-V)=%.2f)" %mwebv
@@ -338,17 +327,17 @@ if __name__ == '__main__':
                 spec_merge = None
             else:  # merged spectrum
                 spec_merge = read_spectrum(os.path.join(option.data_dir, merge_filename),
-                                           z_helio=z_helio, mwebv=mwebv, Rv=option.rv)
+                                           z=z_helio, mwebv=mwebv, Rv=option.rv)
             if b_filename is None:
                 spec_b = None
             else:  # B channel
                 spec_b = read_spectrum(os.path.join(option.data_dir, b_filename),
-                                       z_helio=z_helio, mwebv=mwebv, Rv=option.rv)
+                                       z=z_helio, mwebv=mwebv, Rv=option.rv)
             if r_filename is None:
                 spec_r = None
             else:  # R channel
                 spec_r = read_spectrum(os.path.join(option.data_dir, r_filename),
-                                       z_helio=z_helio, mwebv=mwebv, Rv=option.rv)
+                                       z=z_helio, mwebv=mwebv, Rv=option.rv)
             if restframe_filename is None:
                 spec_rf = None
             else:  # R channel
@@ -359,48 +348,34 @@ if __name__ == '__main__':
                     continue
                 else:
                     spec_merge = spec_rf
-            
+
             DrGall = spinmeas.DrGall(spec=spec_merge, specb=spec_b, specr=spec_r)
-            
+
             if spec_merge is not None or spec_b is not None:
                 calcium = DrGall.calcium_computing(nsimu=option.nsimu,
                                                    smoother=option.smooth,
                                                    verbose=True)
             else:
                 print "There is no B channel"
-            
+
             if spec_merge is not None or spec_r is not None:
-                silicon = DrGall.silicon_computing(nsimu=option.nsimu,
-                                                   smoother=option.smooth,
+                silicon = DrGall.silicon_computing(nsimu=option.nsimu, smoother=option.smooth,
                                                    verbose=True)
-                oxygen = DrGall.oxygen_computing(nsimu=option.nsimu,
-                                                 smoother=option.smooth,
+                oxygen = DrGall.oxygen_computing(nsimu=option.nsimu, smoother=option.smooth,
                                                  verbose=True)
             else:
                 print "There is no R channel"
-            
-            if spec_merge is not None \
-                   or (spec_b is not None \
-                       and spec_r is not None):
-                if spec_merge is not None:
-                    rsjb = [spin.stephen_ratio(spec_merge), 0.0]
-                else:
-                    rsjb = [spin.stephen_ratio(spec_b, spec_r), 0.0]
-                iron = DrGall.iron_computing(nsimu=option.nsimu,
-                                             smoother=option.smooth,
+
+            if spec_merge is not None or (spec_b is not None and spec_r is not None):
+                iron = DrGall.iron_computing(nsimu=option.nsimu, smoother=option.smooth,
                                              verbose=False)
-            else:
-                rsjb = [np.nan] * 2
 
             #Add 'snspin' on each key of the dictionnary
-            DrGall.values.update({'Rsjb': float(rsjb[0]),
-                                  'Rsjb.err': float(rsjb[1])})
             for key in DrGall.values.keys():
                 DrGall.values['snspin.%s' % key] = DrGall.values.pop(key)
 
             #Update final dictionnary
-            add_to_spec(dspin, target, expId,
-                        items=DrGall.values, autoerr=False)
+            add_to_spec(dspin, target, expId, items=DrGall.values, autoerr=False)
 
             #Control plots
             tgtexp = target + '.' + expId
@@ -410,17 +385,19 @@ if __name__ == '__main__':
             control_plot_name = os.path.join(plotdir, cpname)
             control_plot_name_ox = os.path.join(plotdir, cpname_ox)
             control_plot_name_fe = os.path.join(plotdir, cpname_fe)
-            
+
             if option.plot:
                 print "\nINFO: Making control plots"
                 title = target+', Rest-Frame Phase=%.1f' % phase
                 try:
-                    DrGall.control_plot(filename=control_plot_name, title=title, oformat=option.pformat)
+                    DrGall.control_plot(filename=control_plot_name, title=title,
+                                        oformat=option.pformat)
                 except Exception, err:
                     print "<%s> WARNING: control_plot had a problem:"%\
                           code_name, err
                 try:
-                    DrGall.plot_oxygen(filename=control_plot_name_ox, title=title, oformat=option.pformat)
+                    DrGall.plot_oxygen(filename=control_plot_name_ox, title=title,
+                                       oformat=option.pformat)
                 except Exception, err:
                     print "<%s> WARNING: control_plot for oxygen had a problem:"%\
                           code_name, err
@@ -432,7 +409,7 @@ if __name__ == '__main__':
                     print "<%s> WARNING: control_plot for iron had a problem:"%\
                           code_name, err
             print '\n'
-            
+
             if option.save_pickles:
                 fname = tgtexp + ".spin_data" + ".pkl"
                 filename = os.path.join(plotdir, fname)
