@@ -211,87 +211,6 @@ class Spectrum(object):
         self._hdr['CRPIX1'] = 1
         self._hdr['CRVAL1'] = self.start
 
-    def writeto(self, outname, force=False, hdrOnly=False,
-                keywords=(), **kwargs):
-        """Save Spectrum to new FITS-file."""
-        if self._fits is None:          # FITS file has been closed
-            raise IOError("Cannot write to disk to closed FITS file")
-        else:
-            spec = self._fits[self.ext]
-
-        self._hdr['CRPIX1'] = self._hdr.get('CRPIX1', 1)  # Make it mandatory
-
-        if not hdrOnly:                 # Update FITS-data
-            spec.data = numpy.array(self.y)
-
-            # Update FITS-header
-            self._hdr['NAXIS1'] = self.npts
-            self._hdr['CDELT1'] = self.step
-            self._hdr['CRVAL1'] = self.start + \
-                (self._hdr['CRPIX1'] - 1) * self.step
-
-            # Remove any prior VARIANCE/COVARiance extensions if any:
-            # they will then be re-added as needed
-            extnames = [ext.name for ext in self._fits]
-            for extname in ("VARIANCE", "COVAR"):
-                if extname in extnames:
-                    i = self._fits.index_of(extname)
-                    self._fits.remove(self._fits[i])
-
-            if self.hasVar and kwargs.pop('varext', True):
-                # Add variance spectrum as extension VARIANCE
-                assert len(self.v) == self.npts, \
-                    "Variance extension (%d px) " \
-                    "is not coherent with signal (%d px)" % \
-                    (len(self.v), self.npts)
-                var = pyfits.ImageHDU(self.v, name='VARIANCE')
-                var.header['CRVAL1'] = (
-                    self.start + (self._hdr['CRPIX1'] - 1) * self.step)
-                var.header['CDELT1'] = self.step
-                var.header['CRPIX1'] = self._hdr['CRPIX1']
-                self._fits.append(var)
-
-            if self.hasCov and kwargs.pop('covext', True):
-                # Add covariance array as extension COVAR
-                assert self.cov.shape == (self.npts, self.npts), \
-                    "Covariance extension %s " \
-                    "is not coherent with signal (%d px)" % \
-                    (self.cov.shape, self.npts)
-                # Add lower-tri COVARiance matrix as an image extension
-                # cov = pyfits.CompImageHDU(numpy.tril(self.cov), name='COVAR')
-                cov = pyfits.ImageHDU(numpy.tril(self.cov), name='COVAR')
-                cov.header['CRVAL1'] = cov.header['CRVAL2'] = (
-                    self.start + (self._hdr['CRPIX1'] - 1) * self.step)
-                cov.header['CDELT1'] = cov.header['CDELT2'] = \
-                    self.step
-                cov.header['CRPIX1'] = cov.header['CRPIX2'] = \
-                    self._hdr['CRPIX1']
-                self._fits.append(cov)
-
-        # Update required keywords
-        if keywords or kwargs:
-            self.setKey(keywords=keywords, **kwargs)
-
-        # Test output file presence
-        if force:
-            clobber = True              # Overwrite existing file
-        else:
-            clobber = False             # DO NOT overwrite existing file...
-            if os.path.exists(outname):
-                ans = raw_input("Overwrite output file '%s'? [N/y] " % outname)
-                if ans and ans[0].lower() == 'y':
-                    clobber = True      # ...except if confirmed
-                else:
-                    warnings.warn("Output file %s not overwritten" % outname)
-                    return
-
-        # Reset header from local copy self._hdr
-        spec.header = self._hdr
-        # Fix missing keywords (but should be OK)
-        self._fits.writeto(outname, clobber=clobber, output_verify='silentfix')
-        self.name = outname
-        self.filename = outname
-
     def gaussian_filter(self, sigma, excl=None, inplace=True):
         """
         Apply a gaussian smoothing to a Spectrum, w/ possible ExlcDomain. 
@@ -345,58 +264,6 @@ class Spectrum(object):
                                 "Savitzky-Golay filter size, order"))
 
         return f
-
-    def findRange(self, range=(None, None)):
-        """Find pixel indices corresponding to world-coord range."""
-        rmin, rmax = range                 # Requested range
-        lmin, lmax = self.start, self.end  # Actual range
-
-        # Some consistency tests
-        if rmin is not None and rmax is not None and rmin >= rmax:
-            raise ValueError("Requested range %s is not ordered." % range)
-        if (rmin is not None and rmin >= lmax) or \
-           (rmax is not None and rmax <= lmin):
-            raise ValueError("Requested range %s incompatible "
-                             "with actual range %s." % (range, (lmin, lmax)))
-
-        # Find new limit indices
-        if rmin is not None:
-            r = numpy.round((rmin - lmin) / self.step, 6)
-            imin = max(int(numpy.ceil(r)), 0)
-        else:
-            imin = 0
-        if rmax is not None:
-            r = numpy.round((rmax - lmin) / self.step, 6)
-            imax = min(int(numpy.floor(r)), self.npts - 1)
-        else:
-            imax = self.npts - 1
-
-        return imin, imax + 1              # imax pixel should be included
-
-    def truncate(self, range=(None, None), verbose=False):
-        """Truncate spectrum to world-coord range."""
-        rmin, rmax = range                 # Requested range
-        lmin, lmax = self.start, self.end  # Actual range
-
-        imin, imax = self.findRange(range=range)
-
-        if imin > 0 or imax < self.npts:   # Apply truncation
-            if verbose:
-                print "%s: truncation to [%.2f-%.2f] " \
-                      "gives new range [%.2f-%.2f] (%d px)" % \
-                      (self.name, rmin, rmax,
-                       self.x[imin], self.x[imax - 1], len(self.x[imin:imax]))
-
-            # Truncation and parameter update
-            self.x = self.x[imin:imax]
-            self.y = self.y[imin:imax]
-            if self.hasVar:
-                self.v = self.v[imin:imax]
-            if self.hasCov:
-                self.cov = self.cov[imin:imax, imin:imax]
-            self.npts = len(self.x)
-            self.start, self.end = self.x[0], self.x[-1]
-
 
     def deredden(self, ebmv, law='OD94', Rv=3.1):
         """
@@ -452,66 +319,8 @@ class Spectrum(object):
         self.setKey(ZORIG=(z, "Redshift correction applied"),
                     ZEXP=(exp, "Flux correction applied is (1+z)**zexp"))
 
-    @classmethod
-    def read_spectrum(cls, arg, keepfits=True):
-        """
-        Return an initiated Spectrum from arg=name[, var_name].
-
-        includ a proper deciphering of arg.
-        """
-        innames = arg.split(',')     # Check for spectrum, var_spectrum
-        specname = innames[0]
-        if len(innames) == 2:        # Explicit specName, var_specName
-            varname = innames[1]
-        else:                        # Get variance name and test existence
-            varname = cls.get_varname(specname, exists=True)
-
-        # Set variance if any
-        return cls(specname, varname=varname, keepfits=keepfits)
-
-    @staticmethod
-    def get_varname(specname, exists=False):
-        """
-        Return variance spectrum name associated to spectrum 'specname'.
-
-        For historical or DB filenaming. Assumes variance spectrum is
-        located in same directory as spectrum. If exists, test if
-        variance file exists or return None.
-        """
-        path, bname = os.path.split(specname)
-
-        tokens = match_DBname(bname)
-        if tokens is None:            # Historical filenaming
-            varname = 'var_' + bname  # Prefix bname with 'var_'
-        else:                         # DB filenaming
-            # Increase XFclass by one
-            tokens[7] = '%03d' % (int(tokens[7]) + 1)
-            varname = tokens[0] + '_'.join(tokens[1:-1]) + tokens[-1]
-
-        outname = os.path.join(path, varname)        # Add path to varname
-        if exists and not os.path.isfile(outname):
-            outname = None
-
-        return outname
 
 # Utilities ##############################
-
-read_spectrum = Spectrum.read_spectrum  # Helper function
-
-
-def match_DBname(name):
-    """A DB-name is PYY_DOY_RRR_SSS_C_FFF_XXX_VV-vv_NNNS."""
-    dbpattern = '(.*)' + '_'.join([r'(\d{2})'] +          # Prefix, YY
-                                  [r'(\d{3})'] * 3 +        # DOY, RRR, SSS
-                                  [r'(\d{1})'] +          # C
-                                  [r'(\d{3})'] * 2 +        # FFF, XXX
-                                  [r'(\d{2}-\d{2})'] +    # VV-vv
-                                  [r'(\d{3})']) + '(.*)'  # NNN, Suffix
-    search = re.search(dbpattern, name)
-    if search is None:          # No match
-        return None
-    else:                       # Splitted match
-        return list(search.groups())
 
 
 def get_extension(name, default=0):
