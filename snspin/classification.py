@@ -26,7 +26,7 @@ import numpy as N
 import pylab as P
 import scipy.stats as stats
 
-from ToolBox import MPL, Optimizer
+from ToolBox import Optimizer
 from snspin.tools import io
 from snspin.tools import statistics
 
@@ -261,8 +261,6 @@ def benetti_classification(dspin, indic='vSiII_6355', pmin=-5, pmax=25,
     :return: a dictionnary containing the results
     """
     print "\nSub-sampling the SNe list with the 'Benetti05' classification."
-    from ToolBox.Wrappers import SALT2model
-
     prange = [pmin, pmax]
 
     # some functions
@@ -354,7 +352,7 @@ def benetti_classification(dspin, indic='vSiII_6355', pmin=-5, pmax=25,
             P.close()
 
         # save results
-        dm15, dm15e = SALT2model.x1_to_dm15(x1[i], x1e[i])
+        dm15, dm15e = x1_to_dm15(x1[i], x1e[i])
         results[sn] = res
         results[sn]['salt2'] = {'x1': x1[i],
                                 'x1.err': x1e[i],
@@ -655,8 +653,6 @@ def wang_classification_plot(d, idr=None, name=None, StN=3, square=True):
         vSi = N.concatenate([dn['vSi'][filtn], dHV['vSi'][filtHV]])
         EWSi = N.concatenate([dn['EWSi'][filtn], dHV['EWSi'][filtHV]])
         line, = ax.plot(vSi, EWSi, 'k.', ms=1)
-        browser = MPL.PointBrowser(vSi, EWSi, sne, line)
-        print "You should be able to browse the points to get the object name."
         P.show()
 
 
@@ -800,8 +796,6 @@ def branch_classification_plot(d, idr=None, name=None, StN=3):
         fig.savefig(name)
     else:
         line, = ax.plot(EWSi6, EWSi5, 'k.', ms=1)
-        browser = MPL.PointBrowser(EWSi6, EWSi5, sne, line)
-        print "You should be able to browse the points to get the object name."
         P.show()
 
 
@@ -843,8 +837,7 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
     if xaxis == 'dm15':
         xval = dm15
         xvale = dm15e
-        from ToolBox.Wrappers import SALT2model
-        xvalf = (xval >= SALT2model.x1_to_dm15(x1cut))
+        xvalf = (xval >= x1_to_dm15(x1cut))
     elif xaxis == 'x1':
         xval = x1
         xvale = x1e
@@ -922,8 +915,6 @@ def benetti_classification_plot(res, idr=None, name=None, clean=False,
         fig.savefig(name)
     else:
         line, = ax.plot(xval, -vsi, 'k.', ms=1)
-        browser = MPL.PointBrowser(xval, -vsi, sne, line)
-        print "You should be able to browse the points to get the object name."
         P.show()
 
 
@@ -1108,4 +1099,27 @@ def table(output='html'):
         print r'\label{table:classification}'
         print r'\end{table}'
 
-# End of classLib.py
+def x1_to_dm15(x1, dx1=None):
+    """
+    Transform a SALT2 X1 value into a dm15 value (see Guy et al. 2007).
+    """
+    d = float(1.09 - 0.161 * x1 + 0.013 * x1**2 - 0.00130 * x1**3)
+    if dx1 is None:
+        return d, None
+    else:
+        dd = float((0.161 + 2 * 0.013 * x1 + 3 * 0.00130 * x1**2) * dx1)
+        return d, dd
+
+
+def x1_to_stretch(x1, dx1=None):
+    """
+    Transform a SALT2 X1 value into a stretch value.
+
+    If dx1 is given, return the stretch error as well (see Guy et al. 2007)
+    """
+    s = float(0.98 + 0.091 * x1 + 0.003 * (x1**2) - 0.00075 * (x1**3))
+    if dx1 is None:
+        return s, None
+    else:
+        ds = float((0.091 + 2 * 0.003 * x1 + 3 * 0.00075 * x1**2) * dx1)
+        return s, ds

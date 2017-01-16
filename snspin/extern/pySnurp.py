@@ -192,14 +192,14 @@ class Spectrum(object):
         :param int law: Extinction law. Could be CCM89, OD94, FM98 or G08
         :param float Rv: Value for Rv. Default is 3.1
         """
-        from ToolBox.Astro.Extinction import extinctionFactor
+        from Extinction.extinction import extinction_factor
 
         if hasattr(self, 'zorig'):      # Spectrum has been deredshifted
             raise ValueError, \
                 "Dereddening should be done prior to deredshifting."
 
         # Extinction factor (<1)
-        ext = extinctionFactor(self.x, ebmv, Rv=Rv, law=law)
+        ext = extinction_factor(self.x, ebmv, rv=Rv, law=law)
         self.y /= ext
         if self.hasVar:
             self.v /= ext**2

@@ -479,10 +479,9 @@ def sg_find_num_points(x, data, var, pol_degree=2, corr=0.0, verbose=False):
     result = e.keys()[e.values().index(N.min(e.values()))]
 
     if result >= len(x):
-        # This is to avoid the always problematic limit case of calculating an interpolator on
-        # all the points available (for example, in the Savitzky-Golay interpolation
-        # (ToolBox.Signal), when all the available points are selected, the convolution by the
-        # kernel chops out the two extreme points).
+        # This is to avoid the always problematic limit case of calculating an interpolator on all
+        # the points available (e.g., in the Savitzky-Golay interpolation when all the available
+        # points are selected, the convolution by the kernel chops out the two extreme points).
         result = len(x) - 1
     return result
 

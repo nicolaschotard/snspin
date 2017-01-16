@@ -8,9 +8,7 @@ Work for a given spectrum, a collection of spectra, or the IDR. Some plot functi
 
 import numpy as N
 import pylab as P
-
 from snspin.tools import statistics
-from ToolBox import Hubblefit, MPL
 
 
 LIGHT_VELOCITY = 299792.458  # km/s
@@ -254,7 +252,6 @@ class CorrMap(object):
     def plot_correlation(self, i, j):
         """
         Plot the correlation between the given parameter and the bin (i,j).
-        If self.names has been given, you can browse then here.
         """
 
         # shortcut
@@ -280,10 +277,6 @@ class CorrMap(object):
         ax.set_ylabel('Given parameter')
         ax.set_title('Correlation: %.2f' % self._comp_corr(i, j))
 
-        # to browse the data
-        if self.names is not None:
-            if len(self.names) == len(self.param):
-                browser = MPL.PointBrowser(x, y, self.names, line)
 
 # Definitions ============================================================
 

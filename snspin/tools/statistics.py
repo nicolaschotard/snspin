@@ -353,8 +353,6 @@ def correlation_weighted(x, y, w=None, axis=None,
     Source: `Weighted correlation
     <https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient#Calculating_a_weighted_correlation>`_
     """
-    from ToolBox.Arrays import unsqueeze
-
     x = N.asarray(x)
     y = N.asarray(y)
     assert x.shape == y.shape, "Incompatible data arrays x and y"
@@ -364,15 +362,14 @@ def correlation_weighted(x, y, w=None, axis=None,
         w = N.ones_like(x)
     else:
         w = N.where(N.isfinite(w), w, 0)  # Discard NaN's and Inf's
-        assert w.shape == x.shape, \
-            "Weight array w incompatible with data arrays"
+        assert w.shape == x.shape, "Weight array w incompatible with data arrays"
 
     # Weighted means
     mx = N.average(x, weights=w, axis=axis)
     my = N.average(y, weights=w, axis=axis)
     # Residuals around weighted means
-    xm = x - unsqueeze(mx, axis)
-    ym = y - unsqueeze(my, axis)
+    xm = x - (mx if axis is None else N.expand_dims(mx, axis))
+    ym = y - (my if axis is None else N.expand_dims(my, axis))
     # Weighted covariance
     cov, sumw = N.average(xm * ym, weights=w, axis=axis, returned=True)
     # Weighted variances
