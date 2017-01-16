@@ -16,16 +16,17 @@ import cPickle
 import optparse
 import sys
 import os
-import re
 
-# use Agg by default (do not try to show plot windows - extremely slow over ssh)
+import numpy
 import matplotlib
 matplotlib.use('Agg')
 
 from snspin import spinmeas
 from snspin.tools import io
 
+
 code_name = os.path.basename(__file__) + ' '
+
 
 def read_option():
     """Read all options."""
@@ -106,7 +107,7 @@ def read_option():
         for tgn in opts.target:
             if os.path.exists(tgn) and not os.path.isdir(tgn):
                 print "Reading targets from %s" % tgn
-                tgs = tgs.union(set(read_ascii(tgn)))
+                tgs = tgs.union(set(numpy.loadtxt(tgn, dtype='string', ndmin=1)))
             else:
                 tgs.add(tgn)
         opts.target = tgs
@@ -116,30 +117,12 @@ def read_option():
         for tgn in opts.exclude:
             if os.path.exists(tgn):
                 print "Reading targets from %s" % tgn
-                tgs = tgs.union(set(read_ascii(tgn)))
+                tgs = tgs.union(set(numpy.loadtxt(tgn, dtype='string', ndmin=1)))
             else:
                 tgs.add(tgn)
         opts.exclude = tgs
 
     return opts
-
-
-def read_ascii(aname):
-    """
-    Read ascii files and returns a list of lines.
-
-    Empty lines and lines beginning with # are not returned.
-    All comments starting with # in a line are dropped.
-    All lines are stripped.
-    """
-    fh = open(aname, "r")
-    line_list = []
-    for line in fh.readlines():
-        line = (re.sub("#.+$", "", line)).strip()
-        if not len(line):
-            continue
-        line_list.append(line)
-    return line_list
 
 
 def read_from_fits(opts):
@@ -190,11 +173,6 @@ def read_from_fits(opts):
     return data
 
 
-def _makeiterable(obj):
-    """Transform a single object into an list."""
-    return (obj,) if not hasattr(obj, '__iter__') else obj
-
-
 def _add_value_err(data, param, value, autoerr):
     """Parse if value is (value, err) pair and add to dictionary data."""
     if autoerr and hasattr(value, '__iter__') and len(value) == 2:
@@ -221,6 +199,10 @@ def add_to_spec(dic, tgt, exp, param=None, value=None, items=None, autoerr=True)
     as (value, error) pairs resulting in param and param.err entries
     Set autoerr=False to override this auto-error interpretation.
     """
+    def _makeiterable(obj):
+        """Transform a single object into an list."""
+        return (obj,) if not hasattr(obj, '__iter__') else obj
+
     tgt = _makeiterable(tgt)
     exp = _makeiterable(exp)
 
