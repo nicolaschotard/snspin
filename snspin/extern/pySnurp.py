@@ -1,25 +1,13 @@
 #!/usr/bin/env python
 
 """
-Simple module providing few FITS-based I/O classes and other facilities
-(mostly historical name parsing).
-
-* ReStructuredText facilities: now in ToolBox.ReST
-* Plotting utilities (e.g. get_backend): now in ToolBox.MPL
-* Extinction routines: now in ToolBox.Astro.Extinction
-* Flux and date conversion routines: now in ToolBox.Astro.Coords
+Simple module providing few FITS-based I/O classes and other facilities.
 """
 
-import os
 import re
 import warnings
 import numpy
 import pyfits
-
-
-# Ignore warnings from pyfits.writeto
-# (https://github.com/spacetelescope/PyFITS/issues/43)
-warnings.filterwarnings("ignore", "Overwriting existing file")
 
 
 # Spectrum class ##############################
@@ -108,7 +96,7 @@ class Spectrum(object):
 
     def _readFits(self, name, mode='readonly'):
         """
-        Initialize a Spectrum from FITS spectrum name. 
+        Initialize a Spectrum from FITS spectrum name.
 
         'name' can be 'name[ext]', in which case only extension 'ext' is considered.
         """
@@ -196,75 +184,6 @@ class Spectrum(object):
         for key in kwargs:
             self._hdr[key.upper()] = kwargs[key]
 
-    def resetHeader(self):
-        """Delete all non-standard keywords."""
-        # Delete all reference keywords
-        for k in self._hdr.items():
-            del self._hdr[k[0]]
-
-        # Add mandatory keywords
-        self._hdr['SIMPLE'] = True
-        self._hdr['BITPIX'] = -64
-        self._hdr['NAXIS'] = 1
-        self._hdr['NAXIS1'] = self.npts
-        self._hdr['CDELT1'] = self.step
-        self._hdr['CRPIX1'] = 1
-        self._hdr['CRVAL1'] = self.start
-
-    def gaussian_filter(self, sigma, excl=None, inplace=True):
-        """
-        Apply a gaussian smoothing to a Spectrum, w/ possible ExlcDomain. 
-
-        Sigma in A. If not inplace, the smoothed signal is
-        returned and the spectrum is not modified.
-
-        TODO: - linearly interpolate excluded bands before smoothing
-        """
-        from scipy.ndimage import filters
-
-        # Linear interpolation over excluded domains
-        if excl:
-            # print "WARNING: No interpolation over excluded domains."
-            pass
-
-        # Conversion to Float64 is required...
-        f = filters.gaussian_filter1d(
-            self.y.astype('d'), sigma / self.step, mode='nearest')
-
-        if inplace:
-            self.y = f
-            if self.hasVar or self.hasCov:
-                warnings.warn("%s: [co]variance extension left unfiltered" %
-                              self.name)
-            self.setKey(FILTGAUS=(sigma / self.step,
-                                  "Gaussian filtering sigma [px]"))
-
-        return f
-
-    def sgFilter(self, hsize=11, order=4, excl=None, inplace=True):
-        """
-        Apply a Savitzky-Golay smoothing to a Spectrum, w/ possible ExlcDomain. 
-
-        If not inplace, the smoothed signal is returned and the spectrum is not modified.
-        """
-        from snspin.tools.smoothing import savitzky_golay
-
-        # Linear interpolation over excluded domains
-        if excl:
-            # print "WARNING: No interpolation over excluded domains."
-            pass
-
-        f = savitzky_golay(self.y, hsize, order, derivative=0)
-        if inplace:
-            self.y = f
-            if self.hasVar or self.hasCov:
-                warnings.warn("%s: [co]variance extension left unfiltered" %
-                              self.name)
-            self.setKey(FILTSG=(','.join(map(str, (hsize, order))),
-                                "Savitzky-Golay filter size, order"))
-
-        return f
-
     def deredden(self, ebmv, law='OD94', Rv=3.1):
         """
         Deredden spectrum using E(B-V) and a nextinction law.
@@ -318,9 +237,6 @@ class Spectrum(object):
 
         self.setKey(ZORIG=(z, "Redshift correction applied"),
                     ZEXP=(exp, "Flux correction applied is (1+z)**zexp"))
-
-
-# Utilities ##############################
 
 
 def get_extension(name, default=0):
