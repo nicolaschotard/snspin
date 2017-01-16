@@ -260,41 +260,6 @@ def correlation_CI(rho, n, cl=0.95):
     return N.tanh([z - zsig, z + zsig])      # Confidence interval on rho
 
 
-def correlation_significance(rho, n, directional=True, sigma=False):
-    """
-    Significance of (Pearson's or Spearman's) correlation coefficient *rho*,
-    given the (effective) size *n* of the sample.
-
-    If non-*directional*, this is the (two-sided) probability `p =
-    Prob_N(|r| >= |rho|)` to find such an extreme correlation
-    coefficient (no matter the sign of the correlation) from a purely
-    uncorrelated population. If *directional*, this is the (one-sided)
-    probability `p = Prob_N(r > rho)` for rho>0 (resp. `Prob_N(r <
-    rho)` for rho<0). The directional (one-sided) probability is just
-    half the non-directional (two-sided) one.
-
-    If *sigma*, express the result as a sigma equivalent significance
-    from a normal distribution (:func:`pvalue2sigma`).
-
-    Sources: *Introduction to Error Analysis* (Taylor, 1997),
-    `Significance of a Correlation Coefficient
-    <http://vassarstats.net/rsig.html>`_
-    """
-
-    assert -1 < rho < 1, "Correlation coefficient should be in ]-1, 1["
-    assert n >= 6, "Insufficient sample size"
-
-    # t is distributed as Student's T distribution with DoF=n-2
-    t = rho * N.sqrt((n - 2.) / (1 - rho**2))
-    p = stats.distributions.t.sf(t, n - 2)   # directional (one-sided) p-value
-    if sigma:
-        p = pvalue2sigma(p)
-    elif not directional:               # non-directional (two-sided) p-value
-        p *= 2
-
-    return p
-
-
 def correlation(x, y, method='pearson',
                 error=False, confidence=0.6827, symmetric=False):
     """
@@ -331,70 +296,6 @@ def correlation(x, y, method='pearson',
         return rho, N.hypot(drm, drp) / 1.4142  # Symmetrized error
     else:
         return rho, drm, drp              # Assymmetric errors
-
-
-def correlation_weighted(x, y, w=None, axis=None,
-                         error=False, confidence=0.6827, symmetric=False):
-    r"""
-    Compute (weighted) Pearson correlation coefficient between *x* and *y* along
-    *axis*.
-
-    **Weighting choice:** if *x* and *y* have (potentially correlated)
-    errors, a logical choice is the inverse of the error ellipse
-    area. For uncorrelated errors, this would correspond to :math:`w =
-    1/(\sigma_x\sigma_y)`.
-
-    **Error on weighted correlation:** once you have computed the
-    (weighted) correlation, use :func:`correlation_CI` (resp.
-    :func:`correlation_significance`) to compute associated confidence
-    interval (resp. significance). You should then use an *effective*
-    number of weighted points (see :func:`neff_weighted`).
-
-    Source: `Weighted correlation
-    <https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient#Calculating_a_weighted_correlation>`_
-    """
-    x = N.asarray(x)
-    y = N.asarray(y)
-    assert x.shape == y.shape, "Incompatible data arrays x and y"
-
-    # Weights
-    if w is None:
-        w = N.ones_like(x)
-    else:
-        w = N.where(N.isfinite(w), w, 0)  # Discard NaN's and Inf's
-        assert w.shape == x.shape, "Weight array w incompatible with data arrays"
-
-    # Weighted means
-    mx = N.average(x, weights=w, axis=axis)
-    my = N.average(y, weights=w, axis=axis)
-    # Residuals around weighted means
-    xm = x - (mx if axis is None else N.expand_dims(mx, axis))
-    ym = y - (my if axis is None else N.expand_dims(my, axis))
-    # Weighted covariance
-    cov, sumw = N.average(xm * ym, weights=w, axis=axis, returned=True)
-    # Weighted variances
-    vx = N.average(xm**2, weights=w, axis=axis)
-    vy = N.average(ym**2, weights=w, axis=axis)
-
-    # Weighted correlation
-    rho = cov / N.sqrt(vx * vy)
-
-    if not error:
-        return rho
-
-    if axis is not None:
-        raise NotImplementedError("Weighted correlation confidence interval "
-                                  "not implemented for nD-arrays.")
-
-    # Compute error on correlation coefficient using effective number of points
-    rho_dn, rho_up = correlation_CI(rho, n=neff_weighted(w), cl=confidence)
-    drm = rho - rho_dn
-    drp = rho_up - rho
-
-    if symmetric:
-        return rho, N.hypot(drm, drp) / 1.4142135623730951  # Symmetrized error
-    else:
-        return rho, drm, drp                                # Assymmetric errors
 
 
 # Statistical tests ==============================
