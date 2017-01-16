@@ -1547,7 +1547,6 @@ class Craniometer(object):
         ewv['depth_ew%s.stat' % sf] = N.nan
         ewv['depth_ew%s.syst' % sf] = N.nan
         ewv['depth_ew%s.mean' % sf] = N.nan
-        ewv['surf_norm_ew%s' % sf] = N.nan
         ewv['surf_ew%s.err' % sf] = N.nan
         ewv['surf_ew%s.stat' % sf] = N.nan
         ewv['surf_ew%s.syst' % sf] = N.nan
