@@ -2239,9 +2239,9 @@ def get_cranio(x, y, v, smoother='spline_free_knot', nsimu=1000, verbose=False):
     # obj.comp_rho_f()
     obj.smooth(smoothing=smoothf)
     obj.make_simu(nsimu=nsimu)
-    simus = N.array([s.y for s in obj.simus])
-    cr = Craniometer(x, y, v * obj.factor_used)
-    cr.smooth(rho=obj.rho, smoother=smoother, s=obj.s, hsize=obj.w, verbose=False)
-    cr.cranio_generator(rho=obj.rho, simus=simus, verbose=verbose)
+    simus = N.array([s.data['y'] for s in obj.simus])
+    cr = Craniometer(x, y, v * obj.data['factor_used'])
+    cr.smooth(rho=obj.data['rho'], smoother=smoother, s=obj.s, hsize=obj.w, verbose=False)
+    cr.cranio_generator(rho=obj.data['rho'], simus=simus, verbose=verbose)
     cr.find_extrema()
     return cr

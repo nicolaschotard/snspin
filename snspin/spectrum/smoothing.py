@@ -32,7 +32,7 @@ def prediction_error(r, B, var, W=None, verbose=False):
     r is the residual vector
     """
     # simplification because we have no covariance included
-    if W == None:
+    if W is None:
         pe = N.sum(r**2 / var) + 2 * N.sum(N.diag(B)) - len(var)
         if pe < 0 and verbose:
             print "WARNING <prediction_error>: pe < 0, variance probably under estimated"
