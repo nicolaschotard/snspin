@@ -372,18 +372,18 @@ def spincalc(argv=None):
                     DrGall.control_plot(filename=control_plot_name, title=title,
                                         oformat=option.pformat)
                 except Exception, err:
-                    print "WARNING: control_plot had a problem:" % err
+                    print "WARNING: control_plot had a problem:", err
                 try:
                     DrGall.plot_oxygen(filename=control_plot_name_ox, title=title,
                                        oformat=option.pformat)
                 except Exception, err:
-                    print "WARNING: control_plot for oxygen had a problem:" % err
+                    print "WARNING: control_plot for oxygen had a problem:", err
                 try:
                     DrGall.plot_iron(filename=control_plot_name_fe,
                                      title=title,
                                      oformat=option.pformat)
                 except Exception, err:
-                    print "WARNING: control_plot for iron had a problem:" % err
+                    print "WARNING: control_plot for iron had a problem:", err
             print '\n'
 
             if option.save_pickles:
