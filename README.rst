@@ -2,6 +2,9 @@
    :target: https://landscape.io/github/nicolaschotard/snspin/master
    :alt: Code Health
 
+.. image:: https://travis-ci.org/nicolaschotard/snspin.svg?branch=master
+    :target: https://travis-ci.org/nicolaschotard/snspin
+
 snspin
 ======
 
