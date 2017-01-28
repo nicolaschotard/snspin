@@ -6,3 +6,11 @@ snspin
 ======
 
 SuperNova SPectral INdicators: Spectral indicators measurement for supernovae
+
+
+Disclaimer
+==========
+
+This tool has been designed to compute SNe Ia spectral indicotors at
+maximul light. It will most likely give you bad/strange results for
+spectra far from the maximum light.
