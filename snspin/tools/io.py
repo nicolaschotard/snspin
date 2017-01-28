@@ -206,7 +206,7 @@ class Spectrum(object):
         :param int law: Extinction law. Could be CCM89, OD94, FM98 or G08
         :param float Rv: Value for Rv. Default is 3.1
         """
-        from Extinction.extinction import extinction_factor
+        from extinctions.extinction import extinction_factor
 
         if hasattr(self, 'zorig'):      # Spectrum has been deredshifted
             raise ValueError, \
