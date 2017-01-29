@@ -106,24 +106,6 @@ def hist_binwidth(x, choice='FD', arange=None, percentiles=False):
     return h
 
 
-def hist_bins(x, choice='FD', arange=None, percentiles=False, log=False):
-    """Optimal binning. See :func:`hist_binwidth` for details."""
-
-    xmin, xmax = get_range(x, arange=arange, percentiles=percentiles, log=log)
-    if log:
-        from math import log10
-        lxmin, lxmax = log10(xmin), log10(xmax)
-        xx = N.ravel(x)
-        xx = xx[xx >= xmin]
-        return N.logspace(lxmin, lxmax,
-                          hist_nbin(N.log10(xx), choice=choice,
-                                    arange=(lxmin, lxmax)))
-    else:
-        return N.linspace(xmin, xmax,
-                          hist_nbin(x, choice=choice,
-                                    arange=arange, percentiles=percentiles))
-
-
 # Robust statistics ==============================
 
 

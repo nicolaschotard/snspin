@@ -8,10 +8,8 @@ import scipy as S
 from scipy import interpolate
 
 from snspin.tools import io
-from snspin.tools import statistics
 from snspin.spectrum.smoothing import savitzky_golay as sg
 from snspin.spectrum.smoothing import spline_find_s
-# from snspin.spectrum.smoothing import sg_find_num_points
 
 
 class SPCS(object):
@@ -328,8 +326,7 @@ def control_case(rho=0, factor=1, nsimu=1000, nbin=300, plot=False):
     # Check if rho is the given one
     rho = N.array([autocorr(N.array(sim), k=1, full=False) for sim in sims])
     if plot:
-        P.hist(rho, histtype='step', color='b',
-               alpha=0.5, bins=statistics.hist_nbin(rho))
+        P.hist(rho, histtype='step', color='b', alpha=0.5, bins=nsimu / 20) 
         P.title('Mean=%.2f, Std=%.2f' % (N.mean(rho), N.std(rho)))
     else:
         return rho

@@ -518,8 +518,6 @@ class DrGall(object):
                                                   'lrest': 6355,
                                                   'name': 'vsiii_6355'},
                                                  verbose=verbose)
-            # vsiii_6355 = self.cranio_r4.velocity2({'lmin':5850, 'lmax':6015,
-            # 'lrest':6355, 'name':'vsiii_6355'}, verbose=verbose)
             self.values.update(self.cranio_r4.velocityvalues)
             if verbose:
                 print 'vsiii_6355 computing done, vsiii_6355 =', vsiii_6355
@@ -685,9 +683,6 @@ class DrGall(object):
         except ValueError:
             rcas2 = float(N.nan)
 
-        # try:
-        #    edca = self.cranio_bca.edcavalues['edca']
-        # except ValueError:
         edca = float(N.nan)
 
         try:

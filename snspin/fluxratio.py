@@ -8,7 +8,7 @@ Work for a given spectrum, a collection of spectra, or the IDR. Some plot functi
 
 import numpy as N
 import pylab as P
-from snspin.tools import statistics
+import scipy.stats as stats
 
 
 LIGHT_VELOCITY = 299792.458  # km/s
@@ -155,12 +155,14 @@ class CorrMap(object):
         x, y = self._get_column_vals(i, j), self.param
 
         if not (x[x == x] - 1).any():  # if i == j
-            corr = 0
+            rho = 0
         else:
             filt = N.isfinite(x) & N.isfinite(y)
-            corr = statistics.correlation(N.array(x)[filt], N.array(y)[filt],
-                                          method=self.method)
-        return corr
+            if self.method.lower() == 'pearson':
+                rho, p = stats.pearsonr(N.array(x)[filt], N.array(y)[filt])
+            elif self.method.lower() == 'spearman':
+                rho, p = stats.spearmanr(N.array(x)[filt], N.array(y)[filt])
+        return rho
 
     def _get_column_vals(self, i, j, err=False):
         """
